@@ -5,13 +5,15 @@ import {
     Typography,
     Button,
     IconButton,
-    Badge,
     Box,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
+    const navigate = useNavigate();
+
     return (
         <AppBar position="static">
             <Toolbar>
@@ -19,22 +21,30 @@ const Header = () => {
                     variant="h6"
                     component="div"
                     sx={{ flexGrow: 1, cursor: 'pointer' }}
+                    onClick={() => navigate('/')}
                 >
                     Sports Store
                 </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Button color="inherit">Sports</Button>
-                    <Button color="inherit">Equipment</Button>
-                    <Button color="inherit">Clothing</Button>
+                    <Button
+                        color="inherit"
+                        onClick={() => navigate('/products')}
+                    >
+                        Products
+                    </Button>
 
-                    <IconButton color="inherit">
-                        <Badge badgeContent={0} color="error">
-                            <ShoppingCartIcon />
-                        </Badge>
+                    <IconButton
+                        color="inherit"
+                        onClick={() => navigate('/cart')}
+                    >
+                        <ShoppingCartIcon />
                     </IconButton>
 
-                    <IconButton color="inherit">
+                    <IconButton
+                        color="inherit"
+                        onClick={() => navigate('/login')}
+                    >
                         <PersonIcon />
                     </IconButton>
                 </Box>

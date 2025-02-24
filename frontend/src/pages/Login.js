@@ -9,28 +9,26 @@ import {
     Link,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
-    const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
-        try {
-            const success = await login(email, password);
-            if (success) {
-                navigate('/');
-            } else {
-                setError('Invalid credentials');
-            }
-        } catch (err) {
-            setError('An error occurred during login');
+        // Simulated login check (Replace this with real auth when backend is ready)
+        if (email === 'test@example.com' && password === 'password123') {
+            setSuccess('Login successful! Redirecting...');
+            localStorage.setItem('isAuthenticated', 'true'); // Simulated auth
+            setTimeout(() => navigate('/'), 1500); // Redirect after delay
+        } else {
+            setError('Invalid email or password');
         }
     };
 
@@ -65,6 +63,12 @@ const Login = () => {
                     {error && (
                         <Typography color="error" sx={{ mt: 2 }}>
                             {error}
+                        </Typography>
+                    )}
+
+                    {success && (
+                        <Typography color="success.main" sx={{ mt: 2 }}>
+                            {success}
                         </Typography>
                     )}
 

@@ -10,8 +10,6 @@ import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import { CartProvider } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext';
 import { Box } from '@mui/material';
 
 const theme = createTheme({
@@ -30,28 +28,24 @@ function App() {
         <BrowserRouter>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <AuthProvider>
-                    <CartProvider>
-                        <Box sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            minHeight: '100vh'
-                        }}>
-                            <Header />
-                            <Box sx={{ flex: 1, py: 3 }}>
-                                <Routes>
-                                    <Route path="/" element={<Home />} />
-                                    <Route path="/products" element={<Products />} />
-                                    <Route path="/products/:id" element={<ProductDetail />} />
-                                    <Route path="/cart" element={<Cart />} />
-                                    <Route path="/login" element={<Login />} />
-                                    <Route path="/register" element={<Register />} />
-                                </Routes>
-                            </Box>
-                            <Footer />
-                        </Box>
-                    </CartProvider>
-                </AuthProvider>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100vh'
+                }}>
+                    <Header />
+                    <Box sx={{ flex: 1, py: 3 }}>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/products" element={<Products />} />
+                            <Route path="/products/:id" element={<ProductDetail />} />
+                            <Route path="/cart" element={<Cart />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+                        </Routes>
+                    </Box>
+                    <Footer />
+                </Box>
             </ThemeProvider>
         </BrowserRouter>
     );
