@@ -1,55 +1,79 @@
 import React from 'react';
-import { Container, Typography, Grid, Button, Box } from '@mui/material';
+import { Container, Typography, Grid, Box, Card, CardContent, CardMedia } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+
+const featuredProducts = [
+    {
+        id: 1,
+        name: 'Basketball',
+        description: 'Professional grade basketball',
+        price: 29.99,
+        image: '/api/placeholder/300/200',
+    },
+    {
+        id: 2,
+        name: 'Soccer Ball',
+        description: 'FIFA approved soccer ball',
+        price: 24.99,
+        image: '/api/placeholder/300/200',
+    },
+    {
+        id: 3,
+        name: 'Tennis Racket',
+        description: 'Lightweight tennis racket',
+        price: 89.99,
+        image: '/api/placeholder/300/200',
+    },
+];
 
 const Home = () => {
     const navigate = useNavigate();
 
     return (
-        <Container maxWidth="lg">
-            <Box sx={{ my: 4 }}>
-                <Typography variant="h3" component="h1" gutterBottom>
-                    Welcome to Sports Store
-                </Typography>
-                <Typography variant="h5" color="text.secondary" paragraph>
-                    Your one-stop destination for quality sports equipment and accessories
-                </Typography>
-                <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => navigate('/products')}
-                    sx={{ mt: 2 }}
-                >
-                    Shop Now
-                </Button>
+        <Container maxWidth="lg" sx={{ px: 0 }}>
+            {/* Hero Section with Full-Width Video */}
+            <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: 2, boxShadow: 1 }}>
+                <CardMedia
+                    component="video"
+                    src="/video.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    sx={{ width: '100%', height: 'auto', minHeight: '500px' }}
+                />
             </Box>
 
-            <Grid container spacing={4} sx={{ mt: 4 }}>
-                <Grid item xs={12} md={4}>
-                    <Typography variant="h6" gutterBottom>
-                        Quality Equipment
-                    </Typography>
-                    <Typography>
-                        Browse our selection of professional-grade sports equipment.
-                    </Typography>
+            {/* Featured Products */}
+            <Box sx={{ my: 4 }}>
+                <Typography variant="h4" gutterBottom>
+                    Featured Products
+                </Typography>
+                <Grid container spacing={4}>
+                    {featuredProducts.map((product) => (
+                        <Grid item xs={12} sm={6} md={4} key={product.id}>
+                            <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
+                                <CardMedia
+                                    component="img"
+                                    height="200"
+                                    image={product.image}
+                                    alt={product.name}
+                                />
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        {product.name}
+                                    </Typography>
+                                    <Typography color="text.secondary" paragraph>
+                                        {product.description}
+                                    </Typography>
+                                    <Typography variant="h6" color="primary">
+                                        ${product.price}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
                 </Grid>
-                <Grid item xs={12} md={4}>
-                    <Typography variant="h6" gutterBottom>
-                        Best Prices
-                    </Typography>
-                    <Typography>
-                        Competitive prices on all your favorite sports gear.
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                    <Typography variant="h6" gutterBottom>
-                        Expert Advice
-                    </Typography>
-                    <Typography>
-                        Get guidance from our sports equipment specialists.
-                    </Typography>
-                </Grid>
-            </Grid>
+            </Box>
         </Container>
     );
 };
