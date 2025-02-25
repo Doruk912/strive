@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Grid, Box, Card, CardContent, CardMedia } from '@mui/material';
+import { Container, Typography, Grid, Box, Card, CardContent, CardMedia, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const featuredProducts = [
@@ -30,9 +30,9 @@ const Home = () => {
     const navigate = useNavigate();
 
     return (
-        <Container maxWidth="lg" sx={{ px: 0 }}>
-            {/* Hero Section with Full-Width Video */}
-            <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: 2, boxShadow: 1 }}>
+        <Box sx={{ width: '100%' }}>
+            {/* Hero Section with Full-Width Video and Text Overlay */}
+            <Box sx={{ position: 'relative', overflow: 'hidden', mb: 4 }}>
                 <CardMedia
                     component="video"
                     src="/video.mp4"
@@ -41,40 +41,73 @@ const Home = () => {
                     muted
                     sx={{ width: '100%', height: 'auto', minHeight: '500px' }}
                 />
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
+                        color: '#fff',
+                        p: 4,
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    }}
+                >
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        Discover Our Latest Collection
+                    </Typography>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Premium sports accessories for every athlete
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => navigate('/products')}
+                        sx={{ mt: 2 }}
+                    >
+                        Browse Products
+                    </Button>
+                </Box>
             </Box>
 
             {/* Featured Products */}
-            <Box sx={{ my: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Featured Products
-                </Typography>
-                <Grid container spacing={4}>
-                    {featuredProducts.map((product) => (
-                        <Grid item xs={12} sm={6} md={4} key={product.id}>
-                            <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
-                                <CardMedia
-                                    component="img"
-                                    height="200"
-                                    image={product.image}
-                                    alt={product.name}
-                                />
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>
-                                        {product.name}
-                                    </Typography>
-                                    <Typography color="text.secondary" paragraph>
-                                        {product.description}
-                                    </Typography>
-                                    <Typography variant="h6" color="primary">
-                                        ${product.price}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
-        </Container>
+            <Container maxWidth="lg">
+                <Box sx={{ my: 4 }}>
+                    <Typography variant="h4" gutterBottom>
+                        Featured Products
+                    </Typography>
+                    <Grid container spacing={4}>
+                        {featuredProducts.map((product) => (
+                            <Grid item xs={12} sm={6} md={4} key={product.id}>
+                                <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
+                                    <CardMedia
+                                        component="img"
+                                        height="200"
+                                        image={product.image}
+                                        alt={product.name}
+                                    />
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom>
+                                            {product.name}
+                                        </Typography>
+                                        <Typography color="text.secondary" paragraph>
+                                            {product.description}
+                                        </Typography>
+                                        <Typography variant="h6" color="primary">
+                                            ${product.price}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            </Container>
+        </Box>
     );
 };
 
