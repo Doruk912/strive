@@ -8,6 +8,7 @@ import {
     InputAdornment,
     Container,
     Button,
+    Typography
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -24,6 +25,9 @@ const Header = () => {
                     <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
                         <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
                     </IconButton>
+                    <Typography variant="h6" component="div" sx={{ ml: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
+                        Sports Store
+                    </Typography>
 
                     <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
                         <TextField
