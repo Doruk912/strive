@@ -64,10 +64,24 @@ const Home = () => {
                         Premium sports accessories for every athlete
                     </Typography>
                     <Button
-                        variant="contained"
-                        color="primary"
                         onClick={() => navigate('/products')}
-                        sx={{ mt: 2 }}
+                        sx={{
+                            mt: 2,
+                            color: '#ffffff',
+                            backgroundColor: 'transparent',
+                            border: '1px solid #ffffff',
+                            borderRadius: '2px', // Very subtle rounded corners
+                            padding: '8px 20px',
+                            fontSize: '14px',
+                            fontWeight: 400,
+                            textTransform: 'none',
+                            letterSpacing: '0.5px',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle white overlay on hover
+                                border: '1px solid #ffffff',
+                            },
+                        }}
                     >
                         Browse Products
                     </Button>
