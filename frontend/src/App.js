@@ -11,6 +11,7 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Box } from '@mui/material';
+import './App.css';
 
 const theme = createTheme({
     palette: {
