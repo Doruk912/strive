@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import {
     Container,
@@ -9,24 +10,31 @@ import {
     Link,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { mockUsers } from '../mockData/Users';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
-        setSuccess('');
 
-        // Simulated login check (Replace this with real auth when backend is ready)
-        if (email === 'test@example.com' && password === 'password123') {
-            setSuccess('Login successful! Redirecting...');
-            localStorage.setItem('isAuthenticated', 'true'); // Simulated auth
-            setTimeout(() => navigate('/'), 1500); // Redirect after delay
+        const user = mockUsers.find(
+            (u) => u.email === email && u.password === password
+        );
+
+        if (user) {
+            login(user);
+            if (user.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             setError('Invalid email or password');
         }
@@ -63,12 +71,6 @@ const Login = () => {
                     {error && (
                         <Typography color="error" sx={{ mt: 2 }}>
                             {error}
-                        </Typography>
-                    )}
-
-                    {success && (
-                        <Typography color="success.main" sx={{ mt: 2 }}>
-                            {success}
                         </Typography>
                     )}
 

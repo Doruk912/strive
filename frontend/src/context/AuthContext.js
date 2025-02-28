@@ -1,25 +1,21 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
 
-    const login = async (email, password) => {
-        // Here you'll integrate with your backend
-        try {
-            // Simulate API call
-            const response = await mockLogin(email, password);
-            setUser(response.user);
-            return true;
-        } catch (error) {
-            console.error('Login failed:', error);
-            return false;
-        }
+    const login = (userData) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     const logout = () => {
         setUser(null);
+        localStorage.removeItem('user');
     };
 
     return (
@@ -29,25 +25,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
-
-// Mock function - replace with actual API call
-const mockLogin = async (email, password) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                user: {
-                    id: 1,
-                    email,
-                    name: 'Test User',
-                },
-            });
-        }, 1000);
-    });
-};
+export const useAuth = () => useContext(AuthContext);
