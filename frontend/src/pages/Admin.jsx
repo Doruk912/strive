@@ -8,7 +8,6 @@ import {
     Grid,
     Card,
     CardContent,
-    CardHeader,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
