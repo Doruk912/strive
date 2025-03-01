@@ -132,8 +132,6 @@ const Register = () => {
                                     {error}
                                 </Typography>
                             )}
-
-<<<<<<< HEAD:frontend/src/pages/Register.js
                             <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 4, p: 2, fontSize: '1.2rem', borderRadius: '8px', fontWeight: 'bold', backgroundColor: '#1565C0', '&:hover': { backgroundColor: '#0D47A1' } }}>
                                 REGISTER
                             </Button>
@@ -145,75 +143,6 @@ const Register = () => {
                 </Container>
             </Grid>
         </Grid>
-=======
-                    <TextField
-                        fullWidth
-                        label="Last Name"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        margin="normal"
-                        required
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        margin="normal"
-                        required
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        margin="normal"
-                        required
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Confirm Password"
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        margin="normal"
-                        required
-                    />
-
-                    {error && (
-                        <Typography color="error" sx={{ mt: 2 }}>
-                            {error}
-                        </Typography>
-                    )}
-
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        sx={{ mt: 3 }}
-                    >
-                        Register
-                    </Button>
-
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Link href="login" variant="body2">
-                            Already have an account? Sign in
-                        </Link>
-                    </Box>
-                </form>
-            </Paper>
-        </Container>
->>>>>>> 8735ac125778d838b60ef76d92f3d63a57947407:frontend/src/pages/Register.jsx
     );
 };
 

@@ -119,8 +119,6 @@ const Login = () => {
                             >
                                 LOGIN
                             </Button>
-
-<<<<<<< HEAD:frontend/src/pages/Login.js
                             <Box sx={{ mt: 3, textAlign: 'center', fontSize: '1.1rem' }}>
                                 <Link href="/register" variant="body2">
                                     Don't have an account? Sign up
@@ -131,16 +129,6 @@ const Login = () => {
                 </Container>
             </Grid>
         </Grid>
-=======
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Link href="register" variant="body2">
-                            Don't have an account? Sign up
-                        </Link>
-                    </Box>
-                </form>
-            </Paper>
-        </Container>
->>>>>>> 8735ac125778d838b60ef76d92f3d63a57947407:frontend/src/pages/Login.jsx
     );
 };
 
