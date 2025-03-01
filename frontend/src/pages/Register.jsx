@@ -124,7 +124,7 @@ const Register = () => {
                     </Button>
 
                     <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Link href="/frontend/src/pages/Login" variant="body2">
+                        <Link href="login" variant="body2">
                             Already have an account? Sign in
                         </Link>
                     </Box>
