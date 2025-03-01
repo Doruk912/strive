@@ -1,30 +1,7 @@
 import React from 'react';
 import { Container, Typography, Grid, Box, Card, CardContent, CardMedia, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
-const featuredProducts = [
-    {
-        id: 1,
-        name: 'Basketball',
-        description: 'Professional grade basketball',
-        price: 29.99,
-        image: '/api/placeholder/300/200',
-    },
-    {
-        id: 2,
-        name: 'Soccer Ball',
-        description: 'FIFA approved soccer ball',
-        price: 24.99,
-        image: '/api/placeholder/300/200',
-    },
-    {
-        id: 3,
-        name: 'Tennis Racket',
-        description: 'Lightweight tennis racket',
-        price: 89.99,
-        image: '/api/placeholder/300/200',
-    },
-];
+import { featuredProducts } from '../mockData/Products';
 
 const Home = () => {
     const navigate = useNavigate();
