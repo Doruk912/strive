@@ -30,7 +30,7 @@ const Home = () => {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ width: '100%' }}>
+        <Box sx={{ width: '100%', marginTop: '-30px' }}>
             {/* Hero Section with Full-Width Video and Text Overlay */}
             <Box
                 sx={{
@@ -38,9 +38,9 @@ const Home = () => {
                     overflow: 'hidden',
                     mb: 4,
                     height: {
-                        xs: '400px', // Height for mobile
-                        sm: '500px', // Height for tablet
-                        md: '600px'  // Height for desktop
+                        xs: '500px', // Height for mobile
+                        sm: '600px', // Height for tablet
+                        md: '700px'  // Height for desktop
                     }
                 }}
             >
