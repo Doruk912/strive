@@ -32,15 +32,18 @@ const Home = () => {
     return (
         <Box sx={{ width: '100%' }}>
             {/* Hero Section with Full-Width Video and Text Overlay */}
-            <Box sx={{ position: 'relative', overflow: 'hidden', mb: 4 }}>
-                <CardMedia
-                    component="video"
-                    src="/video.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    sx={{ width: '100%', height: 'auto', minHeight: '500px' }}
-                />
+            <Box
+                sx={{
+                    position: 'relative',
+                    overflow: 'hidden',
+                    mb: 4,
+                    height: {
+                        xs: '400px', // Height for mobile
+                        sm: '500px', // Height for tablet
+                        md: '600px'  // Height for desktop
+                    }
+                }}
+            >
                 <Box
                     sx={{
                         position: 'absolute',
@@ -48,19 +51,87 @@ const Home = () => {
                         left: 0,
                         width: '100%',
                         height: '100%',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        }
+                    }}
+                >
+                    <CardMedia
+                        component="video"
+                        src="/video.mp4"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline // Important for iOS
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            minWidth: '100%',
+                            minHeight: '100%',
+                            width: 'auto',
+                            height: 'auto',
+                            transform: 'translate(-50%, -50%)',
+                            objectFit: 'cover',
+                        }}
+                    />
+                </Box>
+                <Box
+                    sx={{
+                        position: 'relative', // Changed to relative
+                        zIndex: 1, // Ensure text appears above video
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        alignItems: 'flex-start',
+                        alignItems: {
+                            xs: 'center', // Center align on mobile
+                            md: 'flex-start' // Left align on desktop
+                        },
                         color: '#fff',
-                        p: 4,
-                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        p: {
+                            xs: 2, // Less padding on mobile
+                            sm: 4, // More padding on larger screens
+                        },
                     }}
                 >
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            fontWeight: 'bold',
+                            mb: 2,
+                            textAlign: {
+                                xs: 'center', // Center text on mobile
+                                md: 'left' // Left align on desktop
+                            },
+                            fontSize: {
+                                xs: '1.8rem', // Smaller font on mobile
+                                sm: '2.125rem' // Regular h4 size on larger screens
+                            }
+                        }}
+                    >
                         Discover Our Latest Collection
                     </Typography>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mb: 2,
+                            textAlign: {
+                                xs: 'center', // Center text on mobile
+                                md: 'left' // Left align on desktop
+                            },
+                            fontSize: {
+                                xs: '1.1rem', // Smaller font on mobile
+                                sm: '1.25rem' // Regular h6 size on larger screens
+                            }
+                        }}
+                    >
                         Premium sports accessories for every athlete
                     </Typography>
                     <Button
@@ -70,15 +141,18 @@ const Home = () => {
                             color: '#ffffff',
                             backgroundColor: 'transparent',
                             border: '1px solid #ffffff',
-                            borderRadius: '2px', // Very subtle rounded corners
+                            borderRadius: '2px',
                             padding: '8px 20px',
-                            fontSize: '14px',
+                            fontSize: {
+                                xs: '12px', // Smaller font on mobile
+                                sm: '14px'  // Regular size on larger screens
+                            },
                             fontWeight: 400,
                             textTransform: 'none',
                             letterSpacing: '0.5px',
                             transition: 'all 0.2s ease',
                             '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle white overlay on hover
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid #ffffff',
                             },
                         }}
