@@ -9,8 +9,14 @@ import {
     Typography,
     Fade,
     ClickAwayListener,
-    Divider
+    Divider,
+    Drawer,
+    List,
+    ListItem,
+    ListItemText,
+    useMediaQuery
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import HistoryIcon from '@mui/icons-material/History';
@@ -18,7 +24,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Make sure this path is correct
+import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -32,6 +38,8 @@ const Header = () => {
     const [popularSearches] = useState([
         'basketball', 'tech', 'air force', 'running shoes', 'dunk low', 'mont', 'sports gear'
     ]);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     const categories = [
         { name: 'New', path: '/new' },
@@ -106,191 +114,59 @@ const Header = () => {
         };
     }, [handleKeyDown]);
 
+    const toggleDrawer = (open) => (event) => {
+        if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+            return;
+        }
+        setDrawerOpen(open);
+    };
+
+    const drawer = (
+        <Box
+            sx={{ width: 250 }}
+            role="presentation"
+            onClick={toggleDrawer(false)}
+            onKeyDown={toggleDrawer(false)}
+        >
+            <List>
+                {categories.map((category) => (
+                    <ListItem button key={category.name} onClick={() => navigate(category.path)}>
+                        <ListItemText primary={category.name} />
+                    </ListItem>
+                ))}
+                {user ? (
+                    <>
+                        {user.role === 'admin' && (
+                            <ListItem button onClick={() => navigate('/admin')}>
+                                <ListItemText primary="Admin" />
+                            </ListItem>
+                        )}
+                        <ListItem button onClick={() => { logout(); navigate('/'); }}>
+                            <ListItemText primary="Logout" />
+                        </ListItem>
+                    </>
+                ) : (
+                    <ListItem button onClick={() => navigate('/login')}>
+                        <ListItemText primary="Login" />
+                    </ListItem>
+                )}
+            </List>
+        </Box>
+    );
+
     return (
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>
             <ClickAwayListener onClickAway={() => searchExpanded && handleSearchClose()}>
                 <Toolbar sx={{ justifyContent: 'space-between', width: '100%', px: 4, transition: 'all 0.3s ease' }}>
-                    {searchExpanded ? (
-                        <Fade in={searchExpanded} timeout={300}>
-                            <Box sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                width: '100%',
-                                position: 'absolute',
-                                left: 0,
-                                top: 0,
-                                backgroundColor: 'white',
-                                p: 2,
-                                zIndex: 10,
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                height: 'auto',
-                                maxHeight: '80vh',
-                                overflow: 'auto',
-                                transform: searchExpanded ? 'translateY(0)' : 'translateY(-100%)',
-                                transition: 'transform 0.3s ease-in-out',
-                            }}>
-                                <Box sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    width: '100%',
-                                    px: 2,
-                                    opacity: searchExpanded ? 1 : 0,
-                                    transform: searchExpanded ? 'translateY(0)' : 'translateY(-20px)',
-                                    transition: 'all 0.3s ease-in-out',
-                                }}>
-                                    <SearchIcon
-                                        sx={{
-                                            color: 'text.secondary',
-                                            mr: 1,
-                                            cursor: 'pointer',
-                                            transition: 'color 0.2s ease',
-                                            '&:hover': {
-                                                color: 'primary.main',
-                                            },
-                                        }}
-                                        onClick={handleSearch}
-                                    />
-                                    <TextField
-                                        autoFocus
-                                        fullWidth
-                                        variant="standard"
-                                        placeholder="Search"
-                                        value={searchValue}
-                                        onChange={handleSearchChange}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleSearch();
-                                        }}
-                                        InputProps={{
-                                            disableUnderline: true,
-                                        }}
-                                        sx={{
-                                            '& input': {
-                                                fontSize: '1.2rem',
-                                                py: 1.5,
-                                                transition: 'all 0.2s ease',
-                                            }
-                                        }}
-                                    />
-                                    <IconButton
-                                        onClick={handleSearchClose}
-                                        sx={{
-                                            transition: 'transform 0.2s ease',
-                                            '&:hover': {
-                                                transform: 'rotate(90deg)',
-                                            },
-                                        }}
-                                    >
-                                        <CloseIcon />
-                                    </IconButton>
-                                </Box>
-
-                                <Box sx={{
-                                    mt: 3,
-                                    px: 2,
-                                    opacity: searchExpanded ? 1 : 0,
-                                    transform: searchExpanded ? 'translateY(0)' : 'translateY(20px)',
-                                    transition: 'all 0.3s ease-in-out 0.1s',
-                                }}>
-                                    {/* Rest of your search content (history and popular searches) remains the same */}
-                                    {searchHistory.length > 0 && (
-                                        <>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                                    Search History
-                                                </Typography>
-                                                <Button
-                                                    size="small"
-                                                    onClick={clearSearchHistory}
-                                                    sx={{ textTransform: 'none', color: 'text.secondary' }}
-                                                >
-                                                    Clear All
-                                                </Button>
-                                            </Box>
-                                            <Box sx={{ mb: 3 }}>
-                                                {searchHistory.map((term) => (
-                                                    <Box
-                                                        key={term}
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            py: 1,
-                                                            cursor: 'pointer',
-                                                            transition: 'background-color 0.2s ease',
-                                                            '&:hover': {
-                                                                backgroundColor: '#f5f5f5'
-                                                            }
-                                                        }}
-                                                        onClick={() => handleHistoryItemClick(term)}
-                                                    >
-                                                        <HistoryIcon sx={{ color: 'text.secondary', mr: 2 }} />
-                                                        <Typography sx={{ flexGrow: 1 }}>{term}</Typography>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={(e) => removeHistoryItem(e, term)}
-                                                            sx={{
-                                                                color: 'text.secondary',
-                                                                opacity: 0,
-                                                                transition: 'opacity 0.2s ease',
-                                                                '$:hover': {
-                                                                    opacity: 1,
-                                                                }
-                                                            }}
-                                                        >
-                                                            <DeleteOutlineIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                            <Divider sx={{ my: 2 }} />
-                                        </>
-                                    )}
-
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                                        Popular Searches
-                                    </Typography>
-                                    <Box sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 1,
-                                    }}>
-                                        {popularSearches.map((term, index) => (
-                                            <Button
-                                                key={term}
-                                                variant="outlined"
-                                                size="small"
-                                                onClick={() => handlePopularSearchClick(term)}
-                                                sx={{
-                                                    borderRadius: '20px',
-                                                    textTransform: 'none',
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderColor: '#e0e0e0',
-                                                    color: 'text.primary',
-                                                    transition: 'all 0.2s ease',
-                                                    animation: `fadeIn 0.3s ease forwards ${index * 0.1}s`,
-                                                    '@keyframes fadeIn': {
-                                                        from: {
-                                                            opacity: 0,
-                                                            transform: 'translateY(10px)',
-                                                        },
-                                                        to: {
-                                                            opacity: 1,
-                                                            transform: 'translateY(0)',
-                                                        },
-                                                    },
-                                                    '&:hover': {
-                                                        backgroundColor: '#e0e0e0',
-                                                        borderColor: '#d0d0d0',
-                                                        transform: 'scale(1.05)',
-                                                    }
-                                                }}
-                                            >
-                                                {term}
-                                            </Button>
-                                        ))}
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Fade>
+                    {isMobile ? (
+                        <>
+                            <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
+                                <MenuIcon />
+                            </IconButton>
+                            <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+                                {drawer}
+                            </Drawer>
+                        </>
                     ) : (
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
@@ -394,4 +270,8 @@ const Header = () => {
     );
 };
 
-export default Header;
+export default Header; 
+
+
+
+
