@@ -7,7 +7,7 @@ const Home = () => {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ width: '100%', marginTop: '-30px' }}>
+        <Box sx={{ width: '100%', marginTop: { xs: '-38px', md: '-30px' }}}>
             {/* Hero Section with Full-Width Video and Text Overlay */}
             <Box
                 sx={{
