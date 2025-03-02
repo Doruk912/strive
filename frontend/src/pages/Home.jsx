@@ -1,10 +1,52 @@
-import React from 'react';
-import { Container, Typography, Grid, Box, Card, CardContent, CardMedia, Button } from '@mui/material';
+import React, { useRef, useState, useEffect } from 'react';
+import { Container, Typography, Box, Card, CardMedia, Button, IconButton, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { featuredProducts } from '../mockData/Products';
+import { featuredProducts, popularCategories } from '../mockData/Products';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const Home = () => {
     const navigate = useNavigate();
+    const scrollContainerRef = useRef(null);
+    const [favorites, setFavorites] = useState({});
+    const [hoveredProduct, setHoveredProduct] = useState(null);
+    const [showLeftArrow, setShowLeftArrow] = useState(false);
+    const [showRightArrow, setShowRightArrow] = useState(true);
+
+    const checkScrollPosition = () => {
+        if (scrollContainerRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+            setShowLeftArrow(scrollLeft > 0);
+            setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+        }
+    };
+
+    useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', checkScrollPosition);
+            checkScrollPosition();
+            return () => scrollContainer.removeEventListener('scroll', checkScrollPosition);
+        }
+    }, []);
+
+    const handleScroll = (scrollOffset) => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({
+                left: scrollOffset,
+                behavior: 'smooth',
+            });
+        }
+    };
+
+    const toggleFavorite = (id) => {
+        setFavorites((prevFavorites) => ({
+            ...prevFavorites,
+            [id]: !prevFavorites[id],
+        }));
+    };
 
     return (
         <Box sx={{ width: '100%', marginTop: { xs: '-38px', md: '-30px' }}}>
@@ -139,37 +181,204 @@ const Home = () => {
                 </Box>
             </Box>
 
-            {/* Featured Products */}
+            {/* Popular Categories Section */}
             <Container maxWidth="lg">
                 <Box sx={{ my: 4 }}>
-                    <Typography variant="h4" gutterBottom>
-                        Featured Products
+                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                        Popular Categories
                     </Typography>
-                    <Grid container spacing={4}>
-                        {featuredProducts.map((product) => (
-                            <Grid item xs={12} sm={6} md={4} key={product.id}>
-                                <Card sx={{ boxShadow: 1, borderRadius: 2 }}>
+                    <Grid container spacing={2}> {/* Use Grid container for consistent layout */}
+                        {popularCategories.map((category) => (
+                            <Grid item xs={12} sm={2.4} key={category.id}> {/* 100% / 5 = 20% width per category */}
+                                <Card
+                                    sx={{
+                                        boxShadow: 'none',
+                                        borderRadius: 0, // Remove border radius for square corners
+                                        width: '100%', // Full width of the grid item
+                                        flexShrink: 0,
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                        '&:hover': {
+                                            transform: 'scale(1.05)', // Slight scale on hover
+                                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', // Add shadow on hover
+                                        },
+                                    }}
+                                >
                                     <CardMedia
                                         component="img"
-                                        height="200"
-                                        image={product.image}
-                                        alt={product.name}
+                                        height="120"
+                                        image={category.image}
+                                        alt={category.name}
+                                        sx={{
+                                            objectFit: 'cover',
+                                        }}
                                     />
-                                    <CardContent>
-                                        <Typography variant="h6" gutterBottom>
-                                            {product.name}
-                                        </Typography>
-                                        <Typography color="text.secondary" paragraph>
-                                            {product.description}
-                                        </Typography>
-                                        <Typography variant="h6" color="primary">
-                                            ${product.price}
-                                        </Typography>
-                                    </CardContent>
+                                    <Box
+                                        sx={{
+                                            padding: '8px',
+                                            backgroundColor: '#868686',
+                                            color: 'white',
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        <Typography>{category.name}</Typography>
+                                    </Box>
                                 </Card>
                             </Grid>
                         ))}
                     </Grid>
+                </Box>
+            </Container>
+
+            {/* Featured Products Section */}
+            <Container maxWidth="lg">
+                <Box sx={{ my: 4, position: 'relative' }}>
+                    <Typography
+                        variant="h5"
+                        gutterBottom
+                        sx={{
+                            fontWeight: 'bold',
+                            mb: 3,
+                        }}
+                    >
+                        Featured Products
+                    </Typography>
+                    <Box sx={{ position: 'relative' }}>
+                        {/* Left arrow button */}
+                        <IconButton
+                            onClick={() => handleScroll(-300)}
+                            sx={{
+                                position: 'absolute',
+                                left: -20,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                zIndex: 2,
+                                backgroundColor: 'white',
+                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                display: showLeftArrow ? 'flex' : 'none',
+                            }}
+                        >
+                            <ArrowBackIosIcon sx={{ fontSize: '0.8rem', ml: 0.5 }} />
+                        </IconButton>
+
+                        {/* Right arrow button */}
+                        <IconButton
+                            onClick={() => handleScroll(300)}
+                            sx={{
+                                position: 'absolute',
+                                right: -20,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                zIndex: 2,
+                                backgroundColor: 'white',
+                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                display: showRightArrow ? 'flex' : 'none',
+                            }}
+                        >
+                            <ArrowForwardIosIcon sx={{ fontSize: '0.8rem' }} />
+                        </IconButton>
+
+                        {/* Scrollable container for products */}
+                        <Box
+                            ref={scrollContainerRef}
+                            sx={{
+                                display: 'flex',
+                                overflowX: 'auto',
+                                gap: 2,
+                                scrollBehavior: 'smooth',
+                                padding: '16px 0',
+                                '&::-webkit-scrollbar': {
+                                    height: '6px',
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    backgroundColor: '#ccc',
+                                    borderRadius: '4px',
+                                },
+                                '&::-webkit-scrollbar-track': {
+                                    backgroundColor: '#f1f1f1',
+                                },
+                            }}
+                        >
+                            {featuredProducts.map((product) => (
+                                <Card
+                                    key={product.id}
+                                    onMouseEnter={() => setHoveredProduct(product.id)}
+                                    onMouseLeave={() => setHoveredProduct(null)}
+                                    sx={{
+                                        boxShadow: 'none',
+                                        borderRadius: 0,
+                                        background: 'transparent',
+                                        position: 'relative',
+                                        width: '280px', // Increased width to fit only 4 boxes in a row
+                                        flexShrink: 0,
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                        '&:hover': {
+                                            transform: 'scale(1.05)', // Slight scale on hover
+                                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', // Add shadow on hover
+                                        },
+                                    }}
+                                >
+                                    {/* Favorite button */}
+                                    {hoveredProduct === product.id && (
+                                        <IconButton
+                                            onClick={() => toggleFavorite(product.id)}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 8,
+                                                right: 8,
+                                                zIndex: 1,
+                                                color: favorites[product.id] ? '#000000' : '#000',
+                                                backgroundColor: '',
+                                                padding: '4px',
+                                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                            }}
+                                        >
+                                            {favorites[product.id] ? (
+                                                <FavoriteIcon sx={{ fontSize: '1.2rem' }} />
+                                            ) : (
+                                                <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />
+                                            )}
+                                        </IconButton>
+                                    )}
+
+                                    {/* Product image */}
+                                    <CardMedia
+                                        component="img"
+                                        image={product.image}
+                                        alt={product.name}
+                                        sx={{
+                                            height: '240px', // Increased height to match the new width
+                                            objectFit: 'cover',
+                                            backgroundColor: '#f5f5f5',
+                                            marginBottom: 1,
+                                        }}
+                                    />
+
+                                    {/* Product info with gray background */}
+                                    <Box
+                                        sx={{
+                                            backgroundColor: '#868686',
+                                            color: 'white',
+                                            padding: '8px',
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
+                                                fontSize: '0.9rem',
+                                            }}
+                                        >
+                                            {product.name}
+                                        </Typography>
+                                    </Box>
+                                </Card>
+                            ))}
+                        </Box>
+                    </Box>
                 </Box>
             </Container>
         </Box>
