@@ -303,6 +303,7 @@ const Home = () => {
                             {featuredProducts.map((product) => (
                                 <Card
                                     key={product.id}
+                                    onClick={() => navigate(`/product/${product.id}`)}
                                     onMouseEnter={() => setHoveredProduct(product.id)}
                                     onMouseLeave={() => setHoveredProduct(null)}
                                     sx={{
