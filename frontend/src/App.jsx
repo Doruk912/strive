@@ -13,7 +13,7 @@ import Register from './pages/Register';
 import Admin from './pages/Admin';
 import { Box } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
-import { CartProvider } from './context/CartContext'; // Add this import
+import { CartProvider } from './context/CartContext';
 import './App.css';
 
 const theme = createTheme({

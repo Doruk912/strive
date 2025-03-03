@@ -1,4 +1,3 @@
-// src/pages/Cart.jsx
 import React from 'react';
 import {
     Container,
@@ -34,25 +33,6 @@ const Cart = () => {
         }
     };
 
-    if (cartItems.length === 0) {
-        return (
-            <Container maxWidth="lg" sx={{ py: 8 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h5" gutterBottom>
-                        Your cart is empty
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={() => navigate('/shop')}
-                        sx={{ mt: 2 }}
-                    >
-                        Continue Shopping
-                    </Button>
-                </Box>
-            </Container>
-        );
-    }
-
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Typography variant="h4" gutterBottom>
@@ -62,83 +42,98 @@ const Cart = () => {
             <Grid container spacing={4}>
                 {/* Cart Items */}
                 <Grid item xs={12} md={8}>
-                    {cartItems.map((item) => (
-                        <Card
-                            key={item.id}
-                            sx={{
-                                mb: 2,
-                                display: 'flex',
-                                flexDirection: isMobile ? 'column' : 'row',
-                                alignItems: isMobile ? 'stretch' : 'center',
-                                p: 2,
-                            }}
-                        >
-                            <CardMedia
-                                component="img"
-                                image={item.image}
-                                alt={item.name}
+                    {cartItems.length === 0 ? (
+                        <Card sx={{ p: 4, textAlign: 'center' }}>
+                            <Typography variant="h6" gutterBottom>
+                                Your cart is empty
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate('/')}
+                                sx={{ mt: 2 }}
+                            >
+                                Continue Shopping
+                            </Button>
+                        </Card>
+                    ) : (
+                        cartItems.map((item) => (
+                            <Card
+                                key={item.id}
                                 sx={{
-                                    width: isMobile ? '100%' : 120,
-                                    height: isMobile ? 200 : 120,
-                                    objectFit: 'cover',
-                                }}
-                            />
-
-                            <Box
-                                sx={{
-                                    flex: 1,
-                                    ml: isMobile ? 0 : 2,
-                                    mt: isMobile ? 2 : 0,
+                                    mb: 2,
+                                    display: 'flex',
+                                    flexDirection: isMobile ? 'column' : 'row',
+                                    alignItems: isMobile ? 'stretch' : 'center',
+                                    p: 2,
                                 }}
                             >
-                                <Typography variant="h6" gutterBottom>
-                                    {item.name}
-                                </Typography>
-                                <Typography color="text.secondary" gutterBottom>
-                                    ${item.price}
-                                </Typography>
+                                <CardMedia
+                                    component="img"
+                                    image={item.image}
+                                    alt={item.name}
+                                    sx={{
+                                        width: isMobile ? '100%' : 120,
+                                        height: isMobile ? 200 : 120,
+                                        objectFit: 'cover',
+                                    }}
+                                />
 
                                 <Box
                                     sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        mt: 1,
+                                        flex: 1,
+                                        ml: isMobile ? 0 : 2,
+                                        mt: isMobile ? 2 : 0,
                                     }}
                                 >
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                    >
-                                        <RemoveIcon />
-                                    </IconButton>
-                                    <TextField
-                                        size="small"
-                                        value={item.quantity}
-                                        onChange={(e) => {
-                                            const value = parseInt(e.target.value) || 0;
-                                            handleQuantityChange(item.id, value);
-                                        }}
-                                        sx={{ width: 60, mx: 1 }}
-                                        inputProps={{ min: 1, style: { textAlign: 'center' } }}
-                                    />
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                    >
-                                        <AddIcon />
-                                    </IconButton>
+                                    <Typography variant="h6" gutterBottom>
+                                        {item.name}
+                                    </Typography>
+                                    <Typography color="text.secondary" gutterBottom>
+                                        ${item.price}
+                                    </Typography>
 
-                                    <IconButton
-                                        color="error"
-                                        onClick={() => removeFromCart(item.id)}
-                                        sx={{ ml: 'auto' }}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            mt: 1,
+                                        }}
                                     >
-                                        <DeleteIcon />
-                                    </IconButton>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                        >
+                                            <RemoveIcon />
+                                        </IconButton>
+                                        <TextField
+                                            size="small"
+                                            value={item.quantity}
+                                            onChange={(e) => {
+                                                const value = parseInt(e.target.value) || 0;
+                                                handleQuantityChange(item.id, value);
+                                            }}
+                                            sx={{ width: 60, mx: 1 }}
+                                            inputProps={{ min: 1, style: { textAlign: 'center' } }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                        >
+                                            <AddIcon />
+                                        </IconButton>
+
+                                        <IconButton
+                                            color="error"
+                                            onClick={() => removeFromCart(item.id)}
+                                            sx={{ ml: 'auto' }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Box>
                                 </Box>
-                            </Box>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))
+                    )}
                 </Grid>
 
                 {/* Order Summary */}
@@ -191,6 +186,7 @@ const Cart = () => {
                             fullWidth
                             size="large"
                             onClick={() => navigate('/checkout')}
+                            disabled={cartItems.length === 0}
                         >
                             Proceed to Checkout
                         </Button>
