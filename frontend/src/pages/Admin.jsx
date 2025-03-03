@@ -24,7 +24,9 @@ import {
     Select,
     MenuItem,
     Checkbox,
-    Stack
+    Stack,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -34,13 +36,34 @@ import {
 } from '@mui/icons-material';
 import { products } from '../mockData/Products';
 
+const useResponsive = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+    const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+
+    return { isMobile, isTablet, isDesktop };
+};
+
+const columns = [
+    { id: 'name', label: 'Name', sortable: true },
+    { id: 'category', label: 'Category', hideOnMobile: true },
+    { id: 'description', label: 'Description', hideOnMobile: true },
+    { id: 'price', label: 'Price' },
+    { id: 'stock', label: 'Stock', hideOnMobile: true },
+    { id: 'status', label: 'Status' },
+    { id: 'actions', label: 'Actions' }
+];
+
 const Admin = () => {
+    const { isMobile } = useResponsive();
+
     // State management
     const [productData, setProductData] = useState(products);
     const [filteredProducts, setFilteredProducts] = useState(products);
     const [selected, setSelected] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [orderBy, setOrderBy] = useState('name');
     const [order, setOrder] = useState('asc');
     const [searchTerm, setSearchTerm] = useState('');
@@ -59,6 +82,13 @@ const Admin = () => {
         image: null
     });
 
+    // Adjust rows per page for mobile
+    useEffect(() => {
+        if (isMobile && rowsPerPage > 5) {
+            setRowsPerPage(5);
+        }
+    }, [isMobile, rowsPerPage]);
+
     // Handle sort
     const handleRequestSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -70,7 +100,6 @@ const Admin = () => {
     useEffect(() => {
         let filtered = [...productData];
 
-        // Search filter
         if (searchTerm) {
             filtered = filtered.filter(product =>
                 product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,12 +107,10 @@ const Admin = () => {
             );
         }
 
-        // Category filter
         if (categoryFilter !== 'all') {
             filtered = filtered.filter(product => product.category === categoryFilter);
         }
 
-        // Sort
         filtered.sort((a, b) => {
             const isAsc = order === 'asc';
             if (isAsc) {
@@ -149,13 +176,11 @@ const Admin = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (currentProduct) {
-            // Update existing product
             const updatedProducts = productData.map(product =>
                 product.id === currentProduct.id ? { ...formData, id: product.id } : product
             );
             setProductData(updatedProducts);
         } else {
-            // Add new product
             const newProduct = {
                 ...formData,
                 id: productData.length + 1,
@@ -175,14 +200,27 @@ const Admin = () => {
     };
 
     return (
-        <Box sx={{ width: '100%', p: 3 }}>
+        <Box sx={{ width: '100%', p: { xs: 1, sm: 3 } }}>
             <Paper sx={{ width: '100%', mb: 2 }}>
-                <Toolbar sx={{ pl: 2, pr: 1 }}>
-                    <Typography variant="h6" component="div" sx={{ flex: '1 1 100%' }}>
+                <Toolbar
+                    sx={{
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 2,
+                        p: 2
+                    }}
+                >
+                    <Typography variant="h6" component="div">
                         Products Management
                     </Typography>
 
-                    <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        sx={{
+                            width: { xs: '100%', sm: 'auto' },
+                            mt: { xs: 2, sm: 0 }
+                        }}
+                    >
                         <TextField
                             size="small"
                             placeholder="Search products..."
@@ -191,9 +229,11 @@ const Admin = () => {
                             InputProps={{
                                 startAdornment: <SearchIcon />
                             }}
+                            fullWidth
+                            sx={{ maxWidth: { sm: 200 } }}
                         />
 
-                        <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
                             <InputLabel>Category</InputLabel>
                             <Select
                                 value={categoryFilter}
@@ -207,53 +247,87 @@ const Admin = () => {
                             </Select>
                         </FormControl>
 
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenDialog()}
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                flexShrink: 0 // This prevents the buttons from shrinking
+                            }}
                         >
-                            Add Product
-                        </Button>
-
-                        {selected.length > 0 && (
                             <Button
                                 variant="contained"
-                                color="error"
-                                startIcon={<DeleteIcon />}
-                                onClick={handleBulkDelete}
+                                startIcon={<AddIcon />}
+                                onClick={() => handleOpenDialog()}
+                                sx={{ flexGrow: { xs: 1, sm: 0 } }}
                             >
-                                Delete Selected
+                                Add Product
                             </Button>
-                        )}
+
+                            {selected.length > 0 && (
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={handleBulkDelete}
+                                    sx={{ flexGrow: { xs: 1, sm: 0 } }}
+                                >
+                                    Delete
+                                </Button>
+                            )}
+                        </Stack>
                     </Stack>
                 </Toolbar>
 
-                <TableContainer>
-                    <Table>
+                <TableContainer
+                    sx={{
+                        overflowX: 'auto',
+                        '.MuiTableCell-root': {
+                            whiteSpace: 'nowrap',
+                            p: { xs: 1, sm: 2 }
+                        }
+                    }}
+                >
+                    <Table size={isMobile ? "small" : "medium"}>
                         <TableHead>
                             <TableRow>
-                                <TableCell padding="checkbox">
+                                <TableCell
+                                    padding="checkbox"
+                                    sx={{
+                                        bgcolor: 'grey.100',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
                                     <Checkbox
                                         indeterminate={selected.length > 0 && selected.length < filteredProducts.length}
                                         checked={selected.length === filteredProducts.length}
                                         onChange={handleSelectAll}
                                     />
                                 </TableCell>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={orderBy === 'name'}
-                                        direction={orderBy === 'name' ? order : 'asc'}
-                                        onClick={() => handleRequestSort('name')}
-                                    >
-                                        Name
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>Category</TableCell>
-                                <TableCell>Description</TableCell>
-                                <TableCell>Price</TableCell>
-                                <TableCell>Stock</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
+                                {columns.map((column) => (
+                                    (!isMobile || !column.hideOnMobile) && (
+                                        <TableCell
+                                            key={column.id}
+                                            sx={{
+                                                bgcolor: 'grey.100',
+                                                fontWeight: 'bold',
+                                                color: 'text.primary'
+                                            }}
+                                        >
+                                            {column.sortable ? (
+                                                <TableSortLabel
+                                                    active={orderBy === column.id}
+                                                    direction={orderBy === column.id ? order : 'asc'}
+                                                    onClick={() => handleRequestSort(column.id)}
+                                                >
+                                                    {column.label}
+                                                </TableSortLabel>
+                                            ) : (
+                                                column.label
+                                            )}
+                                        </TableCell>
+                                    )
+                                ))}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -271,10 +345,10 @@ const Admin = () => {
                                             />
                                         </TableCell>
                                         <TableCell>{product.name}</TableCell>
-                                        <TableCell>{product.category}</TableCell>
-                                        <TableCell>{product.description}</TableCell>
+                                        {!isMobile && <TableCell>{product.category}</TableCell>}
+                                        {!isMobile && <TableCell>{product.description}</TableCell>}
                                         <TableCell>${product.price}</TableCell>
-                                        <TableCell>{product.stock}</TableCell>
+                                        {!isMobile && <TableCell>{product.stock}</TableCell>}
                                         <TableCell>{product.status}</TableCell>
                                         <TableCell>
                                             <IconButton onClick={() => handleOpenDialog(product)}>
@@ -306,21 +380,34 @@ const Admin = () => {
                 />
             </Paper>
 
-            {/* Add/Edit Product Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
-                <DialogTitle>
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                maxWidth="md"
+                fullWidth
+                fullScreen={isMobile}
+            >
+                <DialogTitle sx={{ p: { xs: 2, sm: 3 } }}>
                     {currentProduct ? 'Edit Product' : 'Add New Product'}
                 </DialogTitle>
-                <DialogContent>
-                    <Box component="form" sx={{ mt: 2 }} spacing={3}>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Box
+                        component="form"
+                        sx={{
+                            mt: 2,
+                            display: 'grid',
+                            gap: 2,
+                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }
+                        }}
+                    >
                         <TextField
                             fullWidth
                             label="Name"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            margin="normal"
                         />
-                        <FormControl fullWidth margin="normal">
+
+                        <FormControl fullWidth>
                             <InputLabel>Category</InputLabel>
                             <Select
                                 value={formData.category}
@@ -332,32 +419,34 @@ const Admin = () => {
                                 <MenuItem value="accessories">Accessories</MenuItem>
                             </Select>
                         </FormControl>
+
                         <TextField
                             fullWidth
                             label="Description"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            margin="normal"
                             multiline
                             rows={3}
+                            sx={{ gridColumn: { sm: '1 / -1' } }}
                         />
+
                         <TextField
                             fullWidth
                             label="Price"
                             type="number"
                             value={formData.price}
                             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                            margin="normal"
                         />
+
                         <TextField
                             fullWidth
                             label="Stock"
                             type="number"
                             value={formData.stock}
                             onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                            margin="normal"
                         />
-                        <FormControl fullWidth margin="normal">
+
+                        <FormControl fullWidth>
                             <InputLabel>Status</InputLabel>
                             <Select
                                 value={formData.status}
@@ -368,10 +457,11 @@ const Admin = () => {
                                 <MenuItem value="inactive">Inactive</MenuItem>
                             </Select>
                         </FormControl>
+
                         <Button
                             variant="contained"
                             component="label"
-                            sx={{ mt: 2 }}
+                            sx={{ gridColumn: { sm: '1 / -1' } }}
                         >
                             Upload Image
                             <input
@@ -386,7 +476,7 @@ const Admin = () => {
                         </Button>
                     </Box>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
                     <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
                     <Button onClick={handleSubmit} variant="contained">
                         {currentProduct ? 'Update' : 'Add'} Product
