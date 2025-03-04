@@ -166,4 +166,5 @@ export const popularCategories = [
     { id: 3, name: 'Pants', image: '/api/placeholder/200/200' },
     { id: 4, name: 'Fleece', image: '/api/placeholder/200/200' },
     { id: 5, name: 'Innerwear', image: '/api/placeholder/200/200' },
+    { id: 6, name: 'Thermals', image: '/api/placeholder/200/200' },
 ];

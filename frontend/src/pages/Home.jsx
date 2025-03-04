@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Container, Typography, Box, Card, CardMedia, Button, IconButton, Grid } from '@mui/material';
+import { Container, Typography, Box, Card, CardMedia, Button, IconButton} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { featuredProducts, popularCategories } from '../mockData/Products';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -14,6 +14,7 @@ const Home = () => {
     const [hoveredProduct, setHoveredProduct] = useState(null);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
+    const [activeDot, setActiveDot] = useState(0);
 
     const checkScrollPosition = () => {
         if (scrollContainerRef.current) {
@@ -46,6 +47,26 @@ const Home = () => {
             ...prevFavorites,
             [id]: !prevFavorites[id],
         }));
+    };
+
+    const handleScrollUpdate = () => {
+        if (scrollContainerRef.current) {
+            const scrollPosition = scrollContainerRef.current.scrollLeft;
+            const width = scrollContainerRef.current.clientWidth;
+            const newActiveDot = Math.round(scrollPosition / width);
+            setActiveDot(newActiveDot);
+        }
+    };
+
+    const handleDotClick = (index) => {
+        setActiveDot(index);
+        if (scrollContainerRef.current) {
+            const scrollWidth = scrollContainerRef.current.clientWidth;
+            scrollContainerRef.current.scrollTo({
+                left: scrollWidth * index,
+                behavior: 'smooth'
+            });
+        }
     };
 
     return (
@@ -182,57 +203,150 @@ const Home = () => {
             </Box>
 
             {/* Popular Categories Section */}
-            <Container maxWidth="lg">
+            <Container
+                sx={{
+                    maxWidth: '95% !important',
+                    px: { xs: 1, md: 2 },
+                    mx: 'auto',
+                }}
+            >
                 <Box sx={{ my: 4 }}>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 600,
+                            mb: 3,
+                            fontSize: { xs: '1.5rem', md: '2rem' },
+                            letterSpacing: '0.5px'
+                        }}
+                    >
                         Popular Categories
                     </Typography>
-                    <Grid container spacing={2}> {/* Use Grid container for consistent layout */}
-                        {popularCategories.map((category) => (
-                            <Grid item xs={12} sm={2.4} key={category.id}> {/* 100% / 5 = 20% width per category */}
-                                <Card
+
+                    <Box sx={{ position: 'relative' }}>
+                        <Box
+                            ref={scrollContainerRef}
+                            onScroll={handleScrollUpdate}
+                            sx={{
+                                display: 'flex',
+                                overflowX: { xs: 'auto', md: 'hidden' },
+                                gap: { xs: 2, md: 2 }, // Reduced gap
+                                scrollSnapType: 'x mandatory',
+                                '&::-webkit-scrollbar': { display: 'none' },
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none',
+                                pb: 2
+                            }}
+                        >
+                            {popularCategories.map((category) => (
+                                <Box
+                                    key={category.id}
                                     sx={{
-                                        boxShadow: 'none',
-                                        borderRadius: 0, // Remove border radius for square corners
-                                        width: '100%', // Full width of the grid item
-                                        flexShrink: 0,
-                                        overflow: 'hidden',
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                                        '&:hover': {
-                                            transform: 'scale(1.05)', // Slight scale on hover
-                                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', // Add shadow on hover
+                                        flex: {
+                                            xs: '0 0 42%', // Shows about 2.2 categories on mobile
+                                            md: '1', // Equal width on desktop (1/6 since we have 6 categories)
                                         },
+                                        scrollSnapAlign: 'start',
+                                        cursor: 'pointer',
                                     }}
                                 >
-                                    <CardMedia
-                                        component="img"
-                                        height="120"
-                                        image={category.image}
-                                        alt={category.name}
+                                    <Card
                                         sx={{
-                                            objectFit: 'cover',
-                                        }}
-                                    />
-                                    <Box
-                                        sx={{
-                                            padding: '8px',
-                                            backgroundColor: '#868686',
-                                            color: 'white',
-                                            textAlign: 'center'
+                                            boxShadow: 'none',
+                                            borderRadius: '4px',
+                                            overflow: 'hidden',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                transform: 'translateY(-4px)',
+                                                '& .category-image': {
+                                                    transform: 'scale(1.05)',
+                                                }
+                                            },
                                         }}
                                     >
-                                        <Typography>{category.name}</Typography>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                                        <Box sx={{
+                                            position: 'relative',
+                                            paddingTop: '140%', // More vertical aspect ratio
+                                            overflow: 'hidden',
+                                            backgroundColor: '#f5f5f5'
+                                        }}>
+                                            <CardMedia
+                                                component="img"
+                                                image={category.image}
+                                                alt={category.name}
+                                                className="category-image"
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    transition: 'transform 0.3s ease',
+                                                }}
+                                            />
+                                        </Box>
+                                        <Box
+                                            sx={{
+                                                py: 1.5, // Reduced padding
+                                                px: 1,
+                                                backgroundColor: 'white',
+                                                textAlign: 'center',
+                                            }}
+                                        >
+                                            <Typography
+                                                sx={{
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: 600,
+                                                    color: '#2B2B2B',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px',
+                                                }}
+                                            >
+                                                {category.name}
+                                            </Typography>
+                                        </Box>
+                                    </Card>
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* Dot Navigation for Mobile */}
+                        <Box
+                            sx={{
+                                display: { xs: 'flex', md: 'none' },
+                                justifyContent: 'center',
+                                gap: 1,
+                                mt: 2
+                            }}
+                        >
+                            {[...Array(Math.ceil(popularCategories.length / 2))].map((_, index) => (
+                                <Box
+                                    key={index}
+                                    onClick={() => handleDotClick(index)}
+                                    sx={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: '50%',
+                                        bgcolor: activeDot === index ? '#000' : '#E0E0E0',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s'
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    </Box>
                 </Box>
             </Container>
 
             {/* Featured Products Section */}
-            <Container maxWidth="lg">
+            <Container
+                sx={{
+                    maxWidth: '95% !important',
+                    px: { xs: 1, md: 2 },
+                    mx: 'auto',
+                }}
+            >
                 <Box sx={{ my: 4, position: 'relative' }}>
                     <Typography
                         variant="h5"
