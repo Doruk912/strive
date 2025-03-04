@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Container,
     Paper,
@@ -37,9 +37,24 @@ const Login = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+    useEffect(() => {
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
+        if (rememberedEmail) {
+            setEmail(rememberedEmail);
+            setRememberMe(true);
+        }
+    }, []);
+
     const validateEmail = (email) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
+    };
+
+    const handleRememberMeChange = (e) => {
+        setRememberMe(e.target.checked);
+        if (!e.target.checked) {
+            localStorage.removeItem('rememberedEmail');
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -214,7 +229,7 @@ const Login = () => {
                                 control={
                                     <Checkbox
                                         checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        onChange={handleRememberMeChange}
                                         color="primary"
                                         disabled={isLoading}
                                     />
