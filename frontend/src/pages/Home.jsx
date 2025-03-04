@@ -205,7 +205,7 @@ const Home = () => {
             {/* Popular Categories Section */}
             <Container
                 sx={{
-                    maxWidth: '95% !important',
+                    maxWidth: '90% !important',
                     px: { xs: 1, md: 2 },
                     mx: 'auto',
                 }}
@@ -342,7 +342,7 @@ const Home = () => {
             {/* Featured Products Section */}
             <Container
                 sx={{
-                    maxWidth: '95% !important',
+                    maxWidth: '90% !important',
                     px: { xs: 1, md: 2 },
                     mx: 'auto',
                 }}
