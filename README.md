@@ -4,6 +4,8 @@ Can:
 * Update Product Cards.
 * Update Products page (Add new product cards, remove browser).
 * Placeholder filter to the right side of the Product page.
+  
+## Rest:
 
 * Mobile support
 * Login/Register pages
