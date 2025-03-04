@@ -29,11 +29,13 @@ import { products } from '../mockData/Products';
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const product = products.find(p => p.id === parseInt(id));
     const [quantity, setQuantity] = useState(1);
     const [isFavorite, setIsFavorite] = useState(false);
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarType, setSnackbarType] = useState('success');
+    const isInCart = cartItems.some(item => item.id === product?.id);
 
     if (!product) {
         return (
@@ -51,8 +53,14 @@ const ProductDetail = () => {
     }
 
     const handleAddToCart = () => {
-        addToCart(product, quantity);
-        setOpenSnackbar(true);
+        if (!isInCart) {
+            addToCart(product, quantity);
+            setSnackbarType('success');
+            setOpenSnackbar(true);
+        } else {
+            setSnackbarType('warning');
+            setOpenSnackbar(true);
+        }
     };
 
     const handleCloseSnackbar = (event, reason) => {
@@ -191,7 +199,7 @@ const ProductDetail = () => {
                                 size="large"
                                 fullWidth
                                 onClick={handleAddToCart}
-                                disabled={product.stock === 0}
+                                disabled={product.stock === 0 || isInCart}
                                 sx={{
                                     backgroundColor: '#000',
                                     '&:hover': {
@@ -202,7 +210,7 @@ const ProductDetail = () => {
                                     },
                                 }}
                             >
-                                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                {product.stock === 0 ? 'Out of Stock' : isInCart ? 'Already in Cart' : 'Add to Cart'}
                             </Button>
                         </Box>
 
@@ -214,7 +222,7 @@ const ProductDetail = () => {
                 </Grid>
             </Grid>
 
-            {/* Success Snackbar */}
+            {/* Snackbar */}
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={3000}
@@ -223,11 +231,13 @@ const ProductDetail = () => {
             >
                 <Alert
                     onClose={handleCloseSnackbar}
-                    severity="success"
+                    severity={snackbarType}
                     variant="filled"
                     sx={{ width: '100%' }}
                 >
-                    Product added to cart successfully!
+                    {snackbarType === 'warning'
+                        ? 'This item is already in your cart!'
+                        : 'Product added to cart successfully!'}
                 </Alert>
             </Snackbar>
         </Container>

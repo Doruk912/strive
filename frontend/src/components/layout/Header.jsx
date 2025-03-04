@@ -25,10 +25,13 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Badge } from '@mui/material';
+import { useCart } from '../../context/CartContext';
 
 const Header = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const { cartItems } = useCart();
     const [searchExpanded, setSearchExpanded] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const [searchHistory, setSearchHistory] = useState(() => {
@@ -40,6 +43,7 @@ const Header = () => {
     ]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const isMobile = useMediaQuery('(max-width:600px)');
+    const cartItemsCount = cartItems.length;
 
     const categories = [
         { name: 'New', path: '/new' },
@@ -397,7 +401,20 @@ const Header = () => {
                                             onClick={() => navigate('/cart')}
                                             sx={{ mr: 1 }}
                                         >
-                                            <ShoppingCartIcon />
+                                            <Badge
+                                                badgeContent={cartItemsCount}
+                                                color="primary"
+                                                sx={{
+                                                    '& .MuiBadge-badge': {
+                                                        right: -3,
+                                                        top: 3,
+                                                        border: '2px solid white',
+                                                        padding: '0 4px',
+                                                    }
+                                                }}
+                                            >
+                                                <ShoppingCartIcon />
+                                            </Badge>
                                         </IconButton>
                                     </Box>
                                 </>
@@ -462,7 +479,20 @@ const Header = () => {
                                             <FavoriteBorderIcon />
                                         </IconButton>
                                         <IconButton color="inherit" onClick={() => navigate('/cart')}>
-                                            <ShoppingCartIcon />
+                                            <Badge
+                                                badgeContent={cartItemsCount}
+                                                color="primary"
+                                                sx={{
+                                                    '& .MuiBadge-badge': {
+                                                        right: -3,
+                                                        top: 3,
+                                                        border: '2px solid white',
+                                                        padding: '0 4px',
+                                                    }
+                                                }}
+                                            >
+                                                <ShoppingCartIcon />
+                                            </Badge>
                                         </IconButton>
                                         {user ? (
                                             <>
