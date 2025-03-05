@@ -439,7 +439,10 @@ const Home = () => {
                                     {/* Favorite button */}
                                     {hoveredProduct === product.id && (
                                         <IconButton
-                                            onClick={() => toggleFavorite(product.id)}
+                                            onClick={(event) => {
+                                                event.stopPropagation(); // Stop event propagation
+                                                toggleFavorite(product.id);
+                                            }}
                                             sx={{
                                                 position: 'absolute',
                                                 top: 8,
@@ -468,7 +471,6 @@ const Home = () => {
                                             height: '240px', // Increased height to match the new width
                                             objectFit: 'cover',
                                             backgroundColor: '#f5f5f5',
-                                            marginBottom: 1,
                                         }}
                                     />
 
@@ -478,17 +480,41 @@ const Home = () => {
                                             backgroundColor: '#868686',
                                             color: 'white',
                                             padding: '8px',
-                                            textAlign: 'center'
+                                            display: 'flex',
+                                            justifyContent: 'space-between', // Align name and price
+                                            alignItems: 'center', // Vertically center content
+                                            borderTop: '1px solid rgba(255, 255, 255, 0.1)', // Add a subtle border
                                         }}
                                     >
+                                        {/* Product Name (Left-aligned) */}
                                         <Typography
                                             variant="body1"
                                             sx={{
                                                 fontSize: '0.9rem',
+                                                fontWeight: 'bold',
                                             }}
                                         >
                                             {product.name}
                                         </Typography>
+
+                                        {/* Price (Right-aligned in a smaller rectangular box) */}
+                                        <Box
+                                            sx={{
+                                                backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white background
+                                                padding: '4px 8px',
+                                                borderRadius: '4px', // Rounded corners
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    fontSize: '0.8rem',
+                                                    color: 'white',
+                                                }}
+                                            >
+                                                ${product.price}
+                                            </Typography>
+                                        </Box>
                                     </Box>
                                 </Card>
                             ))}
