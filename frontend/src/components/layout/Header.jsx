@@ -23,12 +23,13 @@ import HistoryIcon from '@mui/icons-material/History';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { useNavigate } from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '@mui/material';
 import { useCart } from '../../context/CartContext';
 
 const Header = () => {
+    const location = useLocation();
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const { cartItems } = useCart();
@@ -366,6 +367,11 @@ const Header = () => {
             </Box>
         </Fade>
     );
+
+    if (location.pathname.startsWith('/admin')) {
+        return null;
+    }
+
 
     return (
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>

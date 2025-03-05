@@ -1,3 +1,4 @@
+// pages/admin/Categories.jsx
 import React, { useState } from 'react';
 import {
     Box,
@@ -14,53 +15,42 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import CommonDialog from '../components/AdminDialog';
-import { products as initialProducts } from '../mockData/Products';
+import { popularCategories as initialCategories } from '../mockData/Products';
 
-const Products = () => {
-    const [products, setProducts] = useState(initialProducts);
+const Categories = () => {
+    const [categories, setCategories] = useState(initialCategories);
     const [openDialog, setOpenDialog] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
-        description: '',
-        price: '',
-        category: '',
-        stock: '',
         image: '',
     });
 
     const handleAdd = () => {
-        setSelectedProduct(null);
-        setFormData({
-            name: '',
-            description: '',
-            price: '',
-            category: '',
-            stock: '',
-            image: '',
-        });
+        setSelectedCategory(null);
+        setFormData({ name: '', image: '' });
         setOpenDialog(true);
     };
 
-    const handleEdit = (product) => {
-        setSelectedProduct(product);
-        setFormData(product);
+    const handleEdit = (category) => {
+        setSelectedCategory(category);
+        setFormData(category);
         setOpenDialog(true);
     };
 
     const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this product?')) {
-            setProducts(products.filter(product => product.id !== id));
+        if (window.confirm('Are you sure you want to delete this category?')) {
+            setCategories(categories.filter(category => category.id !== id));
         }
     };
 
     const handleSubmit = () => {
-        if (selectedProduct) {
-            setProducts(products.map(product =>
-                product.id === selectedProduct.id ? { ...selectedProduct, ...formData } : product
+        if (selectedCategory) {
+            setCategories(categories.map(category =>
+                category.id === selectedCategory.id ? { ...selectedCategory, ...formData } : category
             ));
         } else {
-            setProducts([...products, { ...formData, id: products.length + 1 }]);
+            setCategories([...categories, { ...formData, id: categories.length + 1 }]);
         }
         setOpenDialog(false);
     };
@@ -68,13 +58,13 @@ const Products = () => {
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h5">Products Management</Typography>
+                <Typography variant="h5">Categories Management</Typography>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={handleAdd}
                 >
-                    Add Product
+                    Add Category
                 </Button>
             </Box>
 
@@ -84,31 +74,25 @@ const Products = () => {
                         <TableRow>
                             <TableCell>Image</TableCell>
                             <TableCell>Name</TableCell>
-                            <TableCell>Category</TableCell>
-                            <TableCell>Price</TableCell>
-                            <TableCell>Stock</TableCell>
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {products.map((product) => (
-                            <TableRow key={product.id}>
+                        {categories.map((category) => (
+                            <TableRow key={category.id}>
                                 <TableCell>
                                     <img
-                                        src={product.image}
-                                        alt={product.name}
+                                        src={category.image}
+                                        alt={category.name}
                                         style={{ width: 50, height: 50, objectFit: 'cover' }}
                                     />
                                 </TableCell>
-                                <TableCell>{product.name}</TableCell>
-                                <TableCell>{product.category}</TableCell>
-                                <TableCell>${product.price}</TableCell>
-                                <TableCell>{product.stock}</TableCell>
+                                <TableCell>{category.name}</TableCell>
                                 <TableCell>
-                                    <IconButton onClick={() => handleEdit(product)}>
+                                    <IconButton onClick={() => handleEdit(category)}>
                                         <EditIcon />
                                     </IconButton>
-                                    <IconButton onClick={() => handleDelete(product.id)}>
+                                    <IconButton onClick={() => handleDelete(category.id)}>
                                         <DeleteIcon />
                                     </IconButton>
                                 </TableCell>
@@ -121,14 +105,14 @@ const Products = () => {
             <CommonDialog
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
-                title={selectedProduct ? 'Edit Product' : 'Add Product'}
+                title={selectedCategory ? 'Edit Category' : 'Add Category'}
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={handleSubmit}
-                type="product"
+                type="category"
             />
         </Box>
     );
 };
 
-export default Products;
+export default Categories;

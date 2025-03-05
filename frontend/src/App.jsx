@@ -10,12 +10,14 @@ import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Admin from './pages/Admin';
 import { Box } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './App.css';
 import AdminLayout from "./components/layout/AdminLayout";
+import Categories from "./pages/AdminCategories";
+import AdminProducts from "./pages/AdminProducts";
+import AdminFeaturedProducts from "./pages/AdminFeaturedProducts";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -59,9 +61,9 @@ function AppContent() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/admin" element={<AdminLayout />}>
                             <Route index element={<Navigate to="/admin/products" replace />} />
-                            <Route path="products" element={<Products />} />
-                            {/*<Route path="featured" element={<FeaturedProducts />} />*/}
-                            {/*<Route path="categories" element={<Categories />} />*/}
+                            <Route path="products" element={<AdminProducts />} />
+                            <Route path="featured" element={<AdminFeaturedProducts />} />
+                            <Route path="categories" element={<Categories />} />
                         </Route>
                     </Routes>
                 </Box>

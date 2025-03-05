@@ -18,11 +18,11 @@ import {
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom'; // Add Outlet here
 
 const DRAWER_WIDTH = 240;
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const theme = useTheme();
     const navigate = useNavigate();
@@ -133,7 +133,7 @@ const AdminLayout = ({ children }) => {
                     ml: { sm: `${DRAWER_WIDTH}px` },
                 }}
             >
-                {children}
+                <Outlet />
             </Box>
         </Box>
     );
