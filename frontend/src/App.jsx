@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import {BrowserRouter, Routes, Route, useLocation, Navigate} from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Header from './components/layout/Header';
@@ -15,6 +15,7 @@ import { Box } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './App.css';
+import AdminLayout from "./components/layout/AdminLayout";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -56,7 +57,12 @@ function AppContent() {
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/admin" element={<AdminLayout />}>
+                            <Route index element={<Navigate to="/admin/products" replace />} />
+                            <Route path="products" element={<Products />} />
+                            {/*<Route path="featured" element={<FeaturedProducts />} />*/}
+                            {/*<Route path="categories" element={<Categories />} />*/}
+                        </Route>
                     </Routes>
                 </Box>
                 <Footer />
