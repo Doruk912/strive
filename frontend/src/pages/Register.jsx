@@ -91,6 +91,8 @@ const Register = () => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
+            marginTop: '-32px',
+            marginBottom: '-24px',
         },
         formWrapper: {
             display: 'flex',

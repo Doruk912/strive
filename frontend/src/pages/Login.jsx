@@ -19,6 +19,19 @@ import { useAuth } from '../context/AuthContext';
 import {mockUsers} from "../mockData/Users";
 
 const Login = () => {
+    const getErrorMessage = (errorType) => {
+        const errorMessages = {
+            'Invalid credentials': 'The email or password you entered is incorrect',
+            'Email required': 'Please enter your email address',
+            'Password required': 'Please enter your password',
+            'Invalid email': 'Please enter a valid email address',
+            'Password length': 'Password must be at least 6 characters',
+            'Network error': 'Unable to connect to the server. Please check your internet connection',
+            'default': 'An error occurred. Please try again'
+        };
+        return errorMessages[errorType] || errorMessages.default;
+    };
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -54,14 +67,19 @@ const Login = () => {
 
     const validateForm = () => {
         const newErrors = {};
+
         if (!formData.email) {
-            newErrors.email = 'Email is required';
+            newErrors.email = 'Email required';
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
+            newErrors.email = 'Invalid email';
         }
+
         if (!formData.password) {
-            newErrors.password = 'Password is required';
+            newErrors.password = 'Password required';
+        } else if (formData.password.length < 6) {
+            newErrors.password = 'Password length';
         }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -77,10 +95,17 @@ const Login = () => {
             );
 
             if (!foundUser) {
-                throw new Error('Invalid credentials');
+                setErrors({ submit: 'Invalid credentials' });
+                return;
             }
 
-            login(foundUser);
+            if (rememberMe) {
+                localStorage.setItem('rememberedEmail', formData.email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+
+            await login(foundUser);
 
             if (foundUser.role === 'admin') {
                 navigate('/admin');
@@ -90,7 +115,9 @@ const Login = () => {
 
         } catch (error) {
             console.error('Login error:', error);
-            setErrors({ submit: 'Invalid credentials' });
+            setErrors({
+                submit: 'Network error'
+            });
         } finally {
             setIsLoading(false);
         }
@@ -106,6 +133,8 @@ const Login = () => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
+            marginTop: '-32px',
+            marginBottom: '-24px',
         },
         formWrapper: {
             display: 'flex',
@@ -161,6 +190,19 @@ const Login = () => {
                 },
             },
         },
+        errorMessage: {
+            backgroundColor: '#fdeded',
+            color: '#7d4747',
+            padding: '16px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '14px',
+            fontWeight: 500,
+            border: '1px solid #fccfcf',
+        },
     };
 
     return (
@@ -172,6 +214,12 @@ const Login = () => {
                     </Typography>
 
                     <form onSubmit={handleSubmit}>
+                        {errors.submit && (
+                            <Box sx={styles.errorMessage}>
+                                {getErrorMessage(errors.submit)}
+                            </Box>
+                        )}
+
                         <TextField
                             fullWidth
                             label="Email"
@@ -180,8 +228,14 @@ const Login = () => {
                             value={formData.email}
                             onChange={handleChange}
                             error={!!errors.email}
-                            helperText={errors.email}
-                            sx={styles.textField}
+                            helperText={errors.email && getErrorMessage(errors.email)}
+                            sx={{
+                                ...styles.textField,
+                                '& .MuiFormHelperText-root': {
+                                    marginLeft: 0,
+                                    marginTop: '8px',
+                                },
+                            }}
                         />
 
                         <TextField
@@ -192,8 +246,14 @@ const Login = () => {
                             value={formData.password}
                             onChange={handleChange}
                             error={!!errors.password}
-                            helperText={errors.password}
-                            sx={styles.textField}
+                            helperText={errors.password && getErrorMessage(errors.password)}
+                            sx={{
+                                ...styles.textField,
+                                '& .MuiFormHelperText-root': {
+                                    marginLeft: 0,
+                                    marginTop: '8px',
+                                },
+                            }}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -219,12 +279,6 @@ const Login = () => {
                             label="Remember me"
                             sx={styles.rememberMe}
                         />
-
-                        {errors.submit && (
-                            <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
-                                {errors.submit}
-                            </Typography>
-                        )}
 
                         <Button
                             type="submit"
