@@ -133,7 +133,7 @@ const Login = () => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             overflow: 'hidden',
-            marginTop: '-32px',
+            marginTop: isMobile ? '-40px' : '-32px',
             marginBottom: '-24px',
         },
         formWrapper: {

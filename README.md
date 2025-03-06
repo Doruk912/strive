@@ -7,12 +7,11 @@ Doruk:
 * Manager page
 * Profile page
 * Promotional content with slider
-* Mobile login/register empty white space
 * /admin
 
 Can:
 * Update Products page
-* Miscellanious changes
+* Miscellaneous changes
 * Logo and name
 * Product page openers
 * Footer
@@ -23,5 +22,5 @@ Taha:
 * Responsiveness
   
 Alara:
-* Miscellanious tasks
+* Miscellaneous tasks
 
