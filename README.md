@@ -5,7 +5,6 @@ Doruk:
 * Admin page 
 * Manager page
 * Profile page
-* Promotional content with slider
 
 Can:
 * Update Products page
