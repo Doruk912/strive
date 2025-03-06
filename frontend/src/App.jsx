@@ -46,7 +46,7 @@ function AppContent() {
         const location = useLocation();
 
         if (!user || user.role !== 'admin') {
-            return <Navigate to="/login" state={{ from: location }} replace />;
+            return <Navigate to="/" state={{ from: location }} replace />;
         }
 
         return children;

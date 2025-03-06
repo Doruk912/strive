@@ -6,6 +6,7 @@ import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import PromotionalBanner from "../components/PromotionalBanner";
 
 const Home = () => {
     const navigate = useNavigate();
@@ -338,6 +339,8 @@ const Home = () => {
                     </Box>
                 </Box>
             </Container>
+
+            <PromotionalBanner />
 
             {/* Featured Products Section */}
             <Container
