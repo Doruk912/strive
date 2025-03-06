@@ -8,6 +8,7 @@ Doruk:
 * Profile page
 * Promotional content with slider
 * Mobile login/register empty white space
+* /admin
 
 Can:
 * Update Products page
