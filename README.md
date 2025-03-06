@@ -2,7 +2,6 @@
 
 Doruk:
 * Error message in login/register
-* Shopping cart added to cart notification
 * Admin page 
 * Manager page
 * Profile page

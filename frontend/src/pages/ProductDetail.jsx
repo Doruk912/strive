@@ -23,9 +23,7 @@ import {
     NavigateNext as NavigateNextIcon,
 } from '@mui/icons-material';
 import { products } from '../mockData/Products';
-import CloseIcon from '@mui/icons-material/Close';
-import Slide from '@mui/material/Slide';
-import Dialog from '@mui/material/Dialog';
+import CartNotification from '../components/CartNotification';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -56,14 +54,10 @@ const ProductDetail = () => {
         if (!isInCart) {
             addToCart(product, quantity);
             setOpenSnackbar(true);
+            setTimeout(() => {
+                setOpenSnackbar(false);
+            }, 3000);
         }
-    };
-
-    const handleCloseSnackbar = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setOpenSnackbar(false);
     };
 
     return (
@@ -218,209 +212,11 @@ const ProductDetail = () => {
                 </Grid>
             </Grid>
 
-            <Dialog
+            <CartNotification
                 open={openSnackbar}
-                onClose={handleCloseSnackbar}
-                TransitionComponent={Slide}
-                TransitionProps={{
-                    direction: "left"
-                }}
-                PaperProps={{
-                    sx: {
-                        position: 'fixed',
-                        right: 0,
-                        top: 0,
-                        height: '100%',
-                        m: 0,
-                        width: { xs: '100%', sm: 400 },
-                        borderRadius: 0,
-                        bgcolor: '#fff',
-                        boxShadow: '-4px 0 10px rgba(0,0,0,0.1)',
-                    }
-                }}
-            >
-                <Box sx={{
-                    p: 3,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    bgcolor: '#fff'
-                }}>
-                    {/* Header */}
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 4,
-                        pb: 2,
-                        borderBottom: '1px solid #eee'
-                    }}>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{
-                                fontSize: '1.25rem',
-                                fontWeight: 600,
-                                color: '#111'
-                            }}
-                        >
-                            Added to Cart Successfully
-                        </Typography>
-                        <IconButton
-                            onClick={handleCloseSnackbar}
-                            sx={{
-                                '&:hover': {
-                                    backgroundColor: '#f5f5f5'
-                                }
-                            }}
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-
-                    {/* Product Info */}
-                    <Box sx={{
-                        display: 'flex',
-                        gap: 3,
-                        mb: 4,
-                        backgroundColor: '#f8f8f8',
-                        p: 2,
-                        borderRadius: 1
-                    }}>
-                        <Box
-                            sx={{
-                                width: 120,
-                                height: 120,
-                                backgroundColor: '#fff',
-                                overflow: 'hidden',
-                                borderRadius: 1,
-                                border: '1px solid #eee'
-                            }}
-                        >
-                            <img
-                                src={product.image}
-                                alt={product.name}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                }}
-                            />
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    fontSize: '1.1rem',
-                                    fontWeight: 600,
-                                    mb: 1,
-                                    color: '#111'
-                                }}
-                            >
-                                {product.name}
-                            </Typography>
-                            <Typography
-                                sx={{
-                                    fontSize: '0.95rem',
-                                    color: '#666',
-                                    mb: 1
-                                }}
-                            >
-                                Quantity: {quantity}
-                            </Typography>
-                            <Typography
-                                sx={{
-                                    fontSize: '1.1rem',
-                                    fontWeight: 600,
-                                    color: '#111'
-                                }}
-                            >
-                                ${product.price}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {/* Cart Summary */}
-                    <Box sx={{
-                        mb: 4,
-                        p: 2,
-                        backgroundColor: '#f8f8f8',
-                        borderRadius: 1
-                    }}>
-                        <Typography
-                            sx={{
-                                fontSize: '0.9rem',
-                                color: '#666',
-                                mb: 1
-                            }}
-                        >
-                            Cart Summary
-                        </Typography>
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            mb: 1
-                        }}>
-                            <Typography sx={{ fontSize: '1rem' }}>
-                                Subtotal ({quantity} items)
-                            </Typography>
-                            <Typography sx={{
-                                fontSize: '1rem',
-                                fontWeight: 600
-                            }}>
-                                ${(product.price * quantity).toFixed(2)}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {/* Buttons */}
-                    <Box sx={{
-                        mt: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 2
-                    }}>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={() => {
-                                navigate('/cart');
-                                handleCloseSnackbar();
-                            }}
-                            sx={{
-                                backgroundColor: '#000',
-                                color: '#fff',
-                                py: 1.5,
-                                fontSize: '1rem',
-                                fontWeight: 500,
-                                '&:hover': {
-                                    backgroundColor: '#333',
-                                }
-                            }}
-                        >
-                            View Cart
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            fullWidth
-                            onClick={handleCloseSnackbar}
-                            sx={{
-                                borderColor: '#000',
-                                color: '#000',
-                                py: 1.5,
-                                fontSize: '1rem',
-                                fontWeight: 500,
-                                '&:hover': {
-                                    borderColor: '#333',
-                                    backgroundColor: 'rgba(0,0,0,0.04)',
-                                }
-                            }}
-                        >
-                            Continue Shopping
-                        </Button>
-                    </Box>
-                </Box>
-            </Dialog>
+                product={product}
+                quantity={quantity}
+            />
         </Container>
     );
 };
