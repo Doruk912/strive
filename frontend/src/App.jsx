@@ -11,7 +11,7 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Box } from '@mui/material';
-import { AuthProvider } from './context/AuthContext';
+import {AuthProvider, useAuth} from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './App.css';
 import AdminLayout from "./components/layout/AdminLayout";
@@ -41,6 +41,16 @@ const theme = createTheme({
 });
 
 function AppContent() {
+    const ProtectedRoute = ({ children }) => {
+        const { user } = useAuth();
+        const location = useLocation();
+
+        if (!user || user.role !== 'admin') {
+            return <Navigate to="/login" state={{ from: location }} replace />;
+        }
+
+        return children;
+    };
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -59,7 +69,12 @@ function AppContent() {
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/admin" element={<AdminLayout />}>
+
+                        <Route path="/admin" element={
+                            <ProtectedRoute>
+                                <AdminLayout />
+                            </ProtectedRoute>
+                        }>
                             <Route index element={<Navigate to="/admin/products" replace />} />
                             <Route path="products" element={<AdminProducts />} />
                             <Route path="featured" element={<AdminFeaturedProducts />} />
