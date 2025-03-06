@@ -1,22 +1,26 @@
 ## Project To-Do List
 
 Doruk:
-* Login/Register pages
-* Shopping cart
-* Admin page
+* Error message in login/register
+* Shopping cart added to cart notification
+* Admin page 
 * Manager page
 * Profile page
+* Promotional content with slider
+* Mobile login/register empty white space
 
 Can:
-* Update Product Cards.
-* Update Products page (Add new product cards, remove browser).
-* Placeholder filter to the right side of the Product page.
-  
-Rest:
-
-* Mobile support
-* Decide on name and logo
-* Dropdown menu for categories on the header
-* Products should pop up as user writes in search bar
-* Favorites list
+* Update Products page
+* Miscellanious changes
+* Logo and name
+* Product page openers
 * Footer
+* Favorites list
+* Dropdown menu for categories on the header
+
+Taha:
+* Responsiveness
+  
+Alara:
+* Miscellanious tasks
+
