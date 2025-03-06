@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
 import {
-    Container,
-    Paper,
     TextField,
     Button,
     Typography,
     Box,
     Link,
-    Grid,
-    IconButton,
-    InputAdornment,
     CircularProgress,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-
-const NAVBAR_HEIGHT = 64;
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -27,309 +22,245 @@ const Register = () => {
         password: '',
         confirmPassword: '',
     });
-    const [errors, setErrors] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-    });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+    const [errors, setErrors] = useState({});
 
+    const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const validateEmail = (email) => {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(email);
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     const validateForm = () => {
         const newErrors = {};
-        let isValid = true;
-
         if (!formData.firstName.trim()) {
             newErrors.firstName = 'First name is required';
-            isValid = false;
         }
-
         if (!formData.lastName.trim()) {
             newErrors.lastName = 'Last name is required';
-            isValid = false;
         }
-
-        if (!validateEmail(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-            isValid = false;
+        if (!formData.email) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Invalid email format';
         }
-
         if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters long';
-            isValid = false;
+            newErrors.password = 'Password must be at least 6 characters';
         }
-
         if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
-            isValid = false;
         }
-
         setErrors(newErrors);
-        return isValid;
-    };
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-        // Clear error when user starts typing
-        if (errors[e.target.name]) {
-            setErrors({
-                ...errors,
-                [e.target.name]: ''
-            });
-        }
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
         setIsLoading(true);
         try {
-            console.log('Registration data:', formData);
-            // Simulate API call delay
+            // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
             navigate('/login');
-        } catch (err) {
-            setErrors({ ...errors, general: 'An error occurred during registration' });
+        } catch (error) {
+            setErrors({ submit: 'Registration failed' });
         } finally {
             setIsLoading(false);
         }
     };
 
     const styles = {
-        container: {
-            height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-            margin: 0,
-            padding: 0,
-            overflow: 'hidden'
-        },
-        imageSection: {
-            backgroundImage: 'url("https://i.pinimg.com/736x/82/2b/32/822b32b2cce1af8df475ce0eed27e704.jpg")',
+        wrapper: {
+            minHeight: '100vh',
+            width: '100%',
+            display: 'flex',
+            background: `url("https://images.pexels.com/photos/3193846/pexels-photo-3193846.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            height: isMobile ? '30vh' : `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+            overflow: 'hidden',
+        },
+        formWrapper: {
             display: 'flex',
-            justifyContent: 'flex-end'
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            width: '100%',
+            padding: isMobile ? '20px' : '40px',
+            paddingRight: isMobile ? '20px' : '10%',
         },
-        formSection: {
-            height: isMobile ? 'auto' : `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-            padding: isMobile ? '20px' : '20px 0 20px 20px',
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center'
-        },
-        paper: {
-            p: isMobile ? 3 : 6,
-            textAlign: 'center',
-            width: isMobile ? '100%' : '520px',
-            borderRadius: '12px',
-            backgroundColor: '#fafafa',
-            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
-        },
-        logo: {
-            width: isMobile ? 40 : 60,
-            height: isMobile ? 40 : 60,
-            marginBottom: isMobile ? 10 : 15
-        },
-        submitButton: {
-            mt: 4,
-            p: 1.5,
-            fontSize: isMobile ? '1rem' : '1.2rem',
+        formContainer: {
+            width: '100%',
+            maxWidth: isMobile ? '100%' : '500px',
+            backgroundColor: 'white',
             borderRadius: '8px',
-            fontWeight: 'bold',
-            backgroundColor: '#1565C0',
+            padding: '40px',
+            marginLeft: isMobile ? '0' : 'auto',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        },
+        title: {
+            fontSize: '32px',
+            fontWeight: 500,
+            color: '#1976d2',
+            marginBottom: '24px',
+            textAlign: 'center',
+        },
+        textField: {
+            marginBottom: '16px',
+            '& .MuiOutlinedInput-root': {
+                borderRadius: '4px',
+            },
+        },
+        signUpButton: {
+            padding: '12px',
+            fontSize: '16px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            marginBottom: '16px',
+            backgroundColor: '#1976d2',
             '&:hover': {
-                backgroundColor: '#0D47A1'
-            }
-        }
+                backgroundColor: '#1565c0',
+            },
+        },
+        loginLink: {
+            textAlign: 'center',
+            '& a': {
+                color: '#1976d2',
+                textDecoration: 'none',
+                '&:hover': {
+                    textDecoration: 'underline',
+                },
+            },
+        },
     };
 
     return (
-        <Grid
-            container
-            sx={{
-                ...styles.container,
-                height: isMobile ? 'auto' : `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-                flexDirection: isMobile ? 'column' : 'row'
-            }}
-        >
-            <Grid item xs={12} md={6} sx={styles.imageSection} />
+        <Box sx={styles.wrapper}>
+            <Box sx={styles.formWrapper}>
+                <Box sx={styles.formContainer}>
+                    <Typography sx={styles.title}>
+                        Create Account
+                    </Typography>
 
-            <Grid item xs={12} md={6} sx={styles.formSection}>
-                <Container maxWidth="sm">
-                    <Paper elevation={6} sx={styles.paper}>
-                        <Box display="flex" flexDirection="column" alignItems="center">
-                            <img src="/logo192.png" alt="Logo" style={styles.logo} />
-                            <Typography
-                                variant={isMobile ? "h4" : "h3"}
-                                fontWeight="bold"
-                                color="#1565C0"
-                                gutterBottom
-                            >
-                                Register
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            fullWidth
+                            label="First Name"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            error={!!errors.firstName}
+                            helperText={errors.firstName}
+                            sx={styles.textField}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Last Name"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            error={!!errors.lastName}
+                            helperText={errors.lastName}
+                            sx={styles.textField}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            error={!!errors.email}
+                            helperText={errors.email}
+                            sx={styles.textField}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={formData.password}
+                            onChange={handleChange}
+                            error={!!errors.password}
+                            helperText={errors.password}
+                            sx={styles.textField}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Confirm Password"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            error={!!errors.confirmPassword}
+                            helperText={errors.confirmPassword}
+                            sx={styles.textField}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            edge="end"
+                                        >
+                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        {errors.submit && (
+                            <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
+                                {errors.submit}
                             </Typography>
+                        )}
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            fullWidth
+                            disabled={isLoading}
+                            sx={styles.signUpButton}
+                        >
+                            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+                        </Button>
+
+                        <Box sx={styles.loginLink}>
+                            <Link href="/login">
+                                Already have an account? Sign in
+                            </Link>
                         </Box>
-
-                        <form onSubmit={handleSubmit} noValidate>
-                            <TextField
-                                fullWidth
-                                label="First Name"
-                                name="firstName"
-                                value={formData.firstName}
-                                onChange={handleChange}
-                                margin="dense"
-                                sx={{ mb: 2 }}
-                                required
-                                error={!!errors.firstName}
-                                helperText={errors.firstName}
-                                disabled={isLoading}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Last Name"
-                                name="lastName"
-                                value={formData.lastName}
-                                onChange={handleChange}
-                                margin="dense"
-                                sx={{ mb: 2 }}
-                                required
-                                error={!!errors.lastName}
-                                helperText={errors.lastName}
-                                disabled={isLoading}
-                            />
-                            <TextField
-                                fullWidth
-                                label="Email"
-                                name="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                margin="dense"
-                                sx={{ mb: 2 }}
-                                required
-                                error={!!errors.email}
-                                helperText={errors.email}
-                                disabled={isLoading}
-                                inputProps={{
-                                    autoComplete: 'email'
-                                }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'}
-                                value={formData.password}
-                                onChange={handleChange}
-                                margin="dense"
-                                sx={{ mb: 2 }}
-                                required
-                                error={!!errors.password}
-                                helperText={errors.password}
-                                disabled={isLoading}
-                                InputProps={{
-                                    sx: { paddingRight: '12px' },
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                edge="end"
-                                                disabled={isLoading}
-                                            >
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                    autoComplete: 'new-password'
-                                }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Confirm Password"
-                                name="confirmPassword"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                margin="dense"
-                                sx={{ mb: 2 }}
-                                required
-                                error={!!errors.confirmPassword}
-                                helperText={errors.confirmPassword}
-                                disabled={isLoading}
-                                InputProps={{
-                                    sx: { paddingRight: '12px' },
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                edge="end"
-                                                disabled={isLoading}
-                                            >
-                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                    autoComplete: 'new-password'
-                                }}
-                            />
-
-                            {errors.general && (
-                                <Typography color="error" sx={{ mt: 2 }}>
-                                    {errors.general}
-                                </Typography>
-                            )}
-
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                disabled={isLoading}
-                                sx={styles.submitButton}
-                            >
-                                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'REGISTER'}
-                            </Button>
-
-                            <Box sx={{ mt: 3, textAlign: 'center', fontSize: isMobile ? '1rem' : '1.1rem' }}>
-                                <Link
-                                    href="/login"
-                                    variant="body2"
-                                    sx={{
-                                        textDecoration: 'none',
-                                        '&:hover': {
-                                            textDecoration: 'underline'
-                                        }
-                                    }}
-                                >
-                                    Already have an account? Sign in
-                                </Link>
-                            </Box>
-                        </form>
-                    </Paper>
-                </Container>
-            </Grid>
-        </Grid>
+                    </form>
+                </Box>
+            </Box>
+        </Box>
     );
 };
 
