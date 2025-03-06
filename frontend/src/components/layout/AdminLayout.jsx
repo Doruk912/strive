@@ -18,7 +18,8 @@ import {
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
 } from '@mui/icons-material';
-import { useNavigate, Outlet } from 'react-router-dom'; // Add Outlet here
+import { useNavigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const DRAWER_WIDTH = 240;
 
@@ -26,13 +27,14 @@ const AdminLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const theme = useTheme();
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
 
     const handleLogout = () => {
-        // Implement logout logic here
+        logout();
         navigate('/');
     };
 

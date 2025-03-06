@@ -1,7 +1,14 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Link } from '@mui/material';
+import {useLocation} from 'react-router-dom';
 
 const Footer = () => {
+    const location = useLocation();
+
+    if (location.pathname.startsWith('/admin')) {
+        return null;
+    }
+
     return (
         <Box sx={{ bgcolor: '#333', color: 'white', py: 4, mt: 'auto' }}>
             <Container maxWidth="lg">
