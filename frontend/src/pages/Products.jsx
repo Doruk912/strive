@@ -38,7 +38,8 @@ const Products = () => {
         }));
     };
 
-    const filteredProducts = products; // No search bar, so no filtering by search term
+    // No filtering based on query parameters
+    const filteredProducts = products;
 
     return (
         <Box sx={{ width: '100%', mt: 4 }}>

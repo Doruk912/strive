@@ -14,7 +14,9 @@ import {
     List,
     ListItem,
     ListItemText,
-    useMediaQuery
+    useMediaQuery,
+    Paper,
+    Grid,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
@@ -22,6 +24,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '@mui/material';
@@ -45,16 +48,59 @@ const Header = () => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const cartItemsCount = cartItems.length;
 
+    // State for hover-based dropdown
+    const [hoveredCategory, setHoveredCategory] = useState(null);
+    const [hoverTimeout, setHoverTimeout] = useState(null);
+
     const categories = [
-        { name: 'New', path: '/new' },
-        { name: 'Men', path: '/men' },
-        { name: 'Women', path: '/women' },
-        { name: 'Sports', path: '/sports' }
+        {
+            name: 'New',
+            path: '/new',
+            subcategories: ['Trending Products', 'New Arrivals', 'Highlights'],
+        },
+        {
+            name: 'Men',
+            path: '/men',
+            subcategories: ['Jackets', 'Boots', 'Pants', 'Innerwear', 'Accessories', 'Highlights'],
+        },
+        {
+            name: 'Women',
+            path: '/women',
+            subcategories: ['Jackets', 'Boots', 'Pants', 'Innerwear', 'Accessories', 'Highlights'],
+        },
+        {
+            name: 'Sports',
+            path: '/sports',
+            subcategories: ['Basketball', 'Soccer', 'Baseball', 'Tennis', 'Running', 'Yoga'],
+        },
     ];
 
     useEffect(() => {
         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
     }, [searchHistory]);
+
+    // Hover handlers for dropdown
+    const handleMouseEnter = (category) => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            setHoverTimeout(null);
+        }
+        setHoveredCategory(category);
+    };
+
+    const handleMouseLeave = () => {
+        const timeout = setTimeout(() => {
+            setHoveredCategory(null);
+        }, 300);
+        setHoverTimeout(timeout);
+    };
+
+    const handleDropdownMouseEnter = () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            setHoverTimeout(null);
+        }
+    };
 
     const handleSearchClick = () => {
         setSearchExpanded(true);
@@ -199,6 +245,7 @@ const Header = () => {
                 transform: searchExpanded ? 'translateY(0)' : 'translateY(-100%)',
                 transition: 'transform 0.3s ease-in-out',
             }}>
+                {/* Search input and buttons */}
                 <Box sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -273,6 +320,7 @@ const Header = () => {
                     </IconButton>
                 </Box>
 
+                {/* Search history and popular searches */}
                 <Box sx={{
                     mt: 3,
                     px: 2,
@@ -388,167 +436,239 @@ const Header = () => {
     return (
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>
             <ClickAwayListener onClickAway={() => searchExpanded && handleSearchClose()}>
-                <Toolbar sx={{ justifyContent: 'space-between', width: '100%', px: isMobile ? 2 : 4, transition: 'all 0.3s ease' }}>
-                    {searchExpanded ? (
-                        renderSearchExpanded()
-                    ) : (
-                        <>
-                            {isMobile ? (
-                                <>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
-                                            <MenuIcon />
-                                        </IconButton>
-                                        <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                            <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
-                                        </IconButton>
-                                    </Box>
-                                    <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-                                        {drawer}
-                                    </Drawer>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <IconButton
-                                            color="inherit"
-                                            onClick={handleSearchClick}
-                                            sx={{ mr: 1 }}
-                                        >
-                                            <SearchIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            color="inherit"
-                                            onClick={() => navigate('/cart')}
-                                            sx={{ mr: 1 }}
-                                        >
-                                            <Badge
-                                                badgeContent={cartItemsCount}
-                                                color="primary"
-                                                sx={{
-                                                    '& .MuiBadge-badge': {
-                                                        right: -3,
-                                                        top: 3,
-                                                        border: '2px solid white',
-                                                        padding: '0 4px',
-                                                    }
-                                                }}
-                                            >
-                                                <ShoppingCartIcon />
-                                            </Badge>
-                                        </IconButton>
-                                    </Box>
-                                </>
-                            ) : (
-                                <>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
-                                        <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                            <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
-                                        </IconButton>
-                                        <Typography variant="h6" component="div" sx={{ ml: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
-                                            Sports Store
-                                        </Typography>
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', width: '60%' }}>
-                                        {categories.map((category) => (
-                                            <Button
-                                                key={category.name}
+                <Box>
+                    <Toolbar sx={{ justifyContent: 'space-between', width: '100%', px: isMobile ? 2 : 4, transition: 'all 0.3s ease' }}>
+                        {searchExpanded ? (
+                            renderSearchExpanded()
+                        ) : (
+                            <>
+                                {isMobile ? (
+                                    <>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
+                                                <MenuIcon />
+                                            </IconButton>
+                                            <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
+                                                <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
+                                            </IconButton>
+                                        </Box>
+                                        <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+                                            {drawer}
+                                        </Drawer>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <IconButton
                                                 color="inherit"
-                                                onClick={() => navigate(category.path)}
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    fontWeight: 'medium',
-                                                    fontSize: '1rem',
-                                                    mx: 2
-                                                }}
+                                                onClick={handleSearchClick}
+                                                sx={{ mr: 1 }}
                                             >
-                                                {category.name}
-                                            </Button>
-                                        ))}
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '20%', justifyContent: 'flex-end' }}>
-                                        <IconButton
-                                            color="inherit"
-                                            onClick={handleSearchClick}
-                                            sx={{
-                                                backgroundColor: '#f0f0f0',
-                                                borderRadius: '20px',
-                                                width: '200px',
-                                                justifyContent: 'flex-start',
-                                                pl: 2,
-                                                '&:hover': {
-                                                    backgroundColor: '#e8e8e8',
-                                                },
-                                                border: '1px solid #e0e0e0',
-                                            }}
-                                        >
-                                            <SearchIcon sx={{ color: 'text.secondary' }} />
-                                            <Typography
-                                                sx={{
-                                                    ml: 1,
-                                                    color: 'text.secondary',
-                                                    flexGrow: 1,
-                                                    textAlign: 'left'
-                                                }}
+                                                <SearchIcon />
+                                            </IconButton>
+                                            <IconButton
+                                                color="inherit"
+                                                onClick={() => navigate('/cart')}
+                                                sx={{ mr: 1 }}
                                             >
-                                                Search
+                                                <Badge
+                                                    badgeContent={cartItemsCount}
+                                                    color="primary"
+                                                    sx={{
+                                                        '& .MuiBadge-badge': {
+                                                            right: -3,
+                                                            top: 3,
+                                                            border: '2px solid white',
+                                                            padding: '0 4px',
+                                                        }
+                                                    }}
+                                                >
+                                                    <ShoppingCartIcon />
+                                                </Badge>
+                                            </IconButton>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
+                                            <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
+                                                <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
+                                            </IconButton>
+                                            <Typography variant="h6" component="div" sx={{ ml: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
+                                                Sports Store
                                             </Typography>
-                                        </IconButton>
-                                        <IconButton color="inherit" onClick={() => navigate('/favorites')}>
-                                            <FavoriteBorderIcon />
-                                        </IconButton>
-                                        <IconButton color="inherit" onClick={() => navigate('/cart')}>
-                                            <Badge
-                                                badgeContent={cartItemsCount}
-                                                color="primary"
+                                        </Box>
+
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', width: '60%', gap: 4 }}>
+                                            {categories.map((category) => (
+                                                <Button
+                                                    key={category.name}
+                                                    color="inherit"
+                                                    onMouseEnter={() => handleMouseEnter(category.name)}
+                                                    onMouseLeave={handleMouseLeave}
+                                                    onClick={() => navigate(`/products?category=${category.name.toLowerCase()}`)} // Navigate to Products.jsx
+                                                    sx={{
+                                                        textTransform: 'none',
+                                                        fontWeight: 'medium',
+                                                        fontSize: '1rem',
+                                                        p: 1,
+                                                        borderRadius: '4px',
+                                                        transition: 'background-color 0.2s ease',
+                                                        '&:hover': {
+                                                            backgroundColor: '#f5f5f5',
+                                                        },
+                                                    }}
+                                                >
+                                                    {category.name}
+                                                </Button>
+                                            ))}
+                                        </Box>
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '20%', justifyContent: 'flex-end' }}>
+                                            <IconButton
+                                                color="inherit"
+                                                onClick={handleSearchClick}
                                                 sx={{
-                                                    '& .MuiBadge-badge': {
-                                                        right: -3,
-                                                        top: 3,
-                                                        border: '2px solid white',
-                                                        padding: '0 4px',
-                                                    }
+                                                    backgroundColor: '#f0f0f0',
+                                                    borderRadius: '20px',
+                                                    width: '200px',
+                                                    justifyContent: 'flex-start',
+                                                    pl: 2,
+                                                    '&:hover': {
+                                                        backgroundColor: '#e8e8e8',
+                                                    },
+                                                    border: '1px solid #e0e0e0',
                                                 }}
                                             >
-                                                <ShoppingCartIcon />
-                                            </Badge>
-                                        </IconButton>
-                                        {user ? (
-                                            <>
-                                                {user.role === 'admin' && (
+                                                <SearchIcon sx={{ color: 'text.secondary' }} />
+                                                <Typography
+                                                    sx={{
+                                                        ml: 1,
+                                                        color: 'text.secondary',
+                                                        flexGrow: 1,
+                                                        textAlign: 'left'
+                                                    }}
+                                                >
+                                                    Search
+                                                </Typography>
+                                            </IconButton>
+                                            <IconButton color="inherit" onClick={() => navigate('/favorites')}>
+                                                <FavoriteBorderIcon />
+                                            </IconButton>
+                                            <IconButton color="inherit" onClick={() => navigate('/cart')}>
+                                                <Badge
+                                                    badgeContent={cartItemsCount}
+                                                    color="primary"
+                                                    sx={{
+                                                        '& .MuiBadge-badge': {
+                                                            right: -3,
+                                                            top: 3,
+                                                            border: '2px solid white',
+                                                            padding: '0 4px',
+                                                        }
+                                                    }}
+                                                >
+                                                    <ShoppingCartIcon />
+                                                </Badge>
+                                            </IconButton>
+                                            {user ? (
+                                                <>
+                                                    {user.role === 'admin' && (
+                                                        <Button
+                                                            color="inherit"
+                                                            onClick={() => navigate('/admin')}
+                                                            sx={{ textTransform: 'none' }}
+                                                        >
+                                                            Admin
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         color="inherit"
-                                                        onClick={() => navigate('/admin')}
+                                                        onClick={() => {
+                                                            logout();
+                                                            navigate('/');
+                                                        }}
                                                         sx={{ textTransform: 'none' }}
                                                     >
-                                                        Admin
+                                                        Logout
                                                     </Button>
-                                                )}
-                                                <Button
+                                                </>
+                                            ) : (
+                                                <IconButton
                                                     color="inherit"
-                                                    onClick={() => {
-                                                        logout();
-                                                        navigate('/');
-                                                    }}
-                                                    sx={{ textTransform: 'none' }}
+                                                    onClick={() => navigate('/login')}
                                                 >
-                                                    Logout
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <Button
-                                                color="inherit"
-                                                onClick={() => navigate('/login')}
-                                                sx={{ textTransform: 'none' }}
+                                                    <AccountCircleIcon />
+                                                </IconButton>
+                                            )}
+                                        </Box>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </Toolbar>
+
+                    {/* Full-width dropdown menu */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            width: '100%',
+                            zIndex: 1000,
+                            overflow: 'hidden', // Hide overflow during animation
+                        }}
+                    >
+                        <Paper
+                            elevation={3}
+                            onMouseEnter={handleDropdownMouseEnter} // Keep the dropdown open when hovered
+                            onMouseLeave={handleMouseLeave} // Close the dropdown when the mouse leaves
+                            sx={{
+                                backgroundColor: 'white',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                p: 4,
+                                transform: hoveredCategory ? 'translateY(0)' : 'translateY(-100%)', // Slide down or up
+                                transition: 'transform 0.3s ease', // Smooth sliding animation
+                            }}
+                        >
+                            <Grid
+                                container
+                                spacing={4}
+                                justifyContent="center" // Center the grid horizontally
+                            >
+                                {categories
+                                    .find((cat) => cat.name === hoveredCategory)
+                                    ?.subcategories.map((subcategory) => (
+                                        <Grid item xs={4} key={subcategory}> {/* 3 items per row (12/4 = 3) */}
+                                            <Box
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    p: 2,
+                                                    borderRadius: '4px',
+                                                    transition: 'background-color 0.2s ease',
+                                                    textAlign: 'center', // Center the text
+                                                    '&:hover': {
+                                                        backgroundColor: '#f5f5f5',
+                                                    },
+                                                }}
+                                                onClick={() => navigate(`/products?category=${hoveredCategory.toLowerCase()}&subcategory=${subcategory.toLowerCase().replace(/\s+/g, '-')}`)} // Navigate to Products.jsx
                                             >
-                                                Login
-                                            </Button>
-                                        )}
-                                    </Box>
-                                </>
-                            )}
-                        </>
-                    )}
-                </Toolbar>
+                                                <Typography
+                                                    variant="subtitle1"
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        color: 'text.primary',
+                                                        '&:hover': {
+                                                            color: 'primary.main',
+                                                        },
+                                                    }}
+                                                >
+                                                    {subcategory}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                            </Grid>
+                        </Paper>
+                    </Box>
+                </Box>
             </ClickAwayListener>
         </AppBar>
     );
