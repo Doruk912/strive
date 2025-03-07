@@ -1,4 +1,3 @@
-// components/StockManagementDialog.jsx
 import React, { useState, useEffect } from 'react';
 import {
     Dialog,
@@ -17,6 +16,8 @@ import {
     Paper,
     Alert,
     Box,
+    Typography,
+    Divider,
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
@@ -74,55 +75,105 @@ const StockManagementDialog = ({ open, onClose, product, onSave }) => {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>
-                Manage Stock by Size - {product?.name}
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: 2,
+                    maxHeight: '80vh'
+                }
+            }}
+        >
+            <DialogTitle sx={{
+                pb: 1,
+                backgroundColor: 'primary.main',
+                color: 'white'
+            }}>
+                <Typography variant="h6" component="div">
+                    Stock Management
+                </Typography>
+                <Typography variant="subtitle2" sx={{ mt: 0.5, opacity: 0.9 }}>
+                    {product?.name}
+                </Typography>
             </DialogTitle>
-            <DialogContent>
+
+            <Divider />
+
+            <DialogContent sx={{ p: 3 }}>
                 {error && (
-                    <Box sx={{ mb: 2 }}>
-                        <Alert severity="error">{error}</Alert>
+                    <Box sx={{ mb: 3 }}>
+                        <Alert
+                            severity="error"
+                            variant="filled"
+                            sx={{ borderRadius: 1 }}
+                        >
+                            {error}
+                        </Alert>
                     </Box>
                 )}
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
+
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        boxShadow: 2,
+                        borderRadius: 2,
+                        overflow: 'hidden'
+                    }}
+                >
                     <Table>
                         <TableHead>
-                            <TableRow>
-                                <TableCell>Size</TableCell>
-                                <TableCell>Stock</TableCell>
-                                <TableCell>Action</TableCell>
+                            <TableRow sx={{ backgroundColor: 'grey.100' }}>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Size</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Stock</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {sizes.map((sizeItem) => (
-                                <TableRow key={sizeItem.size}>
-                                    <TableCell>{sizeItem.size}</TableCell>
+                                <TableRow
+                                    key={sizeItem.size}
+                                    sx={{ '&:hover': { backgroundColor: 'grey.50' } }}
+                                >
+                                    <TableCell>
+                                        <Typography variant="body1">
+                                            {sizeItem.size}
+                                        </Typography>
+                                    </TableCell>
                                     <TableCell>
                                         <TextField
                                             type="number"
                                             size="small"
                                             value={sizeItem.stock}
                                             onChange={(e) => handleStockChange(sizeItem.size, e.target.value)}
-                                            inputProps={{ min: 0 }}
+                                            inputProps={{
+                                                min: 0,
+                                                sx: { textAlign: 'center' }
+                                            }}
+                                            sx={{ width: '100px' }}
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <IconButton
                                             onClick={() => handleDeleteSize(sizeItem.size)}
                                             color="error"
+                                            size="small"
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            <TableRow>
+                            <TableRow sx={{ backgroundColor: 'grey.50' }}>
                                 <TableCell>
                                     <TextField
                                         size="small"
                                         value={newSize.size}
                                         onChange={(e) => setNewSize({ ...newSize, size: e.target.value })}
-                                        placeholder="Size"
+                                        placeholder="Enter size"
+                                        sx={{ width: '120px' }}
                                     />
                                 </TableCell>
                                 <TableCell>
@@ -131,14 +182,19 @@ const StockManagementDialog = ({ open, onClose, product, onSave }) => {
                                         type="number"
                                         value={newSize.stock}
                                         onChange={(e) => setNewSize({ ...newSize, stock: e.target.value })}
-                                        placeholder="Stock"
-                                        inputProps={{ min: 0 }}
+                                        placeholder="Enter stock"
+                                        inputProps={{
+                                            min: 0,
+                                            sx: { textAlign: 'center' }
+                                        }}
+                                        sx={{ width: '100px' }}
                                     />
                                 </TableCell>
                                 <TableCell>
                                     <IconButton
                                         onClick={handleAddSize}
                                         color="primary"
+                                        size="small"
                                     >
                                         <AddIcon />
                                     </IconButton>
@@ -148,10 +204,23 @@ const StockManagementDialog = ({ open, onClose, product, onSave }) => {
                     </Table>
                 </TableContainer>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleSave} variant="contained" color="primary">
-                    Save
+
+            <Divider />
+
+            <DialogActions sx={{ p: 2, backgroundColor: 'grey.50' }}>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    sx={{ mr: 1 }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSave}
+                    variant="contained"
+                    color="primary"
+                >
+                    Save Changes
                 </Button>
             </DialogActions>
         </Dialog>

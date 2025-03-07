@@ -10,7 +10,7 @@ Can:
 * Update Products page
 * Miscellaneous changes
 * Logo and name
-* Product page openers
+* Filter changes
 * Footer
 * Favorites list
 * Dropdown menu for categories on the header
