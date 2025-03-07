@@ -1,8 +1,6 @@
 ## Project To-Do List
 
-Doruk:
-* Error message in login/register
-* Admin page 
+Doruk: 
 * Manager page
 * Profile page
 * Proceed to checkout

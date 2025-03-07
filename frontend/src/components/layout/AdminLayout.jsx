@@ -19,6 +19,7 @@ import {
     Menu as MenuIcon,
     CampaignOutlined as CampaignOutlinedIcon,
     FeaturedPlayListOutlined as FeaturedCategoriesIcon,
+    Home as HomeIcon,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -40,6 +41,10 @@ const AdminLayout = () => {
         navigate('/');
     };
 
+    const handleViewSite = () => {
+        navigate('/');
+    };
+
     const menuItems = [
         { text: 'Products', icon: <InventoryIcon />, path: '/admin/products' },
         { text: 'Featured Products', icon: <StarIcon />, path: '/admin/featured' },
@@ -55,6 +60,24 @@ const AdminLayout = () => {
                     Admin Dashboard
                 </Typography>
             </Box>
+
+            {/* Add View Site button at the top */}
+            <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Button
+                    fullWidth
+                    startIcon={<HomeIcon />}
+                    onClick={handleViewSite}
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                        mb: 1,
+                        textTransform: 'none',
+                    }}
+                >
+                    View Site
+                </Button>
+            </Box>
+
             <List sx={{ flexGrow: 1 }}>
                 {menuItems.map((item) => (
                     <ListItem
@@ -72,6 +95,8 @@ const AdminLayout = () => {
                     </ListItem>
                 ))}
             </List>
+
+            {/* Logout button at the bottom */}
             <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                 <Button
                     fullWidth
