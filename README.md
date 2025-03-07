@@ -9,7 +9,7 @@ Doruk:
 
 Can:
 * Miscellaneous changes
-* Logo and name
+* Logo
 * Footer
 
 Taha:
