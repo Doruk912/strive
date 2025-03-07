@@ -22,6 +22,7 @@ import { FavoritesProvider } from './context/FavoritesContext';
 import Favorites from './pages/Favorites';
 import FeaturedCategories from './pages/AdminFeaturedCategories';
 import AdminPromotionalBanner from "./pages/AdminPromotionalBanner";
+import Profile from "./pages/Profile";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -49,8 +50,8 @@ function AppContent() {
         const { user } = useAuth();
         const location = useLocation();
 
-        if (!user || user.role !== 'admin') {
-            return <Navigate to="/" state={{ from: location }} replace />;
+        if (!user) {
+            return <Navigate to="/login" state={{ from: location }} replace />;
         }
 
         return children;
@@ -71,9 +72,16 @@ function AppContent() {
                         <Route path="/products" element={<Products />} />
                         <Route path="/product/:id" element={<ProductDetail />} />
                         <Route path="/cart" element={<Cart />} />
+                        <Route path="/profile" element={<Profile />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/favorites" element={<Favorites />} />
+
+                        <Route path="/profile" element={
+                            <ProtectedRoute>
+                                <Profile />
+                            </ProtectedRoute>
+                        } />
 
                         <Route path="/admin" element={
                             <ProtectedRoute>
