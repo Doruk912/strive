@@ -12,10 +12,10 @@ Can:
 * Logo and name
 * Footer
 * Favorites buttons
-* Dropdown menu for categories on the header
 
 Taha:
 * Responsiveness
+* Favorites pages
   
 Alara:
 * Miscellaneous tasks
