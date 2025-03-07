@@ -12,9 +12,16 @@ import {
     Paper,
     IconButton,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Inventory as InventoryIcon } from '@mui/icons-material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Inventory as InventoryIcon,
+    Collections as ImagesIcon
+} from '@mui/icons-material';
 import StockManagementDialog from '../components/StockManagementDialog';
 import CommonDialog from '../components/AdminDialog';
+import ImageManagementDialog from '../components/ImageManagementDialog';
 import { adminProducts as initialProducts } from '../mockData/Products';
 
 const Products = () => {
@@ -22,6 +29,7 @@ const Products = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [openStockDialog, setOpenStockDialog] = useState(false);
+    const [openImageDialog, setOpenImageDialog] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -69,6 +77,11 @@ const Products = () => {
         }
     };
 
+    const handleImageManagement = (product) => {
+        setSelectedProduct(product);
+        setOpenImageDialog(true);
+    };
+
     const validateForm = () => {
         if (!formData.name || !formData.price || !formData.category) {
             alert('Please fill in all required fields');
@@ -101,7 +114,7 @@ const Products = () => {
     };
 
     return (
-        <Box>
+        <Box sx={{ mt: -3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h5">Products Management</Typography>
                 <Button
@@ -113,26 +126,41 @@ const Products = () => {
                 </Button>
             </Box>
 
-            <TableContainer component={Paper}>
+            <TableContainer
+                component={Paper}
+                sx={{
+                    borderRadius: 2,
+                    boxShadow: 2,
+                    overflow: 'hidden'
+                }}
+            >
                 <Table>
                     <TableHead>
-                        <TableRow>
-                            <TableCell>Image</TableCell>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Category</TableCell>
-                            <TableCell>Price</TableCell>
-                            <TableCell>Stock</TableCell>
-                            <TableCell>Actions</TableCell>
+                        <TableRow sx={{ backgroundColor: 'grey.100' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Image</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Category</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Stock</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {products.map((product) => (
-                            <TableRow key={product.id}>
+                            <TableRow
+                                key={product.id}
+                                sx={{ '&:hover': { backgroundColor: 'grey.50' } }}
+                            >
                                 <TableCell>
                                     <img
                                         src={product.image}
                                         alt={product.name}
-                                        style={{ width: 50, height: 50, objectFit: 'cover' }}
+                                        style={{
+                                            width: 50,
+                                            height: 50,
+                                            objectFit: 'cover',
+                                            borderRadius: '4px'
+                                        }}
                                         onError={(e) => {
                                             e.target.src = '/default-product-image.jpg';
                                         }}
@@ -145,16 +173,35 @@ const Products = () => {
                                     {product.sizes ?
                                         product.sizes.reduce((total, size) =>
                                             total + (Number(size.stock) || 0), 0)
-                                        : Number(product.stock) || 0}
+                                        : 0}
                                 </TableCell>
                                 <TableCell>
-                                    <IconButton onClick={() => handleEdit(product)}>
+                                    <IconButton
+                                        onClick={() => handleEdit(product)}
+                                        size="small"
+                                        sx={{ mr: 1 }}
+                                    >
                                         <EditIcon />
                                     </IconButton>
-                                    <IconButton onClick={() => handleStockManagement(product)}>
+                                    <IconButton
+                                        onClick={() => handleStockManagement(product)}
+                                        size="small"
+                                        sx={{ mr: 1 }}
+                                    >
                                         <InventoryIcon />
                                     </IconButton>
-                                    <IconButton onClick={() => handleDelete(product.id)}>
+                                    <IconButton
+                                        onClick={() => handleImageManagement(product)}
+                                        size="small"
+                                        sx={{ mr: 1 }}
+                                    >
+                                        <ImagesIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => handleDelete(product.id)}
+                                        size="small"
+                                        color="error"
+                                    >
                                         <DeleteIcon />
                                     </IconButton>
                                 </TableCell>
@@ -179,6 +226,19 @@ const Products = () => {
                 onClose={() => setOpenStockDialog(false)}
                 product={selectedProduct}
                 onSave={handleSaveStocks}
+            />
+
+            <ImageManagementDialog
+                open={openImageDialog}
+                onClose={() => setOpenImageDialog(false)}
+                product={selectedProduct}
+                onSave={(images) => {
+                    setProducts(products.map(product =>
+                        product.id === selectedProduct.id
+                            ? { ...product, images }
+                            : product
+                    ));
+                }}
             />
         </Box>
     );

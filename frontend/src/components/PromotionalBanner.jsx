@@ -88,14 +88,6 @@ const PromotionalBanner = () => {
         trackTouch: true,
     });
 
-    const [touchStart, setTouchStart] = useState(null);
-    const [touchEnd, setTouchEnd] = useState(null);
-
-    const getSwipeDirection = () => {
-        if (!touchStart || !touchEnd) return 0;
-        return touchStart - touchEnd;
-    };
-
     return (
         <Container
             maxWidth={false}
