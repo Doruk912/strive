@@ -11,7 +11,6 @@ Can:
 * Miscellaneous changes
 * Logo and name
 * Footer
-* Favorites buttons
 
 Taha:
 * Responsiveness
