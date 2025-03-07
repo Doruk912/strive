@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Container, Typography, Box, Card, CardMedia, Button, IconButton} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Container, Typography, Box, Card, CardMedia, Button, IconButton } from '@mui/material';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { featuredProducts, popularCategories } from '../mockData/Products';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -9,7 +9,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import PromotionalBanner from "../components/PromotionalBanner";
 
 const Home = () => {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Initialize useNavigate
     const scrollContainerRef = useRef(null);
     const [favorites, setFavorites] = useState({});
     const [hoveredProduct, setHoveredProduct] = useState(null);
@@ -68,6 +68,11 @@ const Home = () => {
                 behavior: 'smooth'
             });
         }
+    };
+
+    // Function to handle category click
+    const handleCategoryClick = (categoryName) => {
+        navigate(`/products?category=${categoryName}`); // Navigate to Products.jsx with category name
     };
 
     return (
@@ -250,6 +255,7 @@ const Home = () => {
                                         scrollSnapAlign: 'start',
                                         cursor: 'pointer',
                                     }}
+                                    onClick={() => handleCategoryClick(category.name)} // Add onClick handler
                                 >
                                     <Card
                                         sx={{
