@@ -5,6 +5,7 @@ Doruk:
 * Admin page 
 * Manager page
 * Profile page
+* Proceed to checkout
 
 Can:
 * Miscellaneous changes
