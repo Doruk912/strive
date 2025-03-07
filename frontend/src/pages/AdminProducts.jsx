@@ -114,7 +114,7 @@ const Products = () => {
     };
 
     return (
-        <Box sx={{ mt: -3 }}>
+        <Box sx={{ mt: -10 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h5">Products Management</Typography>
                 <Button
