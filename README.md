@@ -15,6 +15,7 @@ Can:
 
 Taha:
 * Responsiveness
+* Favorites pages
   
 Alara:
 * Miscellaneous tasks
