@@ -173,7 +173,7 @@ const Home = () => {
                             }
                         }}
                     >
-                        Premium sports accessories for every athlete
+                        JUST STRIVE
                     </Typography>
                     <Button
                         onClick={() => navigate('/products')}
