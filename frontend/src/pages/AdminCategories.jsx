@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState} from 'react';
 import {
     Box,
     Typography,
@@ -35,6 +35,7 @@ const Categories = () => {
     const [formData, setFormData] = useState({ id: null, name: '', image: '', parentId: null });
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [expandedCategoryId, setExpandedCategoryId] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const handleOpenDialog = (category = { id: null, name: '', image: '', parentId: null }) => {
         setFormData(category);
@@ -46,19 +47,29 @@ const Categories = () => {
         setFormData({ id: null, name: '', image: '', parentId: null });
     };
 
-    const handleSaveCategory = () => {
+    const handleSaveCategory = async () => {
         if (!formData.name.trim()) {
             setSnackbar({ open: true, message: 'Name is required', severity: 'error' });
             return;
         }
 
+        // Here you would typically upload the image to your server
+        // and get back the URL before saving the category
+        let imageUrl = formData.image;
+        if (selectedFile) {
+            // Example upload logic (replace with your actual upload implementation)
+            // imageUrl = await uploadImage(selectedFile);
+        }
+
         if (formData.id) {
             setCategories(categories.map(cat => {
                 if (cat.id === formData.id) {
-                    return { ...cat, name: formData.name, image: formData.image };
+                    return { ...cat, name: formData.name, image: imageUrl };
                 }
                 if (cat.subcategories) {
-                    cat.subcategories = cat.subcategories.map(sub => sub.id === formData.id ? { ...sub, name: formData.name } : sub);
+                    cat.subcategories = cat.subcategories.map(sub =>
+                        sub.id === formData.id ? { ...sub, name: formData.name } : sub
+                    );
                 }
                 return cat;
             }));
@@ -66,16 +77,28 @@ const Categories = () => {
         } else {
             const newId = Date.now();
             if (formData.parentId) {
-                setCategories(categories.map(cat => cat.id === formData.parentId ? {
-                    ...cat,
-                    subcategories: [...cat.subcategories, { id: newId, name: formData.name, parentId: formData.parentId }]
-                } : cat));
+                setCategories(categories.map(cat =>
+                    cat.id === formData.parentId ? {
+                        ...cat,
+                        subcategories: [...cat.subcategories, {
+                            id: newId,
+                            name: formData.name,
+                            parentId: formData.parentId
+                        }]
+                    } : cat
+                ));
             } else {
-                setCategories([...categories, { ...formData, id: newId, subcategories: [] }]);
+                setCategories([...categories, {
+                    ...formData,
+                    id: newId,
+                    image: imageUrl,
+                    subcategories: []
+                }]);
             }
             setSnackbar({ open: true, message: 'Added successfully', severity: 'success' });
         }
 
+        setSelectedFile(null);
         handleCloseDialog();
     };
 
@@ -101,10 +124,22 @@ const Categories = () => {
         setSnackbar({ open: false, message: '', severity: 'success' });
     };
 
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        setSelectedFile(file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setFormData({ ...formData, image: e.target.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
-        <Box sx={{ mt: 3 }}>
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h5" sx={{ mb: 2 }}>Categories Management</Typography>
+        <Box sx={{ mt: -10 }}>
+            <Paper sx={{ p: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h5">Categories Management</Typography>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
@@ -198,29 +233,123 @@ const Categories = () => {
                 </Table>
             </TableContainer>
 
-            <Dialog open={openDialog} onClose={handleCloseDialog}>
-                <DialogTitle>{formData.id ? 'Edit Item' : 'Add Item'}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        sx={{ mb: 2 }}
-                    />
-                    {!formData.parentId && (
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                PaperProps={{
+                    sx: {
+                        width: '400px',
+                        borderRadius: '8px'
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        borderBottom: '1px solid #e0e0e0',
+                        p: 2,
+                        fontSize: '16px',
+                        fontWeight: 500
+                    }}
+                >
+                    {formData.id ? 'Edit Item' : 'Add Item'}
+                </DialogTitle>
+                <DialogContent sx={{ p: 2 }}>
+                    <Box sx={{ mb: 2 }}>
+                        <Typography
+                            sx={{
+                                fontSize: '14px',
+                                color: '#666',
+                                mb: 1
+                            }}
+                        >
+                            Name
+                        </Typography>
                         <TextField
                             fullWidth
-                            label="Image URL"
-                            value={formData.image}
-                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '4px',
+                                }
+                            }}
                         />
+                    </Box>
+                    {!formData.parentId && (
+                        <Box>
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="image-upload"
+                                type="file"
+                                onChange={handleFileChange}
+                            />
+                            <label htmlFor="image-upload">
+                                <Button
+                                    component="span"
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: '#2196f3',
+                                        borderColor: '#2196f3',
+                                        '&:hover': {
+                                            borderColor: '#2196f3',
+                                            backgroundColor: 'rgba(33, 150, 243, 0.04)'
+                                        }
+                                    }}
+                                >
+                                    UPLOAD IMAGE
+                                </Button>
+                            </label>
+                            {formData.image && (
+                                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                    <img
+                                        src={formData.image}
+                                        alt="Preview"
+                                        style={{
+                                            maxWidth: '100%',
+                                            maxHeight: '200px',
+                                            objectFit: 'contain'
+                                        }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleSaveCategory} variant="contained" color="primary">
-                        Save
+                <DialogActions
+                    sx={{
+                        borderTop: '1px solid #e0e0e0',
+                        p: 2,
+                        '& .MuiButton-root': {
+                            minWidth: '64px',
+                            textTransform: 'uppercase',
+                            fontWeight: 500
+                        }
+                    }}
+                >
+                    <Button
+                        onClick={handleCloseDialog}
+                        sx={{
+                            color: '#2196f3'
+                        }}
+                    >
+                        CANCEL
+                    </Button>
+                    <Button
+                        onClick={handleSaveCategory}
+                        variant="contained"
+                        sx={{
+                            backgroundColor: '#2196f3',
+                            '&:hover': {
+                                backgroundColor: '#1976d2'
+                            }
+                        }}
+                    >
+                        SAVE
                     </Button>
                 </DialogActions>
             </Dialog>
