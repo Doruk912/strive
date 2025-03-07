@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import {
     Grid,
     Typography,
@@ -12,71 +12,70 @@ import {
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import { products } from '../mockData/Products'; // Adjust the import path as needed
+import { products } from '../mockData/Products';
+import { useFavorites } from '../context/FavoritesContext';
 
 const Products = () => {
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
+    const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
     const [filters, setFilters] = useState({
         category: [],
         sportGroup: [],
     });
-    const [favorites, setFavorites] = useState({});
-
-    const toggleFavorite = (productId) => {
-        setFavorites((prev) => ({
-            ...prev,
-            [productId]: !prev[productId],
-        }));
-    };
 
     const handleFilterChange = (filterType, value) => {
         setFilters((prev) => ({
             ...prev,
             [filterType]: prev[filterType].includes(value)
-                ? prev[filterType].filter((item) => item !== value) // Remove if already selected
-                : [...prev[filterType], value], // Add if not selected
+                ? prev[filterType].filter((item) => item !== value)
+                : [...prev[filterType], value],
         }));
     };
 
-    // No filtering based on query parameters
+    const isFavorite = (productId) => favoriteItems.some(item => item.id === productId);
+
+    const toggleFavorite = (product) => {
+        if (isFavorite(product.id)) {
+            removeFromFavorites(product.id);
+        } else {
+            addToFavorites(product);
+        }
+    };
+
     const filteredProducts = products;
 
     return (
         <Box sx={{ width: '100%', mt: 4 }}>
-            {/* Page Title */}
             <Typography
                 variant="h4"
                 gutterBottom
                 sx={{
                     fontWeight: 'bold',
                     mb: 4,
-                    color: '#2B2B2B', // Darker text color
-                    textAlign: 'left', // Align to the left
-                    paddingLeft: '16px', // Align with the filter section
+                    color: '#2B2B2B',
+                    textAlign: 'left',
+                    paddingLeft: '16px',
                 }}
             >
                 Sports Equipment
             </Typography>
 
-            {/* Main Content (Filter and Products) */}
             <Box sx={{ display: 'flex', width: '100%' }}>
-                {/* Filter Section (Sticky) */}
                 <Box
                     sx={{
-                        width: '250px', // Fixed width for the filter section
+                        width: '250px',
                         position: 'sticky',
                         top: 0,
                         height: '100vh',
                         overflowY: 'auto',
                         padding: '16px',
-                        backgroundColor: '#ffffff', // White background for the filter section
+                        backgroundColor: '#ffffff',
                     }}
                 >
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
                         Filter
                     </Typography>
 
-                    {/* Category Filter */}
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: '#2B2B2B' }}>
                             Category
@@ -88,16 +87,15 @@ const Products = () => {
                                     <Checkbox
                                         checked={filters.category.includes(category)}
                                         onChange={() => handleFilterChange('category', category)}
-                                        sx={{ color: '#2B2B2B' }} // Darker checkbox color
+                                        sx={{ color: '#2B2B2B' }}
                                     />
                                 }
                                 label={`${category} (${products.filter((p) => p.category === category).length})`}
-                                sx={{ mb: 1, color: '#2B2B2B' }} // Darker text color
+                                sx={{ mb: 1, color: '#2B2B2B' }}
                             />
                         ))}
                     </Box>
 
-                    {/* Sport Group Filter */}
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: '#2B2B2B' }}>
                             Sport Group
@@ -109,23 +107,22 @@ const Products = () => {
                                     <Checkbox
                                         checked={filters.sportGroup.includes(sport)}
                                         onChange={() => handleFilterChange('sportGroup', sport)}
-                                        sx={{ color: '#2B2B2B' }} // Darker checkbox color
+                                        sx={{ color: '#2B2B2B' }}
                                     />
                                 }
                                 label={`${sport} (${products.filter((p) => p.name.includes(sport)).length})`}
-                                sx={{ mb: 1, color: '#2B2B2B' }} // Darker text color
+                                sx={{ mb: 1, color: '#2B2B2B' }}
                             />
                         ))}
                     </Box>
                 </Box>
 
-                {/* Product Grid Section */}
                 <Box sx={{ flex: 1, pl: 3, pr: 2 }}>
                     <Grid container spacing={3}>
                         {filteredProducts.map((product) => (
                             <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                                 <Card
-                                    onClick={() => navigate(`/product/${product.id}`)} // Navigate to ProductDetail.jsx
+                                    onClick={() => navigate(`/product/${product.id}`)}
                                     sx={{
                                         boxShadow: 'none',
                                         borderRadius: 0,
@@ -142,31 +139,32 @@ const Products = () => {
                                         },
                                     }}
                                 >
-                                    {/* Favorite Button */}
                                     <IconButton
                                         onClick={(event) => {
-                                            event.stopPropagation(); // Stop event propagation
-                                            toggleFavorite(product.id);
+                                            event.stopPropagation();
+                                            toggleFavorite(product);
                                         }}
                                         sx={{
                                             position: 'absolute',
                                             top: 8,
                                             right: 8,
                                             zIndex: 1,
-                                            color: favorites[product.id] ? '#000000' : '#000',
-                                            backgroundColor: 'white',
+                                            color: 'black', // Set color to black
+                                            backgroundColor: 'transparent', // Set background color to transparent
                                             padding: '4px',
                                             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                            '&:hover': {
+                                                backgroundColor: 'transparent', // Ensure hover background is transparent
+                                            },
                                         }}
                                     >
-                                        {favorites[product.id] ? (
+                                        {isFavorite(product.id) ? (
                                             <FavoriteIcon sx={{ fontSize: '1.2rem' }} />
                                         ) : (
                                             <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />
                                         )}
                                     </IconButton>
 
-                                    {/* Product Image */}
                                     <CardMedia
                                         component="img"
                                         image={product.image}
@@ -178,7 +176,6 @@ const Products = () => {
                                         }}
                                     />
 
-                                    {/* Product Info */}
                                     <Box
                                         sx={{
                                             backgroundColor: '#868686',

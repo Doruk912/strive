@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoritesContext';
 import {
     Container,
     Grid,
@@ -29,11 +30,12 @@ const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { addToCart, cartItems } = useCart();
+    const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
     const product = products.find(p => p.id === parseInt(id));
     const [quantity, setQuantity] = useState(1);
-    const [isFavorite, setIsFavorite] = useState(false);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const isInCart = cartItems.some(item => item.id === product?.id);
+    const isFavorite = favoriteItems.some(item => item.id === product?.id);
 
     if (!product) {
         return (
@@ -60,9 +62,16 @@ const ProductDetail = () => {
         }
     };
 
+    const toggleFavorite = () => {
+        if (isFavorite) {
+            removeFromFavorites(product.id);
+        } else {
+            addToFavorites(product);
+        }
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            {/* Breadcrumbs */}
             <Breadcrumbs
                 separator={<NavigateNextIcon fontSize="small" />}
                 sx={{ mb: 4 }}
@@ -87,7 +96,6 @@ const ProductDetail = () => {
             </Breadcrumbs>
 
             <Grid container spacing={4}>
-                {/* Product Image */}
                 <Grid item xs={12} md={6}>
                     <Box
                         sx={{
@@ -111,22 +119,22 @@ const ProductDetail = () => {
                     </Box>
                 </Grid>
 
-                {/* Product Details */}
                 <Grid item xs={12} md={6}>
                     <Box sx={{ position: 'relative' }}>
                         <IconButton
-                            onClick={() => setIsFavorite(!isFavorite)}
+                            onClick={toggleFavorite}
                             sx={{
                                 position: 'absolute',
                                 right: 0,
                                 top: 0,
+                                color: 'black', // Set color to black
                                 transition: 'transform 0.2s ease',
                                 '&:hover': {
                                     transform: 'scale(1.1)',
                                 },
                             }}
                         >
-                            {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+                            {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                         </IconButton>
 
                         <Typography variant="h4" component="h1" gutterBottom>
@@ -167,7 +175,6 @@ const ProductDetail = () => {
 
                         <Divider sx={{ my: 3 }} />
 
-                        {/* Quantity Selector and Add to Cart Button */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                             <FormControl sx={{ width: 100 }}>
                                 <InputLabel>Qty</InputLabel>
@@ -204,7 +211,6 @@ const ProductDetail = () => {
                             </Button>
                         </Box>
 
-                        {/* Additional Product Information */}
                         <Typography variant="body2" color="text.secondary">
                             Free shipping on orders over $50
                         </Typography>
