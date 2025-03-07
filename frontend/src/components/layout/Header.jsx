@@ -491,8 +491,24 @@ const Header = () => {
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
                                                 <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
                                             </IconButton>
-                                            <Typography variant="h6" component="div" sx={{ ml: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
-                                                Sports Store
+                                            <Typography
+                                                variant="h6"
+                                                component="div"
+                                                sx={{
+                                                    ml: 1,
+                                                    cursor: 'pointer',
+                                                    fontFamily: 'Roboto, sans-serif',
+                                                    fontWeight: 'bold',
+                                                    letterSpacing: '0.1em',
+                                                    color: 'primary.main',
+                                                    textTransform: 'uppercase',
+                                                    '&:hover': {
+                                                        color: 'primary.dark',
+                                                    },
+                                                }}
+                                                onClick={() => navigate('/')}
+                                            >
+                                                STRIVE
                                             </Typography>
                                         </Box>
 
