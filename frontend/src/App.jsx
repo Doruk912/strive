@@ -21,6 +21,7 @@ import AdminFeaturedProducts from "./pages/AdminFeaturedProducts";
 import { FavoritesProvider } from './context/FavoritesContext';
 import Favorites from './pages/Favorites';
 import FeaturedCategories from './pages/AdminFeaturedCategories';
+import AdminPromotionalBanner from "./pages/AdminPromotionalBanner";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -84,6 +85,7 @@ function AppContent() {
                             <Route path="featured" element={<AdminFeaturedProducts />} />
                             <Route path="categories" element={<Categories />} />
                             <Route path="featured-categories" element={<FeaturedCategories />} />
+                            <Route path="promotional-banner" element={<AdminPromotionalBanner />} />
                         </Route>
                     </Routes>
                 </Box>
