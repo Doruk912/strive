@@ -5,14 +5,13 @@ Doruk:
 * Admin page 
 * Manager page
 * Profile page
+* Proceed to checkout
 
 Can:
-* Update Products page
 * Miscellaneous changes
 * Logo and name
-* Filter changes
 * Footer
-* Favorites list
+* Favorites buttons
 * Dropdown menu for categories on the header
 
 Taha:
