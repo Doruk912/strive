@@ -7,15 +7,17 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PromotionalBanner from "../components/PromotionalBanner";
+import { useFavorites } from '../context/FavoritesContext';
 
 const Home = () => {
     const navigate = useNavigate(); // Initialize useNavigate
     const scrollContainerRef = useRef(null);
-    const [favorites, setFavorites] = useState({});
+    const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
     const [hoveredProduct, setHoveredProduct] = useState(null);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
     const [activeDot, setActiveDot] = useState(0);
+
 
     const checkScrollPosition = () => {
         if (scrollContainerRef.current) {
@@ -43,11 +45,14 @@ const Home = () => {
         }
     };
 
-    const toggleFavorite = (id) => {
-        setFavorites((prevFavorites) => ({
-            ...prevFavorites,
-            [id]: !prevFavorites[id],
-        }));
+    const toggleFavorite = (product) => {
+        const isAlreadyFavorite = favoriteItems.some(item => item.id === product.id);
+
+        if (isAlreadyFavorite) {
+            removeFromFavorites(product.id);
+        } else {
+            addToFavorites(product);
+        }
     };
 
     const handleScrollUpdate = () => {
@@ -449,21 +454,21 @@ const Home = () => {
                                     {hoveredProduct === product.id && (
                                         <IconButton
                                             onClick={(event) => {
-                                                event.stopPropagation(); // Stop event propagation
-                                                toggleFavorite(product.id);
+                                                event.stopPropagation();
+                                                toggleFavorite(product); // Pass the entire product object
                                             }}
                                             sx={{
                                                 position: 'absolute',
                                                 top: 8,
                                                 right: 8,
                                                 zIndex: 1,
-                                                color: favorites[product.id] ? '#000000' : '#000',
+                                                color: favoriteItems && favoriteItems.some(item => item.id === product.id) ? '#000000' : '#000',
                                                 backgroundColor: '',
                                                 padding: '4px',
                                                 boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                                             }}
                                         >
-                                            {favorites[product.id] ? (
+                                            {favoriteItems.some(item => item.id === product.id) ? (
                                                 <FavoriteIcon sx={{ fontSize: '1.2rem' }} />
                                             ) : (
                                                 <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />

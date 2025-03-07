@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import {
-    Container,
     Grid,
     Typography,
     Box,
@@ -15,6 +15,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { products } from '../mockData/Products'; // Adjust the import path as needed
 
 const Products = () => {
+    const navigate = useNavigate(); // Initialize useNavigate
     const [filters, setFilters] = useState({
         category: [],
         sportGroup: [],
@@ -40,35 +41,43 @@ const Products = () => {
     const filteredProducts = products; // No search bar, so no filtering by search term
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4 }}>
-            {/* Page Name */}
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 4 }}>
+        <Box sx={{ width: '100%', mt: 4 }}>
+            {/* Page Title */}
+            <Typography
+                variant="h4"
+                gutterBottom
+                sx={{
+                    fontWeight: 'bold',
+                    mb: 4,
+                    color: '#2B2B2B', // Darker text color
+                    textAlign: 'left', // Align to the left
+                    paddingLeft: '16px', // Align with the filter section
+                }}
+            >
                 Sports Equipment
             </Typography>
 
-            {/* Main Content */}
-            <Box sx={{ display: 'flex' }}>
+            {/* Main Content (Filter and Products) */}
+            <Box sx={{ display: 'flex', width: '100%' }}>
                 {/* Filter Section (Sticky) */}
                 <Box
                     sx={{
-                        width: '20%', // Reduced width to stick more to the left
-                        pr: 2,
+                        width: '250px', // Fixed width for the filter section
                         position: 'sticky',
                         top: 0,
                         height: '100vh',
                         overflowY: 'auto',
-                        border: '1px solid #ccc', // Added outline
-                        borderRadius: '4px', // Rounded corners
-                        padding: '16px', // Added padding
+                        padding: '16px',
+                        backgroundColor: '#ffffff', // White background for the filter section
                     }}
                 >
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
                         Filter
                     </Typography>
 
                     {/* Category Filter */}
-                    <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="subtitle1" gutterBottom>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: '#2B2B2B' }}>
                             Category
                         </Typography>
                         {['Sports', 'Fitness', 'Accessories'].map((category) => (
@@ -78,17 +87,18 @@ const Products = () => {
                                     <Checkbox
                                         checked={filters.category.includes(category)}
                                         onChange={() => handleFilterChange('category', category)}
+                                        sx={{ color: '#2B2B2B' }} // Darker checkbox color
                                     />
                                 }
                                 label={`${category} (${products.filter((p) => p.category === category).length})`}
-                                sx={{ mb: 1 }} // Added margin bottom for spacing
+                                sx={{ mb: 1, color: '#2B2B2B' }} // Darker text color
                             />
                         ))}
                     </Box>
 
                     {/* Sport Group Filter */}
-                    <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="subtitle1" gutterBottom>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: '#2B2B2B' }}>
                             Sport Group
                         </Typography>
                         {['Basketball', 'Soccer', 'Tennis', 'Baseball', 'Running', 'Yoga'].map((sport) => (
@@ -98,21 +108,23 @@ const Products = () => {
                                     <Checkbox
                                         checked={filters.sportGroup.includes(sport)}
                                         onChange={() => handleFilterChange('sportGroup', sport)}
+                                        sx={{ color: '#2B2B2B' }} // Darker checkbox color
                                     />
                                 }
                                 label={`${sport} (${products.filter((p) => p.name.includes(sport)).length})`}
-                                sx={{ mb: 1 }} // Added margin bottom for spacing
+                                sx={{ mb: 1, color: '#2B2B2B' }} // Darker text color
                             />
                         ))}
                     </Box>
                 </Box>
 
                 {/* Product Grid Section */}
-                <Box sx={{ width: '80%', pl: 2 }}>
+                <Box sx={{ flex: 1, pl: 3, pr: 2 }}>
                     <Grid container spacing={3}>
                         {filteredProducts.map((product) => (
-                            <Grid item xs={12} sm={6} md={3} key={product.id}>
+                            <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                                 <Card
+                                    onClick={() => navigate(`/product/${product.id}`)} // Navigate to ProductDetail.jsx
                                     sx={{
                                         boxShadow: 'none',
                                         borderRadius: 0,
@@ -132,7 +144,7 @@ const Products = () => {
                                     {/* Favorite Button */}
                                     <IconButton
                                         onClick={(event) => {
-                                            event.stopPropagation();
+                                            event.stopPropagation(); // Stop event propagation
                                             toggleFavorite(product.id);
                                         }}
                                         sx={{
@@ -198,7 +210,7 @@ const Products = () => {
                     </Grid>
                 </Box>
             </Box>
-        </Container>
+        </Box>
     );
 };
 

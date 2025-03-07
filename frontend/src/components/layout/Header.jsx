@@ -18,12 +18,11 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
 import HistoryIcon from '@mui/icons-material/History';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import {useLocation, useNavigate} from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '@mui/material';
 import { useCart } from '../../context/CartContext';
@@ -88,7 +87,6 @@ const Header = () => {
     const handlePopularSearchClick = (term) => {
         setSearchValue(term);
 
-        // Execute search immediately with the selected term
         const trimmedTerm = term.trim();
         if (trimmedTerm) {
             if (!searchHistory.includes(trimmedTerm)) {
@@ -105,11 +103,8 @@ const Header = () => {
     };
 
     const handleHistoryItemClick = (term) => {
-        // No longer just sets the search value
-        // Instead directly navigates to search results
         const trimmedTerm = term.trim();
         if (trimmedTerm) {
-            // Move this term to top of history
             setSearchHistory(prev => [
                 trimmedTerm,
                 ...prev.filter(item => item !== trimmedTerm)
@@ -185,7 +180,6 @@ const Header = () => {
         </Box>
     );
 
-    // Render search expanded UI - now extracted to a separate component for reuse
     const renderSearchExpanded = () => (
         <Fade in={searchExpanded} timeout={300}>
             <Box sx={{
@@ -248,15 +242,34 @@ const Header = () => {
                         }}
                     />
                     <IconButton
-                        onClick={handleSearchClose}
+                        color="inherit"
+                        onClick={handleSearchClick}
                         sx={{
-                            transition: 'transform 0.2s ease',
+                            backgroundColor: '#f0f0f0',
+                            borderRadius: '20px',
+                            width: '200px',
+                            justifyContent: 'flex-start',
+                            pl: 2,
                             '&:hover': {
-                                transform: 'rotate(90deg)',
+                                backgroundColor: '#e8e8e8',
                             },
+                            border: '1px solid #e0e0e0',
                         }}
                     >
-                        <CloseIcon />
+                        <SearchIcon sx={{ color: 'text.secondary' }} />
+                        <Typography
+                            sx={{
+                                ml: 1,
+                                color: 'text.secondary',
+                                flexGrow: 1,
+                                textAlign: 'left'
+                            }}
+                        >
+                            Search
+                        </Typography>
+                    </IconButton>
+                    <IconButton color="inherit" onClick={() => navigate('/favorites')}>
+                        <FavoriteBorderIcon />
                     </IconButton>
                 </Box>
 
@@ -371,7 +384,6 @@ const Header = () => {
     if (location.pathname.startsWith('/admin')) {
         return null;
     }
-
 
     return (
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>
@@ -543,6 +555,3 @@ const Header = () => {
 };
 
 export default Header;
-
-
-

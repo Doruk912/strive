@@ -1,5 +1,5 @@
 import React from 'react';
-import {BrowserRouter, Routes, Route, useLocation, Navigate} from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Header from './components/layout/Header';
@@ -11,13 +11,15 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Box } from '@mui/material';
-import {AuthProvider, useAuth} from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './App.css';
 import AdminLayout from "./components/layout/AdminLayout";
 import Categories from "./pages/AdminCategories";
 import AdminProducts from "./pages/AdminProducts";
 import AdminFeaturedProducts from "./pages/AdminFeaturedProducts";
+import { FavoritesProvider } from './context/FavoritesContext';
+import Favorites from './pages/Favorites'; // Add this import
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -69,6 +71,7 @@ function AppContent() {
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/favorites" element={<Favorites />} />
 
                         <Route path="/admin" element={
                             <ProtectedRoute>
@@ -92,9 +95,11 @@ function App() {
     return (
         <AuthProvider>
             <CartProvider>
-                <BrowserRouter>
-                    <AppContent />
-                </BrowserRouter>
+                <FavoritesProvider>
+                    <BrowserRouter>
+                        <AppContent />
+                    </BrowserRouter>
+                </FavoritesProvider>
             </CartProvider>
         </AuthProvider>
     );
