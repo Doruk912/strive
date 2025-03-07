@@ -17,6 +17,8 @@ import {
     Category as CategoryIcon,
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
+    CampaignOutlined as CampaignOutlinedIcon,
+    FeaturedPlayListOutlined as FeaturedCategoriesIcon,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -42,6 +44,8 @@ const AdminLayout = () => {
         { text: 'Products', icon: <InventoryIcon />, path: '/admin/products' },
         { text: 'Featured Products', icon: <StarIcon />, path: '/admin/featured' },
         { text: 'Categories', icon: <CategoryIcon />, path: '/admin/categories' },
+        { text: 'Featured Categories', icon: <FeaturedCategoriesIcon />, path: '/admin/featured-categories' },
+        { text: 'Promotional Banner', icon: <CampaignOutlinedIcon />, path: '/admin/promotional-banner' },
     ];
 
     const drawer = (

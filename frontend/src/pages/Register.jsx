@@ -231,7 +231,7 @@ const Register = () => {
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             edge="end"
                                         >
-                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                            {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),

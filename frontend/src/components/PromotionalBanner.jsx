@@ -1,4 +1,3 @@
-// components/PromotionalBanner.jsx
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Container } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
