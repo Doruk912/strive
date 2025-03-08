@@ -23,6 +23,8 @@ import Favorites from './pages/Favorites';
 import FeaturedCategories from './pages/AdminFeaturedCategories';
 import AdminPromotionalBanner from "./pages/AdminPromotionalBanner";
 import Profile from "./pages/Profile";
+import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -80,6 +82,17 @@ function AppContent() {
                         <Route path="/profile" element={
                             <ProtectedRoute>
                                 <Profile />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="/checkout" element={
+                            <ProtectedRoute>
+                                <Checkout />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/order-confirmation" element={
+                            <ProtectedRoute>
+                                <OrderConfirmation />
                             </ProtectedRoute>
                         } />
 
