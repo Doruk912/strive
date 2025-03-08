@@ -13,7 +13,7 @@ export const popularCategories = [
     {
         id: 2,
         name: 'Boots',
-        image: '/api/placeholder/200/200',
+        image: 'https://obozfootwear-prod.zaneray.com/cms/images/c5b8873e-6a9e-4bcf-9624-3a32866dec63_Bridger-insulated-2.jpg?auto=compress,format&rect=186,0,820,1178&w=585&h=840',
         subcategories: [
             { id: 201, name: 'Hiking Boots', parentId: 2 },
             { id: 202, name: 'Winter Boots', parentId: 2 },
