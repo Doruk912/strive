@@ -228,20 +228,69 @@ const Header = () => {
 
     const drawer = (
         <Box sx={{ width: 250 }} role="presentation" onKeyDown={toggleDrawer(false)}>
+            {/* Header with Logo and Name */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    p: 2,
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                    cursor: 'pointer', // Add cursor pointer
+                }}
+                onClick={() => { navigate('/'); setDrawerOpen(false); }} // Add click handler
+            >
+                <img
+                    src="/logo2-upscaled.png"
+                    alt="Logo"
+                    style={{
+                        height: 40,
+                        width: 'auto',
+                        marginRight: 12,
+                    }}
+                />
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontFamily: '"Montserrat", sans-serif',
+                        fontWeight: 700,
+                        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                    }}
+                >
+                    STRIVE
+                </Typography>
+            </Box>
+
+            {/* Categories Section - removed the "Categories" text */}
             <List>
                 {categories.map((category) => (
                     <React.Fragment key={category.name}>
                         <ListItem
                             button
                             onClick={() => handleNavigateToProducts()}
-                            sx={{ display: 'flex', justifyContent: 'space-between' }}
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                px: 2,
+                            }}
                         >
-                            <ListItemText primary={category.name} />
+                            <ListItemText
+                                primary={category.name}
+                                sx={{
+                                    '& .MuiListItemText-primary': {
+                                        fontSize: '0.95rem',
+                                        fontWeight: 500,
+                                    }
+                                }}
+                            />
                             <IconButton
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleCategoryClick(category.name);
                                 }}
+                                size="small"
                             >
                                 {expandedCategory === category.name ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             </IconButton>
@@ -252,36 +301,76 @@ const Header = () => {
                                     <ListItem
                                         button
                                         key={subcategory}
-                                        sx={{ pl: 4 }}
+                                        sx={{
+                                            pl: 4,
+                                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                                        }}
                                         onClick={handleNavigateToProducts}
                                     >
-                                        <ListItemText primary={subcategory} />
+                                        <ListItemText
+                                            primary={subcategory}
+                                            sx={{
+                                                '& .MuiListItemText-primary': {
+                                                    fontSize: '0.9rem',
+                                                }
+                                            }}
+                                        />
                                     </ListItem>
                                 ))}
                             </List>
                         </Collapse>
                     </React.Fragment>
                 ))}
-                <ListItem button onClick={() => { navigate('/favorites'); setDrawerOpen(false); }}>
-                    <ListItemText primary="Favorites" />
-                </ListItem>
-                {user ? (
-                    <>
-                        {user.role === 'admin' && (
-                            <ListItem button onClick={() => { navigate('/admin'); setDrawerOpen(false); }}>
-                                <ListItemText primary="Admin" />
-                            </ListItem>
-                        )}
-                        <ListItem button onClick={() => { logout(); navigate('/'); setDrawerOpen(false); }}>
-                            <ListItemText primary="Logout" />
-                        </ListItem>
-                    </>
-                ) : (
-                    <ListItem button onClick={() => { navigate('/login'); setDrawerOpen(false); }}>
-                        <ListItemText primary="Login" />
-                    </ListItem>
-                )}
             </List>
+
+            <Divider />
+
+            {/* Account Section */}
+            {user && (
+                <List>
+                    <Typography
+                        variant="overline"
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            display: 'block',
+                            color: 'text.secondary',
+                            fontWeight: 500,
+                        }}
+                    >
+                        Account
+                    </Typography>
+                    {user.role === 'admin' && (
+                        <ListItem
+                            button
+                            onClick={() => { navigate('/admin'); setDrawerOpen(false); }}
+                            sx={{ px: 2 }}
+                        >
+                            <ListItemIcon>
+                                <AdminPanelSettingsIcon sx={{ color: 'primary.main' }} />
+                            </ListItemIcon>
+                            <ListItemText primary="Admin Dashboard" />
+                        </ListItem>
+                    )}
+                    <ListItem
+                        button
+                        onClick={() => { logout(); navigate('/'); setDrawerOpen(false); }}
+                        sx={{ px: 2 }}
+                    >
+                        <ListItemIcon>
+                            <LogoutIcon sx={{ color: 'error.main' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary="Logout"
+                            sx={{
+                                '& .MuiListItemText-primary': {
+                                    color: 'error.main',
+                                }
+                            }}
+                        />
+                    </ListItem>
+                </List>
+            )}
         </Box>
     );
 
@@ -494,7 +583,14 @@ const Header = () => {
                                         <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
                                             <MenuIcon />
                                         </IconButton>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => navigate('/')}
+                                        >
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
                                                 <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 35 }} />
                                             </IconButton>
