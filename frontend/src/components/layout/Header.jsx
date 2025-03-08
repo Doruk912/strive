@@ -488,69 +488,78 @@ const Header = () => {
                             justifyContent: 'space-between'
                         }}>
 
-                                {isMobile ? (
-                                    <>
+                            {isMobile ? (
+                                <>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
+                                            <MenuIcon />
+                                        </IconButton>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
-                                                <MenuIcon />
-                                            </IconButton>
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 40 }} />
+                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 35 }} />
                                             </IconButton>
-                                        </Box>
-                                        <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-                                            {drawer}
-                                        </Drawer>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <IconButton
-                                                color="inherit"
-                                                onClick={handleSearchClick}
+                                            <Typography
+                                                variant="subtitle1"
                                                 sx={{
-                                                    backgroundColor: '#f0f0f0',
-                                                    borderRadius: '20px',
-                                                    width: '200px',
-                                                    justifyContent: 'flex-start',
-                                                    pl: 2,
-                                                    '&:hover': {
-                                                        backgroundColor: '#e8e8e8',
-                                                    },
-                                                    border: '1px solid #e0e0e0',
+                                                    fontFamily: '"Montserrat", sans-serif',
+                                                    fontWeight: 700,
+                                                    fontSize: '1.1rem',
+                                                    background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                                                    WebkitBackgroundClip: 'text',
+                                                    WebkitTextFillColor: 'transparent',
                                                 }}
                                             >
-                                                <SearchIcon sx={{ color: 'text.secondary' }} />
-                                                <Typography
-                                                    sx={{
-                                                        ml: 1,
-                                                        color: 'text.secondary',
-                                                        flexGrow: 1,
-                                                        textAlign: 'left'
-                                                    }}
-                                                >
-                                                    Search
-                                                </Typography>
-                                            </IconButton>
-                                            <IconButton
-                                                color="inherit"
-                                                onClick={() => navigate('/cart')}
-                                                sx={{ mr: 1 }}
-                                            >
-                                                <Badge
-                                                    badgeContent={cartItemsCount}
-                                                    color="primary"
-                                                    sx={{
-                                                        '& .MuiBadge-badge': {
-                                                            right: -3,
-                                                            top: 3,
-                                                            border: '2px solid white',
-                                                            padding: '0 4px',
-                                                        }
-                                                    }}
-                                                >
-                                                    <ShoppingCartIcon />
-                                                </Badge>
-                                            </IconButton>
+                                                STRIVE
+                                            </Typography>
                                         </Box>
-                                    </>
+                                    </Box>
+                                    <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+                                        {drawer}
+                                    </Drawer>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={handleSearchClick}
+                                            sx={{ p: 1 }}
+                                        >
+                                            <SearchIcon />
+                                        </IconButton>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={() => navigate('/favorites')}
+                                            sx={{ p: 1 }}
+                                        >
+                                            <FavoriteBorderIcon />
+                                        </IconButton>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={() => navigate('/cart')}
+                                            sx={{ p: 1 }}
+                                        >
+                                            <Badge
+                                                badgeContent={cartItemsCount}
+                                                color="primary"
+                                                sx={{
+                                                    '& .MuiBadge-badge': {
+                                                        right: -3,
+                                                        top: 3,
+                                                        border: '2px solid white',
+                                                        padding: '0 4px',
+                                                    }
+                                                }}
+                                            >
+                                                <ShoppingCartIcon />
+                                            </Badge>
+                                        </IconButton>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={handleProfileMenuOpen}
+                                            sx={{ p: 1 }}
+                                        >
+                                            <AccountCircleIcon />
+                                        </IconButton>
+                                    </Box>
+                                </>
                                 ) : (
                                     <>
                                         <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
@@ -706,202 +715,6 @@ const Header = () => {
                                             >
                                                 <AccountCircleIcon />
                                             </IconButton>
-                                            <Menu
-                                                anchorEl={anchorEl}
-                                                open={Boolean(anchorEl)}
-                                                onClose={handleProfileMenuClose}
-                                                onClick={handleProfileMenuClose}
-                                                PaperProps={{
-                                                    elevation: 3,
-                                                    sx: {
-                                                        mt: 1,
-                                                        minWidth: 220, // Slightly reduced width
-                                                        borderRadius: '8px', // Slightly reduced border radius
-                                                        overflow: 'visible',
-                                                        filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            display: 'block',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            right: 14,
-                                                            width: 8, // Slightly smaller arrow
-                                                            height: 8,
-                                                            bgcolor: 'background.paper',
-                                                            transform: 'translateY(-50%) rotate(45deg)',
-                                                            zIndex: 0,
-                                                        },
-                                                    },
-                                                }}
-                                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                                            >
-                                                {user ? (
-                                                    <>
-                                                        <Box sx={{
-                                                            px: 2, // Reduced padding
-                                                            py: 1.5,
-                                                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                                                            borderTopLeftRadius: '8px',
-                                                            borderTopRightRadius: '8px',
-                                                        }}>
-                                                            <Typography
-                                                                variant="caption"
-                                                                color="text.secondary"
-                                                                sx={{ display: 'block', mb: 0.5 }}
-                                                            >
-                                                                Signed in as
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontWeight: 500,
-                                                                    color: 'text.primary',
-                                                                }}
-                                                            >
-                                                                {user.email}
-                                                            </Typography>
-                                                        </Box>
-                                                        <Box sx={{ py: 0.5 }}>
-                                                            <MenuItem
-                                                                onClick={() => navigate('/profile')}
-                                                                sx={{
-                                                                    py: 1,
-                                                                    px: 2,
-                                                                    '&:hover': {
-                                                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <ListItemIcon>
-                                                                    <AccountCircleIcon
-                                                                        fontSize="small"
-                                                                        sx={{
-                                                                            color: 'primary.main',
-                                                                            width: 20,
-                                                                            height: 20,
-                                                                        }}
-                                                                    />
-                                                                </ListItemIcon>
-                                                                <Typography variant="body2">
-                                                                    Profile
-                                                                </Typography>
-                                                            </MenuItem>
-                                                            {user.role === 'admin' && (
-                                                                <MenuItem
-                                                                    onClick={() => navigate('/admin')}
-                                                                    sx={{
-                                                                        py: 1,
-                                                                        px: 2,
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ListItemIcon>
-                                                                        <AdminPanelSettingsIcon
-                                                                            fontSize="small"
-                                                                            sx={{
-                                                                                color: 'primary.main',
-                                                                                width: 20,
-                                                                                height: 20,
-                                                                            }}
-                                                                        />
-                                                                    </ListItemIcon>
-                                                                    <Typography variant="body2">
-                                                                        Admin Dashboard
-                                                                    </Typography>
-                                                                </MenuItem>
-                                                            )}
-                                                            {user.role === 'manager' && (
-                                                                <MenuItem
-                                                                    onClick={() => navigate('/manager')}
-                                                                    sx={{
-                                                                        py: 1,
-                                                                        px: 2,
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ListItemIcon>
-                                                                        <AdminPanelSettingsIcon
-                                                                            fontSize="small"
-                                                                            sx={{
-                                                                                color: 'primary.main',
-                                                                                width: 20,
-                                                                                height: 20,
-                                                                            }}
-                                                                        />
-                                                                    </ListItemIcon>
-                                                                    <Typography variant="body2">
-                                                                        Manager Dashboard
-                                                                    </Typography>
-                                                                </MenuItem>
-                                                            )}
-                                                        </Box>
-                                                        <Divider sx={{ my: 0.5 }} />
-                                                        <Box sx={{ py: 0.5 }}>
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    logout();
-                                                                    navigate('/');
-                                                                    handleProfileMenuClose();
-                                                                }}
-                                                                sx={{
-                                                                    py: 1,
-                                                                    px: 2,
-                                                                    '&:hover': {
-                                                                        backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <ListItemIcon>
-                                                                    <LogoutIcon
-                                                                        fontSize="small"
-                                                                        sx={{
-                                                                            color: 'error.main',
-                                                                            width: 20,
-                                                                            height: 20,
-                                                                        }}
-                                                                    />
-                                                                </ListItemIcon>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    sx={{ color: 'error.main' }}
-                                                                >
-                                                                    Logout
-                                                                </Typography>
-                                                            </MenuItem>
-                                                        </Box>
-                                                    </>
-                                                ) : (
-                                                    <MenuItem
-                                                        onClick={() => navigate('/login')}
-                                                        sx={{
-                                                            py: 1,
-                                                            px: 2,
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                                            },
-                                                        }}
-                                                    >
-                                                        <ListItemIcon>
-                                                            <LoginIcon
-                                                                fontSize="small"
-                                                                sx={{
-                                                                    color: 'primary.main',
-                                                                    width: 20,
-                                                                    height: 20,
-                                                                }}
-                                                            />
-                                                        </ListItemIcon>
-                                                        <Typography variant="body2">
-                                                            Login
-                                                        </Typography>
-                                                    </MenuItem>
-                                                )}
-                                            </Menu>
                                         </Box>
                                     </>
                                 )}
@@ -971,6 +784,202 @@ const Header = () => {
                             </Grid>
                         </Paper>
                     </Box>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleProfileMenuClose}
+                        onClick={handleProfileMenuClose}
+                        PaperProps={{
+                            elevation: 3,
+                            sx: {
+                                mt: 1,
+                                minWidth: 220,
+                                borderRadius: '8px',
+                                overflow: 'visible',
+                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
+                                '&:before': {
+                                    content: '""',
+                                    display: 'block',
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 14,
+                                    width: 8,
+                                    height: 8,
+                                    bgcolor: 'background.paper',
+                                    transform: 'translateY(-50%) rotate(45deg)',
+                                    zIndex: 0,
+                                },
+                            },
+                        }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    >
+                        {user ? (
+                            <>
+                                <Box sx={{
+                                    px: 2, // Reduced padding
+                                    py: 1.5,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                                    borderTopLeftRadius: '8px',
+                                    borderTopRightRadius: '8px',
+                                }}>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ display: 'block', mb: 0.5 }}
+                                    >
+                                        Signed in as
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            fontWeight: 500,
+                                            color: 'text.primary',
+                                        }}
+                                    >
+                                        {user.email}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ py: 0.5 }}>
+                                    <MenuItem
+                                        onClick={() => navigate('/profile')}
+                                        sx={{
+                                            py: 1,
+                                            px: 2,
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                            },
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <AccountCircleIcon
+                                                fontSize="small"
+                                                sx={{
+                                                    color: 'primary.main',
+                                                    width: 20,
+                                                    height: 20,
+                                                }}
+                                            />
+                                        </ListItemIcon>
+                                        <Typography variant="body2">
+                                            Profile
+                                        </Typography>
+                                    </MenuItem>
+                                    {user.role === 'admin' && (
+                                        <MenuItem
+                                            onClick={() => navigate('/admin')}
+                                            sx={{
+                                                py: 1,
+                                                px: 2,
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                },
+                                            }}
+                                        >
+                                            <ListItemIcon>
+                                                <AdminPanelSettingsIcon
+                                                    fontSize="small"
+                                                    sx={{
+                                                        color: 'primary.main',
+                                                        width: 20,
+                                                        height: 20,
+                                                    }}
+                                                />
+                                            </ListItemIcon>
+                                            <Typography variant="body2">
+                                                Admin Dashboard
+                                            </Typography>
+                                        </MenuItem>
+                                    )}
+                                    {user.role === 'manager' && (
+                                        <MenuItem
+                                            onClick={() => navigate('/manager')}
+                                            sx={{
+                                                py: 1,
+                                                px: 2,
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                },
+                                            }}
+                                        >
+                                            <ListItemIcon>
+                                                <AdminPanelSettingsIcon
+                                                    fontSize="small"
+                                                    sx={{
+                                                        color: 'primary.main',
+                                                        width: 20,
+                                                        height: 20,
+                                                    }}
+                                                />
+                                            </ListItemIcon>
+                                            <Typography variant="body2">
+                                                Manager Dashboard
+                                            </Typography>
+                                        </MenuItem>
+                                    )}
+                                </Box>
+                                <Divider sx={{ my: 0.5 }} />
+                                <Box sx={{ py: 0.5 }}>
+                                    <MenuItem
+                                        onClick={() => {
+                                            logout();
+                                            navigate('/');
+                                            handleProfileMenuClose();
+                                        }}
+                                        sx={{
+                                            py: 1,
+                                            px: 2,
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                                            },
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <LogoutIcon
+                                                fontSize="small"
+                                                sx={{
+                                                    color: 'error.main',
+                                                    width: 20,
+                                                    height: 20,
+                                                }}
+                                            />
+                                        </ListItemIcon>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ color: 'error.main' }}
+                                        >
+                                            Logout
+                                        </Typography>
+                                    </MenuItem>
+                                </Box>
+                            </>
+                        ) : (
+                            <MenuItem
+                                onClick={() => navigate('/login')}
+                                sx={{
+                                    py: 1,
+                                    px: 2,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                    },
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <LoginIcon
+                                        fontSize="small"
+                                        sx={{
+                                            color: 'primary.main',
+                                            width: 20,
+                                            height: 20,
+                                        }}
+                                    />
+                                </ListItemIcon>
+                                <Typography variant="body2">
+                                    Login
+                                </Typography>
+                            </MenuItem>
+                        )}
+                    </Menu>
                 </Box>
             </ClickAwayListener>
         </AppBar>
