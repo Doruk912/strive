@@ -109,7 +109,9 @@ const Login = () => {
 
             if (foundUser.role === 'admin') {
                 navigate('/admin');
-            } else {
+            }else if (foundUser.role === 'manager') {
+                navigate('/manager');
+            }else {
                 navigate('/');
             }
 

@@ -487,7 +487,7 @@ const Header = () => {
         </Fade>
     );
 
-    if (location.pathname.startsWith('/admin')) {
+    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/manager')) {
         return null;
     }
 
@@ -773,6 +773,32 @@ const Header = () => {
                                                                     </ListItemIcon>
                                                                     <Typography variant="body2">
                                                                         Admin Dashboard
+                                                                    </Typography>
+                                                                </MenuItem>
+                                                            )}
+                                                            {user.role === 'manager' && (
+                                                                <MenuItem
+                                                                    onClick={() => navigate('/manager')}
+                                                                    sx={{
+                                                                        py: 1,
+                                                                        px: 2,
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <ListItemIcon>
+                                                                        <AdminPanelSettingsIcon
+                                                                            fontSize="small"
+                                                                            sx={{
+                                                                                color: 'primary.main',
+                                                                                width: 20,
+                                                                                height: 20,
+                                                                            }}
+                                                                        />
+                                                                    </ListItemIcon>
+                                                                    <Typography variant="body2">
+                                                                        Manager Dashboard
                                                                     </Typography>
                                                                 </MenuItem>
                                                             )}

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext} from 'react';
 
 const AuthContext = createContext(null);
 
@@ -14,8 +14,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        setUser(null);
-        localStorage.removeItem('user');
+        return new Promise((resolve) => {
+            setUser(null);
+            localStorage.removeItem('user');
+            resolve();
+        });
     };
 
     return (
