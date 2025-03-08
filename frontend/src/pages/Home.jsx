@@ -188,7 +188,7 @@ const Home = () => {
                             }
                         }}
                     >
-                        JUST STRIVE
+                        Push Your Limits, Find Your Stride
                     </Typography>
                     <Button
                         onClick={() => navigate('/products')}
