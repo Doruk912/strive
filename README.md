@@ -7,7 +7,7 @@ Modern e-commerce platform specializing in sports and lifestyle products. Built 
 
 ### Prerequisites
 * Node.js (v14+)
-* npm or yarn
+* npm
 
 ### Installation Steps
 
