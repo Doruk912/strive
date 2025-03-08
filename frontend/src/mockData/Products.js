@@ -164,9 +164,9 @@ export const popularCategories = [
     { id: 1, name: 'Jackets', image: 'https://images.ctfassets.net/egcy6g1mdqw1/4eoRpyEp4OT5nwbHXt2XMU/836cd28b6afef9b62cd165a8d693dbb0/Jackets-MensPLP-3.png?fm=avif' },
     { id: 2, name: 'Boots', image: '/api/placeholder/200/200' },
     { id: 3, name: 'Pants', image: '/api/placeholder/200/200' },
-    { id: 4, name: 'Fleece', image: '/api/placeholder/200/200' },
-    { id: 5, name: 'Innerwear', image: '/api/placeholder/200/200' },
-    { id: 6, name: 'Thermals', image: '/api/placeholder/200/200' },
+    { id: 4, name: 'Innerwear', image: '/api/placeholder/200/200' },
+    { id: 5, name: 'Accessories', image: '/api/placeholder/200/200' },
+    { id: 6, name: 'Highlights', image: '/api/placeholder/200/200' },
 ];
 
 export const adminProducts = [
