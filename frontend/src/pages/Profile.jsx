@@ -55,7 +55,7 @@ const Profile = () => {
     return (
         <>
             <Helmet>
-                <title>Strive - Home</title>
+                <title>Strive - Profile</title>
             </Helmet>
         <Box
             sx={{

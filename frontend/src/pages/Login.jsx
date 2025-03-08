@@ -108,13 +108,17 @@ const Login = () => {
 
             await login(foundUser);
 
+            let title = 'Strive - Home';
             if (foundUser.role === 'admin') {
+                title = 'Strive - Admin';
                 navigate('/admin');
-            }else if (foundUser.role === 'manager') {
+            } else if (foundUser.role === 'manager') {
+                title = 'Strive - Manager';
                 navigate('/manager');
-            }else {
+            } else {
                 navigate('/');
             }
+            document.title = title;
 
         } catch (error) {
             console.error('Login error:', error);
