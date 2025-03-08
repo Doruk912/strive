@@ -566,28 +566,77 @@ const Header = () => {
                                 ) : (
                                     <>
                                         <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
-                                            <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 40 }} />
-                                            </IconButton>
-                                            <Typography
-                                                variant="h6"
-                                                component="div"
-                                                sx={{
-                                                    ml: 1,
-                                                    cursor: 'pointer',
-                                                    fontFamily: 'Roboto, sans-serif',
-                                                    fontWeight: 'bold',
-                                                    letterSpacing: '0.1em',
-                                                    color: 'primary.main',
-                                                    textTransform: 'uppercase',
-                                                    '&:hover': {
-                                                        color: 'primary.dark',
-                                                    },
-                                                }}
+                                            <IconButton
+                                                edge="start"
+                                                color="inherit"
                                                 onClick={() => navigate('/')}
+                                                sx={{
+                                                    p: 0.5, // Reduced padding
+                                                    '&:hover': {
+                                                        backgroundColor: 'transparent',
+                                                    }
+                                                }}
                                             >
-                                                STRIVE
-                                            </Typography>
+                                                <img
+                                                    src="/logo2-upscaled.png"
+                                                    alt="Logo"
+                                                    style={{
+                                                        height: 45, // Slightly larger
+                                                        width: 'auto',
+                                                        filter: 'brightness(1.1)', // Makes the logo slightly brighter
+                                                        transition: 'transform 0.3s ease',
+                                                    }}
+                                                />
+                                            </IconButton>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    ml: 1,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="h5"
+                                                    component="div"
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        fontFamily: '"Montserrat", sans-serif', // More modern font
+                                                        fontWeight: 700,
+                                                        letterSpacing: '0.15em',
+                                                        color: 'primary.main',
+                                                        textTransform: 'uppercase',
+                                                        lineHeight: 1,
+                                                        fontSize: '1.5rem',
+                                                        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                                                        textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                        WebkitBackgroundClip: 'text',
+                                                        WebkitTextFillColor: 'transparent',
+                                                        transition: 'all 0.3s ease',
+                                                        '&:hover': {
+                                                            transform: 'scale(1.05)',
+                                                            background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                                                            WebkitBackgroundClip: 'text',
+                                                            WebkitTextFillColor: 'transparent',
+                                                        },
+                                                    }}
+                                                    onClick={() => navigate('/')}
+                                                >
+                                                    STRIVE
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        letterSpacing: '0.1em',
+                                                        fontSize: '0.7rem',
+                                                        fontFamily: '"Roboto", sans-serif',
+                                                        opacity: 0.8,
+                                                        mt: -0.5,
+                                                    }}
+                                                >
+                                                    SPORTS & LIFESTYLE
+                                                </Typography>
+                                            </Box>
                                         </Box>
 
                                         <Box sx={{ display: 'flex', justifyContent: 'center', width: '60%', gap: 4 }}>
