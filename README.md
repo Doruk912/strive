@@ -5,8 +5,6 @@ Doruk:
 
 Can:
 * Miscellaneous changes
-* Logo
-* Footer
 
 Taha:
 * Responsiveness
