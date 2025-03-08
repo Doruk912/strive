@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 const Profile = () => {
     const { user, login } = useAuth();
@@ -52,6 +53,10 @@ const Profile = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Home</title>
+            </Helmet>
         <Box
             sx={{
                 height: '90vh',
@@ -171,6 +176,7 @@ const Profile = () => {
                 </Paper>
             </Container>
         </Box>
+            </>
     );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -10,13 +10,12 @@ import {
     Grid,
     Divider,
 } from '@mui/material';
-import { Close as CloseIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 
 const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
-    const [images, setImages] = useState(product?.images || []);
+    // const [images, setImages] = useState(product?.images || []);
 
     const handleImageUpload = (event) => {
-        const files = Array.from(event.target.files);
         // Handle image upload logic here
     };
 

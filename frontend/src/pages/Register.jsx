@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -148,6 +149,10 @@ const Register = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Register</title>
+            </Helmet>
         <Box sx={styles.wrapper}>
             <Box sx={styles.formWrapper}>
                 <Box sx={styles.formContainer}>
@@ -263,6 +268,7 @@ const Register = () => {
                 </Box>
             </Box>
         </Box>
+        </>
     );
 };
 

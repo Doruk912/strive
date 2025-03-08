@@ -8,6 +8,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PromotionalBanner from "../components/PromotionalBanner";
 import { useFavorites } from '../context/FavoritesContext';
+import {Helmet} from "react-helmet";
 
 const Home = () => {
     const navigate = useNavigate(); // Initialize useNavigate
@@ -81,6 +82,10 @@ const Home = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Home</title>
+            </Helmet>
         <Box sx={{ width: '100%', marginTop: { xs: '-38px', md: '-30px' }}}>
             {/* Hero Section with Full-Width Video and Text Overlay */}
             <Box
@@ -537,6 +542,7 @@ const Home = () => {
                 </Box>
             </Container>
         </Box>
+        </>
     );
 };
 

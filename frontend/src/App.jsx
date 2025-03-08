@@ -28,6 +28,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import ManagerLayout from "./components/layout/ManagerLayout";
 import EmployeeManagement from "./pages/ManagerEmployeeManagement";
 import FinancialOverview from "./pages/ManagerFinancialOverview";
+import {Helmet} from "react-helmet";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -65,6 +66,9 @@ function AppContent() {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <ScrollToTop />
+            <Helmet>
+                <title>Strive</title>
+            </Helmet>
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',

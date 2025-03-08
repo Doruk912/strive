@@ -17,6 +17,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {mockUsers} from "../mockData/Users";
+import {Helmet} from "react-helmet";
 
 const Login = () => {
     const getErrorMessage = (errorType) => {
@@ -208,6 +209,10 @@ const Login = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Login</title>
+            </Helmet>
         <Box sx={styles.wrapper}>
             <Box sx={styles.formWrapper}>
                 <Box sx={styles.formContainer}>
@@ -301,6 +306,7 @@ const Login = () => {
                 </Box>
             </Box>
         </Box>
+            </>
     );
 };
 

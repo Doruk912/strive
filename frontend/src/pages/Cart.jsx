@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 const Cart = () => {
     const theme = useTheme();
@@ -34,6 +35,10 @@ const Cart = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Cart</title>
+            </Helmet>
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Typography variant="h4" gutterBottom>
                 Shopping Cart
@@ -194,6 +199,7 @@ const Cart = () => {
                 </Grid>
             </Grid>
         </Container>
+            </>
     );
 };
 

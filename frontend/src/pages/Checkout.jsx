@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 const steps = ['Shipping Address', 'Payment Method', 'Review Order'];
 
@@ -209,6 +210,10 @@ const Checkout = () => {
     };
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Checkout</title>
+            </Helmet>
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Paper sx={{ p: 4 }}>
                 <Typography variant="h4" gutterBottom align="center">
@@ -239,6 +244,7 @@ const Checkout = () => {
                 </Box>
             </Paper>
         </Container>
+            </>
     );
 };
 

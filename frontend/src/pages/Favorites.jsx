@@ -3,6 +3,7 @@ import { Box, Card, CardMedia, Typography, IconButton, useMediaQuery } from '@mu
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useFavorites } from '../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
+import {Helmet} from "react-helmet";
 
 const Favorites = () => {
     const { favoriteItems, removeFromFavorites } = useFavorites();
@@ -11,6 +12,10 @@ const Favorites = () => {
     const isMobile = useMediaQuery('(max-width:600px)');
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Favorites</title>
+            </Helmet>
         <Box sx={{ p: 2 }}>
             <Typography variant="h4" sx={{ mb: 2 }}>
                 My Favorites
@@ -110,6 +115,7 @@ const Favorites = () => {
                 ))}
             </Box>
         </Box>
+            </>
     );
 };
 

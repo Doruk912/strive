@@ -14,6 +14,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { products } from '../mockData/Products';
 import { useFavorites } from '../context/FavoritesContext';
+import {Helmet} from "react-helmet";
 
 const Products = () => {
     const navigate = useNavigate();
@@ -45,6 +46,10 @@ const Products = () => {
     const filteredProducts = products;
 
     return (
+        <>
+            <Helmet>
+                <title>Strive - Products</title>
+            </Helmet>
         <Box sx={{ width: '100%', mt: 4 }}>
             <Typography
                 variant="h4"
@@ -209,6 +214,7 @@ const Products = () => {
                 </Box>
             </Box>
         </Box>
+            </>
     );
 };
 
