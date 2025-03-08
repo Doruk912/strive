@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Card, CardMedia, Typography, IconButton } from '@mui/material';
+import { Box, Card, CardMedia, Typography, IconButton, useMediaQuery } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useFavorites } from '../context/FavoritesContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ const Favorites = () => {
     const { favoriteItems, removeFromFavorites } = useFavorites();
     const [hoveredProduct, setHoveredProduct] = useState(null);
     const navigate = useNavigate();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     return (
         <Box sx={{ p: 2 }}>
@@ -37,7 +38,7 @@ const Favorites = () => {
                             },
                         }}
                     >
-                        {hoveredProduct === product.id && (
+                        {(hoveredProduct === product.id || isMobile) && (
                             <IconButton
                                 onClick={(event) => {
                                     event.stopPropagation();
