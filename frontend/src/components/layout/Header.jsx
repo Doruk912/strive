@@ -495,7 +495,7 @@ const Header = () => {
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>
             <ClickAwayListener onClickAway={() => searchExpanded && handleSearchClose()}>
                 <Box>
-                    <Toolbar sx={{ justifyContent: 'space-between', width: '100%', px: isMobile ? 2 : 4, transition: 'all 0.3s ease' }}>
+                    <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', px: isMobile ? 2 : 4, transition: 'all 0.3s ease' }}>
                         {searchExpanded ? (
                             renderSearchExpanded()
                         ) : (
@@ -507,7 +507,7 @@ const Header = () => {
                                                 <MenuIcon />
                                             </IconButton>
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
+                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 40 }} />
                                             </IconButton>
                                         </Box>
                                         <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
@@ -567,7 +567,7 @@ const Header = () => {
                                     <>
                                         <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo192.png" alt="Logo" style={{ height: 40 }} />
+                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 40 }} />
                                             </IconButton>
                                             <Typography
                                                 variant="h6"
