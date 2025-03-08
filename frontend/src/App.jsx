@@ -28,6 +28,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import ManagerLayout from "./components/layout/ManagerLayout";
 import EmployeeManagement from "./pages/ManagerEmployeeManagement";
 import FinancialOverview from "./pages/ManagerFinancialOverview";
+import Terms from './pages/Terms';
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -81,6 +82,7 @@ function AppContent() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/favorites" element={<Favorites />} />
+                        <Route path="/terms" element={<Terms />} /> {/* Add this route */}
 
                         <Route path="/profile" element={
                             <ProtectedRoute>

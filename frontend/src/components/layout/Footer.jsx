@@ -1,52 +1,79 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Link } from '@mui/material';
-import {useLocation} from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink for navigation
 
 const Footer = () => {
-    const location = useLocation();
-
-    if (location.pathname.startsWith('/admin')) {
-        return null;
-    }
-
     return (
-        <Box sx={{ bgcolor: '#333', color: 'white', py: 4, mt: 'auto' }}>
+        <Box sx={{ bgcolor: 'white', color: 'black', py: 4, mt: 'auto', borderTop: '1px solid #ddd' }}>
             <Container maxWidth="lg">
-                <Grid container spacing={4}>
-                    <Grid item xs={12} sm={4}>
+                {/* Footer Sections */}
+                <Grid container spacing={4} justifyContent="center">
+                    {/* Resources Section */}
+                    <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" gutterBottom>
+                            Resources
+                        </Typography>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
+                            Help
+                        </Link>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
+                            Store Locator
+                        </Link>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
                             About Us
-                        </Typography>
-                        <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-                            Your one-stop shop for all sports accessories and equipment.
-                        </Typography>
-                    </Grid>
-
-                    <Grid item xs={12} sm={4}>
-                        <Typography variant="h6" gutterBottom>
-                            Quick Links
-                        </Typography>
-                        <Link href="#" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
-                            Sports
-                        </Link>
-                        <Link href="#" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
-                            Equipment
-                        </Link>
-                        <Link href="#" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
-                            Clothing
                         </Link>
                     </Grid>
 
-                    <Grid item xs={12} sm={4}>
+                    {/* Company Section */}
+                    <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
                         <Typography variant="h6" gutterBottom>
+                            Company
+                        </Typography>
+                        <Link component={RouterLink} to="/careers" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
+                            Careers
+                        </Link>
+                        <Link component={RouterLink} to="/investors" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
+                            Investors
+                        </Link>
+                        <Link component={RouterLink} to="/sustainability" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }}>
+                            Sustainability
+                        </Link>
+                    </Grid>
+
+                    {/* Support Section */}
+                    <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Support
+                        </Typography>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
+                            Feedback
+                        </Link>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
+                            Returns
+                        </Link>
+                        <Link href="https://g.co/kgs/jR7d5vU" color="inherit" display="block" sx={{ mb: 1, '&:hover': { color: '#007bff' } }} target="_blank" rel="noopener noreferrer">
                             Contact Us
-                        </Typography>
-                        <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-                            Email: <Link href="mailto:contact@sportsstore.com" color="inherit" sx={{ '&:hover': { color: '#007bff' } }}>contact@sportsstore.com</Link><br />
-                            Phone: <Link href="tel:1234567890" color="inherit" sx={{ '&:hover': { color: '#007bff' } }}>(123) 456-7890</Link>
-                        </Typography>
+                        </Link>
                     </Grid>
                 </Grid>
+
+                {/* Footer Bottom Section */}
+                <Box sx={{ borderTop: '1px solid #ddd', pt: 3, mt: 3, textAlign: 'center' }}>
+                    <Typography variant="body2">
+                        © 2025 Niko, Inc. All Rights Reserved
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                        <Link component={RouterLink} to="/terms" color="inherit" sx={{ mx: 1, '&:hover': { color: '#007bff' } }}>
+                            Terms of Use
+                        </Link>
+                        <Link component={RouterLink} to="/terms" color="inherit" sx={{ mx: 1, '&:hover': { color: '#007bff' } }}>
+                            Sales Terms
+                        </Link>
+                        <Link component={RouterLink} to="/terms" color="inherit" sx={{ mx: 1, '&:hover': { color: '#007bff' } }}>
+                            Privacy Policy
+                        </Link>
+                    </Box>
+                </Box>
             </Container>
         </Box>
     );
