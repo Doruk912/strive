@@ -60,7 +60,7 @@ const Footer = () => {
                 {/* Footer Bottom Section */}
                 <Box sx={{ borderTop: '1px solid #ddd', pt: 3, mt: 3, textAlign: 'center' }}>
                     <Typography variant="body2">
-                        © 2025 Niko, Inc. All Rights Reserved
+                        © 2025 Strive, Inc. All Rights Reserved
                     </Typography>
                     <Box sx={{ mt: 1 }}>
                         <Link component={RouterLink} to="/terms" color="inherit" sx={{ mx: 1, '&:hover': { color: '#007bff' } }}>
