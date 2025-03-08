@@ -1,4 +1,3 @@
-// src/constants/Texts.js
 export const termsOfUse = `
 # Strive Terms of Use
 

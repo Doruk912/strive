@@ -39,6 +39,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
 import CloseIcon from '@mui/icons-material/Close';
+import {ShoppingBag} from "@mui/icons-material";
 
 const Header = () => {
     const location = useLocation();
@@ -959,6 +960,30 @@ const Header = () => {
                                         </ListItemIcon>
                                         <Typography variant="body2">
                                             Profile
+                                        </Typography>
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => navigate('/orders')}
+                                        sx={{
+                                            py: 1,
+                                            px: 2,
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                            },
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <ShoppingBag
+                                                fontSize="small"
+                                                sx={{
+                                                    color: 'primary.main',
+                                                    width: 20,
+                                                    height: 20,
+                                                }}
+                                            />
+                                        </ListItemIcon>
+                                        <Typography variant="body2">
+                                            My Orders
                                         </Typography>
                                     </MenuItem>
                                     {user.role === 'admin' && (
