@@ -38,6 +38,7 @@ import { useCart } from '../../context/CartContext';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Header = () => {
     const location = useLocation();
@@ -295,7 +296,7 @@ const Header = () => {
                 top: 0,
                 backgroundColor: 'white',
                 p: 2,
-                zIndex: 10,
+                zIndex: 1200,
                 boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                 height: 'auto',
                 maxHeight: '80vh',
@@ -346,35 +347,8 @@ const Header = () => {
                             }
                         }}
                     />
-                    <IconButton
-                        color="inherit"
-                        onClick={handleSearchClick}
-                        sx={{
-                            backgroundColor: '#f0f0f0',
-                            borderRadius: '20px',
-                            width: '200px',
-                            justifyContent: 'flex-start',
-                            pl: 2,
-                            '&:hover': {
-                                backgroundColor: '#e8e8e8',
-                            },
-                            border: '1px solid #e0e0e0',
-                        }}
-                    >
-                        <SearchIcon sx={{ color: 'text.secondary' }} />
-                        <Typography
-                            sx={{
-                                ml: 1,
-                                color: 'text.secondary',
-                                flexGrow: 1,
-                                textAlign: 'left'
-                            }}
-                        >
-                            Search
-                        </Typography>
-                    </IconButton>
-                    <IconButton color="inherit" onClick={() => navigate('/favorites')}>
-                        <FavoriteBorderIcon />
+                    <IconButton color="inherit" onClick={handleSearchClose}>
+                        <CloseIcon />
                     </IconButton>
                 </Box>
 
@@ -495,11 +469,25 @@ const Header = () => {
         <AppBar position="fixed" color="default" elevation={1} sx={{ borderBottom: '1px solid #e0e0e0' }}>
             <ClickAwayListener onClickAway={() => searchExpanded && handleSearchClose()}>
                 <Box>
-                    <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', px: isMobile ? 2 : 4, transition: 'all 0.3s ease' }}>
-                        {searchExpanded ? (
-                            renderSearchExpanded()
-                        ) : (
-                            <>
+                    <Toolbar
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            px: isMobile ? 2 : 4,
+                            transition: 'all 0.3s ease',
+                            position: 'relative'
+                        }}
+                    >
+                        {searchExpanded && renderSearchExpanded()}
+                        <Box sx={{
+                            display: 'flex',
+                            width: '100%',
+                            visibility: searchExpanded ? 'hidden' : 'visible',
+                            justifyContent: 'space-between'
+                        }}>
+
                                 {isMobile ? (
                                     <>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -917,9 +905,8 @@ const Header = () => {
                                         </Box>
                                     </>
                                 )}
-                            </>
-                        )}
-                    </Toolbar>
+                            </Box>
+                        </Toolbar>
 
                     {/* Full-width dropdown menu */}
                     <Box
