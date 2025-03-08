@@ -124,6 +124,59 @@ const CommonDialog = ({ open, onClose, title, formData, setFormData, onSubmit, t
                         </Grid>
                     </Grid>
                 );
+            case 'employee':
+                return (
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle2" color="primary" gutterBottom>
+                                Employee Information
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                name="name"
+                                label="Employee Name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                variant="outlined"
+                                size="small"
+                            />
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle2" color="primary" gutterBottom>
+                                Position & Salary
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        fullWidth
+                                        name="position"
+                                        label="Position"
+                                        value={formData.position}
+                                        onChange={handleChange}
+                                        variant="outlined"
+                                        size="small"
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        fullWidth
+                                        name="salary"
+                                        label="Salary ($)"
+                                        type="number"
+                                        value={formData.salary}
+                                        onChange={handleChange}
+                                        variant="outlined"
+                                        size="small"
+                                        InputProps={{
+                                            startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                );
             default:
                 return null;
         }

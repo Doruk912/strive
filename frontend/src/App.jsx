@@ -27,6 +27,7 @@ import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import ManagerLayout from "./components/layout/ManagerLayout";
 import EmployeeManagement from "./pages/ManagerEmployeeManagement";
+import FinancialOverview from "./pages/ManagerFinancialOverview";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -117,10 +118,8 @@ function AppContent() {
                             </ProtectedRoute>
                         }>
                             <Route index element={<Navigate to="/manager/employees" replace />} />
-                            {/*<Route path="finances" element={<FinancialOverview />} />*/}
                             <Route path="employees" element={<EmployeeManagement />} />
-                            {/*<Route path="reports" element={<FinancialReports />} />*/}
-                            {/*<Route path="downloads" element={<DownloadData />} />*/}
+                            <Route path="finances" element={<FinancialOverview />} />
                         </Route>
                     </Routes>
                 </Box>

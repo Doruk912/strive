@@ -14,7 +14,6 @@ import {
 import {
     AttachMoney as FinanceIcon,
     People as EmployeesIcon,
-    Download as DownloadIcon,
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
     Home as HomeIcon,
@@ -50,7 +49,6 @@ const ManagerLayout = () => {
     const menuItems = [
         { text: 'Employees', icon: <EmployeesIcon />, path: '/manager/employees' },
         { text: 'Financial Overview', icon: <FinanceIcon />, path: '/manager/finances' },
-        { text: 'Download Data', icon: <DownloadIcon />, path: '/manager/downloads' },
     ];
 
     const drawer = (

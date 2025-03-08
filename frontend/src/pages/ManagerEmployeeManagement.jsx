@@ -10,12 +10,14 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
+    IconButton,
 } from '@mui/material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+} from '@mui/icons-material';
+import CommonDialog from '../components/AdminDialog';
 
 const EmployeeManagement = () => {
     const [employees, setEmployees] = useState([
@@ -23,66 +25,114 @@ const EmployeeManagement = () => {
         { id: 2, name: 'Jane Smith', position: 'Marketing', salary: 55000 },
     ]);
     const [openDialog, setOpenDialog] = useState(false);
-    const [newEmployee, setNewEmployee] = useState({
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [formData, setFormData] = useState({
         name: '',
         position: '',
         salary: '',
     });
 
-    const handleAddEmployee = () => {
-        setEmployees([
-            ...employees,
-            {
-                id: employees.length + 1,
-                ...newEmployee,
-                salary: Number(newEmployee.salary),
-            },
-        ]);
-        setOpenDialog(false);
-        setNewEmployee({ name: '', position: '', salary: '' });
+    const handleAdd = () => {
+        setSelectedEmployee(null);
+        setFormData({
+            name: '',
+            position: '',
+            salary: '',
+        });
+        setOpenDialog(true);
     };
 
-    const handleRemoveEmployee = (id) => {
-        setEmployees(employees.filter(emp => emp.id !== id));
+    const handleEdit = (employee) => {
+        setSelectedEmployee(employee);
+        setFormData(employee);
+        setOpenDialog(true);
+    };
+
+    const handleDelete = (id) => {
+        if (window.confirm('Are you sure you want to remove this employee?')) {
+            setEmployees(employees.filter(emp => emp.id !== id));
+        }
+    };
+
+    const handleSubmit = () => {
+        if (!formData.name || !formData.position || !formData.salary) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        if (selectedEmployee) {
+            setEmployees(employees.map(emp =>
+                emp.id === selectedEmployee.id
+                    ? { ...emp, ...formData }
+                    : emp
+            ));
+        } else {
+            setEmployees([
+                ...employees,
+                {
+                    id: employees.length + 1,
+                    ...formData,
+                    salary: Number(formData.salary),
+                }
+            ]);
+        }
+        setOpenDialog(false);
     };
 
     return (
         <Box sx={{ mt: -10 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h4">Employee Management</Typography>
+                <Typography variant="h5">Employee Management</Typography>
                 <Button
                     variant="contained"
-                    color="primary"
-                    onClick={() => setOpenDialog(true)}
+                    startIcon={<AddIcon />}
+                    onClick={handleAdd}
                 >
                     Add Employee
                 </Button>
             </Box>
 
-            <TableContainer component={Paper}>
+            <TableContainer
+                component={Paper}
+                sx={{
+                    borderRadius: 2,
+                    boxShadow: 2,
+                    overflow: 'hidden'
+                }}
+            >
                 <Table>
                     <TableHead>
-                        <TableRow>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Position</TableCell>
-                            <TableCell>Salary</TableCell>
-                            <TableCell>Actions</TableCell>
+                        <TableRow sx={{ backgroundColor: 'grey.100' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Position</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Salary</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {employees.map((employee) => (
-                            <TableRow key={employee.id}>
+                            <TableRow
+                                key={employee.id}
+                                sx={{ '&:hover': { backgroundColor: 'grey.50' } }}
+                            >
                                 <TableCell>{employee.name}</TableCell>
                                 <TableCell>{employee.position}</TableCell>
-                                <TableCell>${employee.salary}</TableCell>
+                                <TableCell>${employee.salary.toLocaleString()}</TableCell>
                                 <TableCell>
-                                    <Button
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={() => handleRemoveEmployee(employee.id)}
+                                    <IconButton
+                                        onClick={() => handleEdit(employee)}
+                                        size="small"
+                                        sx={{ mr: 1 }}
                                     >
-                                        Remove
-                                    </Button>
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => handleDelete(employee.id)}
+                                        size="small"
+                                        color="error"
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -90,38 +140,15 @@ const EmployeeManagement = () => {
                 </Table>
             </TableContainer>
 
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <DialogTitle>Add New Employee</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Name"
-                        fullWidth
-                        value={newEmployee.name}
-                        onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Position"
-                        fullWidth
-                        value={newEmployee.position}
-                        onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Salary"
-                        type="number"
-                        fullWidth
-                        value={newEmployee.salary}
-                        onChange={(e) => setNewEmployee({ ...newEmployee, salary: e.target.value })}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                    <Button onClick={handleAddEmployee} variant="contained">Add</Button>
-                </DialogActions>
-            </Dialog>
+            <CommonDialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                title={selectedEmployee ? 'Edit Employee' : 'Add Employee'}
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                type="employee"
+            />
         </Box>
     );
 };
