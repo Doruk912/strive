@@ -33,8 +33,8 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
@@ -242,7 +242,7 @@ const Header = () => {
                 onClick={() => { navigate('/'); setDrawerOpen(false); }} // Add click handler
             >
                 <img
-                    src="/logo2-upscaled.png"
+                    src="/logo.png"
                     alt="Logo"
                     style={{
                         height: 40,
@@ -593,7 +593,7 @@ const Header = () => {
                                             onClick={() => navigate('/')}
                                         >
                                             <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo2-upscaled.png" alt="Logo" style={{ height: 35 }} />
+                                                <img src="/logo.png" alt="Logo" style={{ height: 35 }} />
                                             </IconButton>
                                             <Typography
                                                 variant="subtitle1"
@@ -672,7 +672,7 @@ const Header = () => {
                                                 }}
                                             >
                                                 <img
-                                                    src="/logo2-upscaled.png"
+                                                    src="/logo.png"
                                                     alt="Logo"
                                                     style={{
                                                         height: 45, // Slightly larger

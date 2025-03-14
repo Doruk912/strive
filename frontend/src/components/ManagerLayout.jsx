@@ -12,21 +12,18 @@ import {
     useTheme,
 } from '@mui/material';
 import {
-    Inventory as InventoryIcon,
-    Star as StarIcon,
-    Category as CategoryIcon,
+    AttachMoney as FinanceIcon,
+    People as EmployeesIcon,
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
-    CampaignOutlined as CampaignOutlinedIcon,
-    FeaturedPlayListOutlined as FeaturedCategoriesIcon,
     Home as HomeIcon,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const DRAWER_WIDTH = 240;
 
-const AdminLayout = () => {
+const ManagerLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const theme = useTheme();
     const navigate = useNavigate();
@@ -50,22 +47,18 @@ const AdminLayout = () => {
     };
 
     const menuItems = [
-        { text: 'Products', icon: <InventoryIcon />, path: '/admin/products' },
-        { text: 'Featured Products', icon: <StarIcon />, path: '/admin/featured' },
-        { text: 'Categories', icon: <CategoryIcon />, path: '/admin/categories' },
-        { text: 'Featured Categories', icon: <FeaturedCategoriesIcon />, path: '/admin/featured-categories' },
-        { text: 'Promotional Banner', icon: <CampaignOutlinedIcon />, path: '/admin/promotional-banner' },
+        { text: 'Employees', icon: <EmployeesIcon />, path: '/manager/employees' },
+        { text: 'Financial Overview', icon: <FinanceIcon />, path: '/manager/finances' },
     ];
 
     const drawer = (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    Admin Dashboard
+                    Manager Dashboard
                 </Typography>
             </Box>
 
-            {/* Add View Site button at the top */}
             <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
                 <Button
                     fullWidth
@@ -100,7 +93,6 @@ const AdminLayout = () => {
                 ))}
             </List>
 
-            {/* Logout button at the bottom */}
             <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                 <Button
                     fullWidth
@@ -174,4 +166,4 @@ const AdminLayout = () => {
     );
 };
 
-export default AdminLayout;
+export default ManagerLayout;
