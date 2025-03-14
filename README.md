@@ -13,7 +13,7 @@ Modern e-commerce platform specializing in sports and lifestyle products. Built 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/strive-store.git
+git clone https://github.com/Doruk912/cmpe356-project.git
 cd frontend
 ```
 2. **Install dependencies**
