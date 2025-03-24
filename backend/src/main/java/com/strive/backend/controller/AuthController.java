@@ -2,6 +2,8 @@ package com.strive.backend.controller;
 
 import com.strive.backend.dto.LoginRequest;
 import com.strive.backend.dto.LoginResponse;
+import com.strive.backend.dto.RegisterRequest;
+import com.strive.backend.model.User;
 import com.strive.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,18 @@ public class AuthController {
             return ResponseEntity.ok(loginResponse);
         } catch (UsernameNotFoundException | BadCredentialsException e) {
             return ResponseEntity.status(401).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        try {
+            User user = authService.register(registerRequest);
+            return ResponseEntity.ok().body("User registered successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }

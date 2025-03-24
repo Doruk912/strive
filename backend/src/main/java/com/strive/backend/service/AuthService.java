@@ -2,6 +2,7 @@ package com.strive.backend.service;
 
 import com.strive.backend.dto.LoginRequest;
 import com.strive.backend.dto.LoginResponse;
+import com.strive.backend.dto.RegisterRequest;
 import com.strive.backend.model.User;
 import com.strive.backend.security.JwtUtil;
 import com.strive.backend.repository.UserRepository;
@@ -44,5 +45,23 @@ public class AuthService {
             user.getLastName(),
             user.getRole()
         );
+    }
+    
+    public User register(RegisterRequest registerRequest) {
+        // Check if email already exists
+        if (userRepository.findByEmail(registerRequest.getEmail()) != null) {
+            throw new RuntimeException("Email is already in use");
+        }
+        
+        // Create new user with CUSTOMER role by default
+        User user = new User();
+        user.setEmail(registerRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setFirstName(registerRequest.getFirstName());
+        user.setLastName(registerRequest.getLastName());
+        user.setPhone(registerRequest.getPhone());
+        // Role is automatically set to CUSTOMER because of the default value in the User entity
+        
+        return userRepository.save(user);
     }
 } 

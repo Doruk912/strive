@@ -14,6 +14,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {Helmet} from "react-helmet";
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -31,6 +32,7 @@ const Register = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { login } = useAuth();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -72,11 +74,50 @@ const Register = () => {
 
         setIsLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            navigate('/login');
+            // Register the user
+            const registerResponse = await fetch('http://localhost:8080/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                }),
+            });
+            
+            if (!registerResponse.ok) {
+                const data = await registerResponse.text();
+                throw new Error(data || 'Registration failed');
+            }
+
+            // Registration successful, now log in the user automatically
+            const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                }),
+            });
+
+            if (!loginResponse.ok) {
+                throw new Error('Registration successful but automatic login failed. Please login manually.');
+            }
+
+            const loginData = await loginResponse.json();
+            
+            // Use AuthContext login function instead of directly manipulating localStorage
+            login(loginData);
+
+            // Redirect to home page immediately
+            navigate('/');
         } catch (error) {
-            setErrors({ submit: 'Registration failed' });
+            setErrors({ submit: error.message || 'Registration failed' });
         } finally {
             setIsLoading(false);
         }
@@ -153,121 +194,121 @@ const Register = () => {
             <Helmet>
                 <title>Strive - Register</title>
             </Helmet>
-        <Box sx={styles.wrapper}>
-            <Box sx={styles.formWrapper}>
-                <Box sx={styles.formContainer}>
-                    <Typography sx={styles.title}>
-                        Create Account
-                    </Typography>
+            <Box sx={styles.wrapper}>
+                <Box sx={styles.formWrapper}>
+                    <Box sx={styles.formContainer}>
+                        <Typography sx={styles.title}>
+                            Create Account
+                        </Typography>
 
-                    <form onSubmit={handleSubmit}>
-                        <TextField
-                            fullWidth
-                            label="First Name"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleChange}
-                            error={!!errors.firstName}
-                            helperText={errors.firstName}
-                            sx={styles.textField}
-                        />
+                        <form onSubmit={handleSubmit}>
+                            <TextField
+                                fullWidth
+                                label="First Name"
+                                name="firstName"
+                                value={formData.firstName}
+                                onChange={handleChange}
+                                error={!!errors.firstName}
+                                helperText={errors.firstName}
+                                sx={styles.textField}
+                            />
 
-                        <TextField
-                            fullWidth
-                            label="Last Name"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleChange}
-                            error={!!errors.lastName}
-                            helperText={errors.lastName}
-                            sx={styles.textField}
-                        />
+                            <TextField
+                                fullWidth
+                                label="Last Name"
+                                name="lastName"
+                                value={formData.lastName}
+                                onChange={handleChange}
+                                error={!!errors.lastName}
+                                helperText={errors.lastName}
+                                sx={styles.textField}
+                            />
 
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            error={!!errors.email}
-                            helperText={errors.email}
-                            sx={styles.textField}
-                        />
+                            <TextField
+                                fullWidth
+                                label="Email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                error={!!errors.email}
+                                helperText={errors.email}
+                                sx={styles.textField}
+                            />
 
-                        <TextField
-                            fullWidth
-                            label="Password"
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
-                            onChange={handleChange}
-                            error={!!errors.password}
-                            helperText={errors.password}
-                            sx={styles.textField}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                        >
-                                            {showPassword ? <Visibility /> : <VisibilityOff />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
+                            <TextField
+                                fullWidth
+                                label="Password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={formData.password}
+                                onChange={handleChange}
+                                error={!!errors.password}
+                                helperText={errors.password}
+                                sx={styles.textField}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <Visibility /> : <VisibilityOff />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
 
-                        <TextField
-                            fullWidth
-                            label="Confirm Password"
-                            name="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            error={!!errors.confirmPassword}
-                            helperText={errors.confirmPassword}
-                            sx={styles.textField}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            edge="end"
-                                        >
-                                            {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
+                            <TextField
+                                fullWidth
+                                label="Confirm Password"
+                                name="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                error={!!errors.confirmPassword}
+                                helperText={errors.confirmPassword}
+                                sx={styles.textField}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                edge="end"
+                                            >
+                                                {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
 
-                        {errors.submit && (
-                            <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
-                                {errors.submit}
-                            </Typography>
-                        )}
+                            {errors.submit && (
+                                <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
+                                    {errors.submit}
+                                </Typography>
+                            )}
 
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            fullWidth
-                            disabled={isLoading}
-                            sx={styles.signUpButton}
-                        >
-                            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
-                        </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                fullWidth
+                                disabled={isLoading}
+                                sx={styles.signUpButton}
+                            >
+                                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+                            </Button>
 
-                        <Box sx={styles.loginLink}>
-                            <Link href="/login">
-                                Already have an account? Sign in
-                            </Link>
-                        </Box>
-                    </form>
+                            <Box sx={styles.loginLink}>
+                                <Link href="/login">
+                                    Already have an account? Sign in
+                                </Link>
+                            </Box>
+                        </form>
+                    </Box>
                 </Box>
             </Box>
-        </Box>
         </>
     );
 };
