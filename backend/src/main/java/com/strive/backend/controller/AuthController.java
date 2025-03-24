@@ -29,14 +29,4 @@ public class AuthController {
             return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }
     }
-    
-    @PostMapping("/update-passwords")
-    public ResponseEntity<?> updatePasswords() {
-        try {
-            authService.updatePasswordEncoding();
-            return ResponseEntity.ok("Passwords updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
-        }
-    }
 } 

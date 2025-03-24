@@ -45,13 +45,4 @@ public class AuthService {
             user.getRole()
         );
     }
-    
-    public void updatePasswordEncoding() {
-        userRepository.findAll().forEach(user -> {
-            if (!user.getPassword().startsWith("$2a$")) {
-                user.setPassword(passwordEncoder.encode(user.getPassword()));
-                userRepository.save(user);
-            }
-        });
-    }
 } 
