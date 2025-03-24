@@ -341,7 +341,7 @@ const Header = () => {
                     >
                         Account
                     </Typography>
-                    {user.role === 'ADMIN' && (
+                    {user.role && user.role.toUpperCase() === 'ADMIN' && (
                         <ListItem
                             button
                             onClick={() => { navigate('/admin'); setDrawerOpen(false); }}
@@ -986,7 +986,7 @@ const Header = () => {
                                             My Orders
                                         </Typography>
                                     </MenuItem>
-                                    {user.role === 'ADMIN' && (
+                                    {user.role && user.role.toUpperCase() === 'ADMIN' && (
                                         <MenuItem
                                             onClick={() => navigate('/admin')}
                                             sx={{
@@ -1012,7 +1012,7 @@ const Header = () => {
                                             </Typography>
                                         </MenuItem>
                                     )}
-                                    {user.role === 'MANAGER' && (
+                                    {user.role && user.role.toUpperCase() === 'MANAGER' && (
                                         <MenuItem
                                             onClick={() => navigate('/manager')}
                                             sx={{

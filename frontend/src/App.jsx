@@ -53,12 +53,16 @@ const theme = createTheme({
 });
 
 function AppContent() {
-    const ProtectedRoute = ({ children }) => {
+    const ProtectedRoute = ({ children, requiredRole }) => {
         const { user } = useAuth();
         const location = useLocation();
 
         if (!user) {
             return <Navigate to="/login" state={{ from: location }} replace />;
+        }
+
+        if (requiredRole && user.role.toUpperCase() !== requiredRole.toUpperCase()) {
+            return <Navigate to="/" replace />;
         }
 
         return children;
@@ -104,7 +108,7 @@ function AppContent() {
                         } />
 
                         <Route path="/admin" element={
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredRole="ADMIN">
                                 <AdminLayout />
                             </ProtectedRoute>
                         }>
@@ -117,7 +121,7 @@ function AppContent() {
                         </Route>
 
                         <Route path="/manager" element={
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredRole="MANAGER">
                                 <ManagerLayout />
                             </ProtectedRoute>
                         }>

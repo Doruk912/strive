@@ -117,10 +117,10 @@ const Login = () => {
             await login(userData);
 
             let title = 'Strive - Home';
-            if (userData.role === 'ADMIN') {
+            if (userData.role && userData.role.toUpperCase() === 'ADMIN') {
                 title = 'Strive - Admin';
                 navigate('/admin');
-            } else if (userData.role === 'MANAGER') {
+            } else if (userData.role && userData.role.toUpperCase() === 'MANAGER') {
                 title = 'Strive - Manager';
                 navigate('/manager');
             } else {
