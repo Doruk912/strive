@@ -16,8 +16,8 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {mockUsers} from "../mockData/Users";
-import {Helmet} from "react-helmet";
+import { Helmet } from 'react-helmet';
+import axios from 'axios';
 
 const Login = () => {
     const getErrorMessage = (errorType) => {
@@ -50,37 +50,46 @@ const Login = () => {
     useEffect(() => {
         const savedEmail = localStorage.getItem('rememberedEmail');
         if (savedEmail) {
-            setFormData(prev => ({ ...prev, email: savedEmail }));
+            setFormData({ ...formData, email: savedEmail });
             setRememberMe(true);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData({ ...formData, [name]: value });
+        
+        // Clear the specific error when the user starts typing in a field
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+            setErrors({ ...errors, [name]: null });
+        }
+        
+        // If there was a submit error, clear it when any field is modified
+        if (errors.submit) {
+            setErrors({ ...errors, submit: null });
         }
     };
 
     const validateForm = () => {
         const newErrors = {};
-
+        
         if (!formData.email) {
             newErrors.email = 'Email required';
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Invalid email';
         }
-
+        
         if (!formData.password) {
             newErrors.password = 'Password required';
-        } else if (formData.password.length < 6) {
+        } else if (formData.password.length < 3) {
             newErrors.password = 'Password length';
         }
-
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -91,14 +100,13 @@ const Login = () => {
 
         setIsLoading(true);
         try {
-            const foundUser = mockUsers.find(
-                user => user.email === formData.email && user.password === formData.password
-            );
-
-            if (!foundUser) {
-                setErrors({ submit: 'Invalid credentials' });
-                return;
+            const response = await axios.post('http://localhost:8080/api/auth/login', formData);
+            
+            if (response.status !== 200) {
+                throw new Error('Invalid credentials');
             }
+            
+            const userData = response.data;
 
             if (rememberMe) {
                 localStorage.setItem('rememberedEmail', formData.email);
@@ -106,13 +114,13 @@ const Login = () => {
                 localStorage.removeItem('rememberedEmail');
             }
 
-            await login(foundUser);
+            await login(userData);
 
             let title = 'Strive - Home';
-            if (foundUser.role === 'admin') {
+            if (userData.role === 'ADMIN') {
                 title = 'Strive - Admin';
                 navigate('/admin');
-            } else if (foundUser.role === 'manager') {
+            } else if (userData.role === 'MANAGER') {
                 title = 'Strive - Manager';
                 navigate('/manager');
             } else {
@@ -122,9 +130,16 @@ const Login = () => {
 
         } catch (error) {
             console.error('Login error:', error);
-            setErrors({
-                submit: 'Network error'
-            });
+            if (error.response) {
+                const errorStatus = error.response.status;
+                if (errorStatus === 401) {
+                    setErrors({ submit: 'Invalid credentials' });
+                } else {
+                    setErrors({ submit: 'Network error' });
+                }
+            } else {
+                setErrors({ submit: 'Network error' });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -269,7 +284,7 @@ const Login = () => {
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
+                                            onClick={handleShowPassword}
                                             edge="end"
                                         >
                                             {showPassword ? <Visibility /> : <VisibilityOff />}
