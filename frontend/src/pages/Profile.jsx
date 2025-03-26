@@ -8,8 +8,6 @@ import {
     TextField,
     Button,
     Grid,
-    Divider,
-    IconButton,
     Alert,
     Tabs,
     Tab,
@@ -31,12 +29,12 @@ import {
     Select,
     MenuItem,
 } from '@mui/material';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import 'react-phone-input-2/lib/material.css';
 import {
-    Edit as EditIcon,
     Save as SaveIcon,
-    Cancel as CancelIcon,
     Add as AddIcon,
-    Delete as DeleteIcon,
     CreditCard as CreditCardIcon,
     LocationOn as LocationIcon,
     Notifications as NotificationsIcon,
@@ -49,16 +47,17 @@ import { Helmet } from "react-helmet";
 const Profile = () => {
     const { user, login } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
-    const [isEditing, setIsEditing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [openAddressDialog, setOpenAddressDialog] = useState(false);
     const [openCardDialog, setOpenCardDialog] = useState(false);
     const [formData, setFormData] = useState({
-        name: user?.name || '',
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
         email: user?.email || '',
-        phone: user?.phone || '',
-        address: user?.address || '',
+        phoneNumber: user?.phoneNumber || '',
+        countryCode: user?.countryCode || '+1',
     });
+    const [phoneError, setPhoneError] = useState('');
 
     // Get user's full name from user context
     const userFullName = user?.firstName && user?.lastName 
@@ -88,17 +87,38 @@ const Profile = () => {
         return <Navigate to="/login" replace />;
     }
 
+    const validatePhoneNumber = (phone) => {
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        if (!phone) {
+            setPhoneError('Phone number is required');
+            return false;
+        }
+        if (!phoneRegex.test(phone)) {
+            setPhoneError('Please enter a valid phone number');
+            return false;
+        }
+        setPhoneError('');
+        return true;
+    };
+
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        if (name === 'phoneNumber') {
+            validatePhoneNumber(value);
+        }
     };
 
     const handleSubmit = () => {
+        if (!validatePhoneNumber(formData.phoneNumber)) {
+            return;
+        }
         // Here you would typically make an API call to update the user's information
         login({ ...user, ...formData }); // Update the user context
-        setIsEditing(false);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
     };
@@ -282,40 +302,53 @@ const Profile = () => {
                                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                         Personal Information
                                     </Typography>
-                                    <IconButton
-                                        onClick={() => setIsEditing(!isEditing)}
-                                        color={isEditing ? "error" : "primary"}
-                                        size="small"
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<SaveIcon />}
+                                        onClick={handleSubmit}
+                                        disabled={!!phoneError}
                                         sx={{
-                                            backgroundColor: isEditing ? 'error.light' : 'primary.light',
-                                            color: 'white',
-                                            width: 32,
-                                            height: 32,
+                                            px: 4,
+                                            py: 1,
+                                            borderRadius: 2,
+                                            textTransform: 'none',
+                                            fontWeight: 600,
+                                            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
                                             '&:hover': {
-                                                backgroundColor: isEditing ? 'error.main' : 'primary.main',
-                                            },
-                                            '& .MuiSvgIcon-root': {
-                                                fontSize: '1.2rem',
+                                                boxShadow: '0 6px 16px rgba(25, 118, 210, 0.3)',
                                             }
                                         }}
                                     >
-                                        {isEditing ? <CancelIcon /> : <EditIcon />}
-                                    </IconButton>
+                                        Save Changes
+                                    </Button>
                                 </Box>
                                 <Grid container spacing={3}>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Name"
-                                            name="name"
-                                            value={formData.name}
+                                            label="First Name"
+                                            name="firstName"
+                                            value={formData.firstName}
                                             onChange={handleChange}
-                                            disabled={!isEditing}
-                                            variant={isEditing ? "outlined" : "filled"}
+                                            variant="outlined"
                                             sx={{
-                                                '& .MuiFilledInput-root': {
-                                                    backgroundColor: 'rgba(0,0,0,0.02)',
+                                                '& .MuiOutlinedInput-root': {
+                                                    '&:hover fieldset': {
+                                                        borderColor: 'primary.main',
+                                                    },
                                                 },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Last Name"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                            variant="outlined"
+                                            sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     '&:hover fieldset': {
                                                         borderColor: 'primary.main',
@@ -329,14 +362,11 @@ const Profile = () => {
                                             fullWidth
                                             label="Email"
                                             name="email"
+                                            type="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            disabled={!isEditing}
-                                            variant={isEditing ? "outlined" : "filled"}
+                                            variant="outlined"
                                             sx={{
-                                                '& .MuiFilledInput-root': {
-                                                    backgroundColor: 'rgba(0,0,0,0.02)',
-                                                },
                                                 '& .MuiOutlinedInput-root': {
                                                     '&:hover fieldset': {
                                                         borderColor: 'primary.main',
@@ -346,76 +376,51 @@ const Profile = () => {
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            fullWidth
-                                            label="Phone"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            disabled={!isEditing}
-                                            variant={isEditing ? "outlined" : "filled"}
-                                            sx={{
-                                                '& .MuiFilledInput-root': {
-                                                    backgroundColor: 'rgba(0,0,0,0.02)',
-                                                },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '&:hover fieldset': {
-                                                        borderColor: 'primary.main',
-                                                    },
-                                                },
+                                        <PhoneInput
+                                            country={'tr'}
+                                            value={formData.phoneNumber}
+                                            onChange={(phone, country) => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    phoneNumber: phone,
+                                                    countryCode: '+' + country.dialCode
+                                                }));
+                                                validatePhoneNumber(phone);
                                             }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            fullWidth
-                                            label="Address"
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleChange}
-                                            disabled={!isEditing}
-                                            variant={isEditing ? "outlined" : "filled"}
-                                            sx={{
-                                                '& .MuiFilledInput-root': {
-                                                    backgroundColor: 'rgba(0,0,0,0.02)',
-                                                },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '&:hover fieldset': {
-                                                        borderColor: 'primary.main',
-                                                    },
-                                                },
+                                            inputStyle={{
+                                                width: '100%',
+                                                height: '56px',
+                                                fontSize: '16px',
+                                                borderRadius: '4px',
+                                                border: '1px solid rgba(0, 0, 0, 0.23)',
+                                                backgroundColor: 'white',
                                             }}
+                                            buttonStyle={{
+                                                border: '1px solid rgba(0, 0, 0, 0.23)',
+                                                borderRight: 'none',
+                                                backgroundColor: 'white',
+                                                borderRadius: '4px 0 0 4px',
+                                            }}
+                                            dropdownStyle={{
+                                                backgroundColor: 'white',
+                                                borderRadius: '4px',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                            }}
+                                            containerStyle={{
+                                                width: '100%',
+                                            }}
+                                            enableSearch={true}
+                                            searchPlaceholder="Search country..."
+                                            searchNotFound="No country found"
+                                            specialLabel=""
                                         />
+                                        {phoneError && (
+                                            <Typography color="error" variant="caption" sx={{ mt: 1, ml: 2 }}>
+                                                {phoneError}
+                                            </Typography>
+                                        )}
                                     </Grid>
                                 </Grid>
-                                {isEditing && (
-                                    <Box sx={{ 
-                                        display: 'flex', 
-                                        justifyContent: 'flex-end',
-                                        mt: 4,
-                                        mb: 2,
-                                    }}>
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<SaveIcon />}
-                                            onClick={handleSubmit}
-                                            fullWidth={window.innerWidth < 600}
-                                            sx={{
-                                                px: 4,
-                                                py: 1,
-                                                borderRadius: 2,
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
-                                                '&:hover': {
-                                                    boxShadow: '0 6px 16px rgba(25, 118, 210, 0.3)',
-                                                }
-                                            }}
-                                        >
-                                            Save Changes
-                                        </Button>
-                                    </Box>
-                                )}
                             </Box>
                         )}
 
