@@ -38,4 +38,31 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
+
+    @Override
+    public User updateUser(Integer id, User userDetails) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Update only the fields that are provided
+        if (userDetails.getFirstName() != null) {
+            user.setFirstName(userDetails.getFirstName());
+        }
+        if (userDetails.getLastName() != null) {
+            user.setLastName(userDetails.getLastName());
+        }
+        if (userDetails.getPhone() != null) {
+            // If phone is just the country code, set it to null
+            if (userDetails.getPhone().length() <= 3) {
+                user.setPhone(null);
+            } else {
+                user.setPhone(userDetails.getPhone());
+            }
+        }
+        if (userDetails.getEmail() != null) {
+            user.setEmail(userDetails.getEmail());
+        }
+
+        return userRepository.save(user);
+    }
 }

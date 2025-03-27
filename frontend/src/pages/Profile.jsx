@@ -48,6 +48,7 @@ const Profile = () => {
     const { user, login } = useAuth();
     const [activeTab, setActiveTab] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [openAddressDialog, setOpenAddressDialog] = useState(false);
     const [openCardDialog, setOpenCardDialog] = useState(false);
     const [formData, setFormData] = useState({
@@ -89,9 +90,8 @@ const Profile = () => {
 
     const validatePhoneNumber = (phone) => {
         const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-        if (!phone) {
-            setPhoneError('Phone number is required');
-            return false;
+        if (phone.length <= 3) {
+            return true;
         }
         if (!phoneRegex.test(phone)) {
             setPhoneError('Please enter a valid phone number');
@@ -113,14 +113,64 @@ const Profile = () => {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        console.log('Submit button clicked');
+        console.log('Current user:', user);
+        console.log('Form data:', formData);
+        setErrorMessage(''); // Clear any previous errors
+
         if (!validatePhoneNumber(formData.phoneNumber)) {
             return;
         }
-        // Here you would typically make an API call to update the user's information
-        login({ ...user, ...formData }); // Update the user context
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
+
+        if (!user?.userId) {
+            setErrorMessage('User ID not found. Please try logging in again.');
+            return;
+        }
+
+        if (!user?.token) {
+            setErrorMessage('Authentication token not found. Please log in again.');
+            return;
+        }
+
+        try {
+            const apiUrl = 'http://localhost:8080/api/users/' + user.userId;
+            console.log('Making API call to:', apiUrl);
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    phone: formData.phoneNumber,
+                }),
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('You are not authorized to perform this action. Please log in again.');
+                }
+                throw new Error(`Failed to update profile: ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            console.log('Response data:', responseData);
+
+            login({ ...user, ...responseData }); // Update the user context
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setShowSuccess(false);
+            setErrorMessage(error.message || 'Failed to update profile. Please try again.');
+        }
     };
 
     const handleTabChange = (event, newValue) => {
@@ -192,6 +242,18 @@ const Profile = () => {
                             }}
                         >
                             Profile updated successfully!
+                        </Alert>
+                    )}
+                    {errorMessage && (
+                        <Alert 
+                            severity="error" 
+                            sx={{ 
+                                mb: 2,
+                                borderRadius: 2,
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            }}
+                        >
+                            {errorMessage}
                         </Alert>
                     )}
 
