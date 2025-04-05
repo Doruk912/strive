@@ -53,7 +53,7 @@ const Profile = () => {
         firstName: user?.firstName || '',
         lastName: user?.lastName || '',
         email: user?.email || '',
-        phoneNumber: user?.phoneNumber || '',
+        phoneNumber: user?.phone || '',
         countryCode: user?.countryCode || '+1',
     });
     const [phoneError, setPhoneError] = useState('');
@@ -164,7 +164,6 @@ const Profile = () => {
 
         try {
             const apiUrl = 'http://localhost:8080/api/users/' + user.userId;
-            console.log('Making API call to:', apiUrl);
             const response = await fetch(apiUrl, {
                 method: 'PUT',
                 headers: {
@@ -176,7 +175,7 @@ const Profile = () => {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    phone: formData.phoneNumber || null, // Send null if phone is empty
+                    phone: formData.phoneNumber.trim() || null,
                 }),
             });
 
@@ -525,9 +524,9 @@ const Profile = () => {
                                                                 value={formData.phoneNumber}
                                                                 onChange={handleChange}
                                                                 variant="outlined"
-                                                                placeholder="5XX XXX XX XX"
+                                                                placeholder="555 111 22 33"  // Updated placeholder format
                                                                 inputProps={{
-                                                                    maxLength: 13, //(10 digits + 3 spaces)
+                                                                    maxLength: 13, // (10 digits + 3 spaces)
                                                                     inputMode: 'numeric',
                                                                     pattern: '[0-9]*'
                                                                 }}
