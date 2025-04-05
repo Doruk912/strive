@@ -92,3 +92,8 @@ INSERT INTO users (email, password, first_name, last_name, phone, role) VALUES
 ('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', '+1234567893', 'MANAGER'),
 ('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', '+1234567891', 'CUSTOMER'),
 ('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , 'CUSTOMER')
+
+INSERT INTO products (name, description, price, category_id) VALUES
+('Product 1', 'Description for product 1', 19.99, 1),
+('Product 2', 'Description for product 2', 29.99, 2),
+('Product 3', 'Description for product 3', 39.99, 3);

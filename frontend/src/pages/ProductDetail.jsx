@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -23,7 +23,7 @@ import {
     Favorite as FavoriteIcon,
     NavigateNext as NavigateNextIcon,
 } from '@mui/icons-material';
-import { products } from '../mockData/Products';
+import axios from 'axios';
 import CartNotification from '../components/CartNotification';
 
 const ProductDetail = () => {
@@ -31,11 +31,35 @@ const ProductDetail = () => {
     const navigate = useNavigate();
     const { addToCart, cartItems } = useCart();
     const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
-    const product = products.find(p => p.id === parseInt(id));
+    const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const isInCart = cartItems.some(item => item.id === product?.id);
     const isFavorite = favoriteItems.some(item => item.id === product?.id);
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const response = await axios.get(`/api/products/${id}`);
+                setProduct(response.data);
+            } catch (err) {
+                if (err.response && err.response.status === 404) {
+                    setError('Product not found');
+                } else {
+                    setError('An error occurred while fetching the product');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProduct();
+    }, [id]);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
     if (!product) {
         return (
@@ -127,7 +151,7 @@ const ProductDetail = () => {
                                 position: 'absolute',
                                 right: 0,
                                 top: 0,
-                                color: 'black', // Set color to black
+                                color: 'black',
                                 transition: 'transform 0.2s ease',
                                 '&:hover': {
                                     transform: 'scale(1.1)',
