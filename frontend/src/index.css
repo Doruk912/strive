@@ -6,7 +6,6 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -18,7 +17,6 @@ code {
 
 /* Global text styles */
 h1, h2, h3, h4, h5, h6, p, span, div, button, a {
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -33,21 +31,16 @@ input, textarea {
 .MuiAppBar-root .MuiButton-root,
 .MuiAppBar-root .MuiListItemText-primary,
 .MuiAppBar-root .MuiMenuItem-root {
-  text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
   font-weight: 500 !important;
 }
 
-/* Make sure menu items are also uppercase */
 .MuiMenu-paper .MuiMenuItem-root,
 .MuiMenu-paper .MuiListItemText-primary {
-  text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
 }
 
-/* Ensure dropdown menus maintain uppercase */
 .MuiPopover-paper .MuiMenuItem-root,
 .MuiPopover-paper .MuiListItemText-primary {
-  text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
 }
