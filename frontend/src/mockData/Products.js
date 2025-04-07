@@ -8,6 +8,7 @@ export const featuredProducts = [
         stock: 50,
         status: 'active',
         rating: 4.5,
+        gender: 'Unisex',
         image: 'https://www.bzronline.com/temp/JPG_98044e9911ba2c59c19723586baaae61.png',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -21,6 +22,7 @@ export const featuredProducts = [
         stock: 75,
         status: 'active',
         rating: 4.7,
+        gender: 'Unisex',
         image: 'https://i.pinimg.com/736x/dd/03/87/dd0387b326ea9870be9818b459f1429f.jpg',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -89,6 +91,7 @@ export const products = [
         stock: 50,
         status: 'active',
         rating: 4.5,
+        gender: 'Unisex',
         image: 'https://www.bzronline.com/temp/JPG_98044e9911ba2c59c19723586baaae61.png',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -102,6 +105,7 @@ export const products = [
         stock: 75,
         status: 'active',
         rating: 4.7,
+        gender: 'Unisex',
         image: 'https://i.pinimg.com/736x/dd/03/87/dd0387b326ea9870be9818b459f1429f.jpg',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -115,6 +119,7 @@ export const products = [
         stock: 30,
         status: 'active',
         rating: 4.3,
+        gender: 'Unisex',
         image: 'https://designwanted.com/wp-content/uploads/2022/09/Hi%CC%80te%CC%88kw-by-All-Design-Lab.jpg.webp',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -128,6 +133,7 @@ export const products = [
         stock: 45,
         status: 'active',
         rating: 4.6,
+        gender: 'Men',
         image: 'https://www.thecoolector.com/wp-content/uploads/2018/04/p10.png',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -141,6 +147,7 @@ export const products = [
         stock: 100,
         status: 'active',
         rating: 4.8,
+        gender: 'Unisex',
         image: 'https://korayspor.mncdn.com/mnresize/1920/-/korayspor/products/IF6594_10.jpg',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
@@ -154,6 +161,7 @@ export const products = [
         stock: 150,
         status: 'active',
         rating: 4.4,
+        gender: 'Women',
         image: 'https://i.pinimg.com/1200x/00/90/d8/0090d8dad34d0b8abd0ff711a91606c0.jpg',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
