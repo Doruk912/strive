@@ -54,7 +54,7 @@ const Profile = () => {
         lastName: user?.lastName || '',
         email: user?.email || '',
         phoneNumber: user?.phone || '',
-        countryCode: user?.countryCode || '+1',
+        countryCode: user?.countryCode || '+90',
     });
     const [phoneError, setPhoneError] = useState('');
 
@@ -470,12 +470,12 @@ const Profile = () => {
                                                     <Box sx={{
                                                         display: 'flex',
                                                         gap: 2,
-                                                        alignItems: 'flex-start' // Align items at the top
+                                                        alignItems: 'flex-start'
                                                     }}>
-                                                        <Box sx={{ width: '35%' }}> {/* Slightly wider for country code */}
+                                                        <Box sx={{ width: '30%' }}>
                                                             <PhoneInput
                                                                 country={'tr'}
-                                                                value={formData.countryCode}
+                                                                value={formData.countryCode.replace('+', '')}
                                                                 onChange={(value, country) => {
                                                                     setFormData(prev => ({
                                                                         ...prev,
@@ -483,20 +483,28 @@ const Profile = () => {
                                                                     }));
                                                                 }}
                                                                 inputProps={{
-                                                                    disabled: true // Disable direct input
-                                                                }}
-                                                                inputStyle={{
-                                                                    width: '100%',
-                                                                    height: '56px',
-                                                                    fontSize: '16px',
-                                                                    borderRadius: '4px',
-                                                                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                                                                    backgroundColor: '#f5f5f5' // Visual indication that it's disabled
+                                                                    style: {
+                                                                        width: '100%',
+                                                                        height: '56px',
+                                                                        fontSize: '16px',
+                                                                        borderRadius: '4px',
+                                                                        border: '1px solid rgba(0, 0, 0, 0.23)',
+                                                                        cursor: 'pointer' // Add cursor pointer to indicate it's clickable
+                                                                    },
+                                                                    readOnly: true, // Prevent keyboard input
+                                                                    onClick: () => {
+                                                                        // Programmatically open the dropdown when clicked
+                                                                        const dropdownButton = document.querySelector('.react-tel-input .selected-flag');
+                                                                        if (dropdownButton) {
+                                                                            dropdownButton.click();
+                                                                        }
+                                                                    }
                                                                 }}
                                                                 buttonStyle={{
                                                                     border: '1px solid rgba(0, 0, 0, 0.23)',
                                                                     borderRight: 'none',
                                                                     backgroundColor: 'transparent',
+                                                                    borderRadius: '4px 0 0 4px',
                                                                 }}
                                                                 containerStyle={{
                                                                     width: '100%',
@@ -516,7 +524,7 @@ const Profile = () => {
                                                                 preferredCountries={['tr', 'us', 'gb', 'de']}
                                                             />
                                                         </Box>
-                                                        <Box sx={{ width: '65%' }}>
+                                                        <Box sx={{ width: '70%' }}>
                                                             <TextField
                                                                 fullWidth
                                                                 label="Phone Number"
@@ -524,26 +532,18 @@ const Profile = () => {
                                                                 value={formData.phoneNumber}
                                                                 onChange={handleChange}
                                                                 variant="outlined"
-                                                                placeholder="555 111 22 33"  // Updated placeholder format
+                                                                placeholder="555 111 22 33"
                                                                 inputProps={{
                                                                     maxLength: 13, // (10 digits + 3 spaces)
                                                                     inputMode: 'numeric',
                                                                     pattern: '[0-9]*'
                                                                 }}
-                                                                onKeyPress={(e) => {
-                                                                    // Prevent non-numeric input
-                                                                    if (!/[0-9]/.test(e.key)) {
-                                                                        e.preventDefault();
-                                                                    }
-                                                                }}
-                                                                InputProps={{
-                                                                    sx: {
-                                                                        height: '56px',
-                                                                    }
-                                                                }}
+                                                                error={!!phoneError}
+                                                                helperText={phoneError}
                                                                 sx={{
                                                                     '& .MuiOutlinedInput-root': {
                                                                         borderRadius: 1,
+                                                                        height: '56px',
                                                                         '&:hover fieldset': {
                                                                             borderColor: 'primary.main',
                                                                         },
