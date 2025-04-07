@@ -25,7 +25,7 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem, ListItemIcon,
+    MenuItem, ListItemIcon, IconButton, FormControlLabel,
 } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -41,6 +41,15 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Helmet } from "react-helmet";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+
+function StarOutlineIcon() {
+    return null;
+}
+
+function EditIcon() {
+    return null;
+}
 
 const Profile = () => {
     const { user, login } = useAuth();
@@ -49,15 +58,43 @@ const Profile = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [openAddressDialog, setOpenAddressDialog] = useState(false);
     const [openCardDialog, setOpenCardDialog] = useState(false);
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [addressFormData, setAddressFormData] = useState({
+        name: '',
+        streetAddress: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+        isDefault: false
+    });
+    const [formData, setFormData] = useState(() => ({
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        email: user?.email || '',
+        phoneNumber: user?.phone ? formatPhoneNumber(user.phone) : '',
+        countryCode: user?.countryCode || '+90'
+    }));
+    const [phoneError, setPhoneError] = useState('');
+    const [addresses, setAddresses] = useState([
+        { id: 1, type: 'Home', address: '123 Main St, City, Country', isDefault: true },
+        { id: 2, type: 'Work', address: '456 Office Ave, City, Country', isDefault: false },
+    ]);
+    const [cards, setCards] = useState([
+        { id: 1, type: 'Visa', last4: '4242', expiry: '12/25' },
+        { id: 2, type: 'Mastercard', last4: '8888', expiry: '06/24' },
+    ]);
+    const [notificationPreferences, setNotificationPreferences] = useState({
+        emailNotifications: true,
+        orderUpdates: true,
+        promotions: false,
+        newsletter: true,
+    });
 
     const formatPhoneNumber = (phone) => {
-        // Remove non-digits and spaces
         const cleaned = phone.replace(/\D/g, '');
-
-        // Only take first 10 digits
         const digits = cleaned.slice(0, 10);
-
-        // Format as XXX XXX XX XX
         let formatted = '';
         for (let i = 0; i < digits.length; i++) {
             if (i === 3 || i === 6 || i === 8) formatted += ' ';
@@ -66,45 +103,15 @@ const Profile = () => {
         return formatted;
     };
 
-    const [formData, setFormData] = useState(() => ({
-        firstName: user?.firstName || '',
-        lastName: user?.lastName || '',
-        email: user?.email || '',
-        phoneNumber: user?.phone ? formatPhoneNumber(user.phone) : '',
-        countryCode: user?.countryCode || '+90' // Default to +90 if no country code
-    }));
-    const [phoneError, setPhoneError] = useState('');
-
-    // Get user's full name from user context
-    const userFullName = user?.firstName && user?.lastName 
+    const userFullName = user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
         : user?.name || 'User';
 
-    // Mock data for addresses and cards (replace with actual data from backend)
-    const [addresses, setAddresses] = useState([
-        { id: 1, type: 'Home', address: '123 Main St, City, Country', isDefault: true },
-        { id: 2, type: 'Work', address: '456 Office Ave, City, Country', isDefault: false },
-    ]);
-
-    const [cards, setCards] = useState([
-        { id: 1, type: 'Visa', last4: '4242', expiry: '12/25' },
-        { id: 2, type: 'Mastercard', last4: '8888', expiry: '06/24' },
-    ]);
-
-    const [notificationPreferences, setNotificationPreferences] = useState({
-        emailNotifications: true,
-        orderUpdates: true,
-        promotions: false,
-        newsletter: true,
-    });
-
-    // Redirect if not logged in
     if (!user) {
         return <Navigate to="/login" replace />;
     }
 
     const validatePhoneNumber = (phone) => {
-        // If phone is empty, it's valid (optional field)
         if (!phone || phone.trim() === '') {
             setPhoneError('');
             return true;
@@ -112,7 +119,6 @@ const Profile = () => {
 
         const cleanPhone = phone.replace(/\D/g, '');
 
-        // Check if the length is valid when a number is provided
         if (cleanPhone.length < 10 || cleanPhone.length > 11) {
             setPhoneError('Please enter a valid phone number');
             return false;
@@ -152,7 +158,7 @@ const Profile = () => {
         try {
             const apiUrl = 'http://localhost:8080/api/users/' + user.userId;
             const phoneNumber = formData.phoneNumber.replace(/\s/g, '');
-            const isPhoneNumberBlank = !phoneNumber; // Check if the phone number is blank
+            const isPhoneNumberBlank = !phoneNumber;
 
             const response = await fetch(apiUrl, {
                 method: 'PUT',
@@ -165,8 +171,8 @@ const Profile = () => {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    phone: isPhoneNumberBlank ? null : phoneNumber, // Set to null if blank
-                    countryCode: isPhoneNumberBlank ? null : formData.countryCode // Set to null if blank
+                    phone: isPhoneNumberBlank ? null : phoneNumber,
+                    countryCode: isPhoneNumberBlank ? null : formData.countryCode
                 }),
             });
 
@@ -175,8 +181,6 @@ const Profile = () => {
             }
 
             const responseData = await response.json();
-
-            // Add the token from the current user to the response data
             responseData.token = user.token;
 
             login({
@@ -215,6 +219,239 @@ const Profile = () => {
 
     const handleDeleteCard = (id) => {
         setCards(prev => prev.filter(card => card.id !== id));
+    };
+
+    const handleEditAddress = (address) => {
+        setSelectedAddress(address);
+        setAddressFormData({
+            name: address.type,
+            streetAddress: address.address.split(',')[0],
+            city: address.address.split(',')[1]?.trim() || '',
+            state: address.address.split(',')[2]?.trim() || '',
+            postalCode: address.address.split(',')[3]?.trim() || '',
+            country: address.address.split(',')[4]?.trim() || '',
+            isDefault: address.isDefault
+        });
+        setOpenEditDialog(true);
+    };
+
+    const handleAddressFormChange = (e) => {
+        const { name, value, checked } = e.target;
+        setAddressFormData(prev => ({
+            ...prev,
+            [name]: name === 'isDefault' ? checked : value
+        }));
+    };
+
+    const handleSaveAddress = () => {
+        const formattedAddress = `${addressFormData.streetAddress}, ${addressFormData.city}, ${addressFormData.state}, ${addressFormData.postalCode}, ${addressFormData.country}`;
+
+        if (selectedAddress) {
+            setAddresses(prev => prev.map(addr =>
+                addr.id === selectedAddress.id
+                    ? {
+                        ...addr,
+                        type: addressFormData.name,
+                        address: formattedAddress,
+                        isDefault: addressFormData.isDefault
+                    }
+                    : addressFormData.isDefault
+                        ? { ...addr, isDefault: false }
+                        : addr
+            ));
+        } else {
+            const newAddress = {
+                id: Date.now(),
+                type: addressFormData.name,
+                address: formattedAddress,
+                isDefault: addressFormData.isDefault
+            };
+
+            setAddresses(prev => addressFormData.isDefault
+                ? [...prev.map(addr => ({ ...addr, isDefault: false })), newAddress]
+                : [...prev, newAddress]
+            );
+        }
+
+        handleCloseDialog();
+    };
+
+    const handleCloseDialog = () => {
+        setOpenAddressDialog(false);
+        setOpenEditDialog(false);
+        setSelectedAddress(null);
+        setAddressFormData({
+            name: '',
+            streetAddress: '',
+            city: '',
+            state: '',
+            postalCode: '',
+            country: '',
+            isDefault: false
+        });
+    };
+
+    const AddressDialog = ({ open, onClose, address }) => {
+        return (
+            <Dialog
+                open={open}
+                onClose={onClose}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    fontWeight: 600,
+                    pb: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    px: 3,
+                }}>
+                    {address ? 'Edit Address' : 'Add New Address'}
+                </DialogTitle>
+                <DialogContent sx={{ p: 3 }}>
+                    <Box sx={{ pt: 2 }}>
+                        <TextField
+                            fullWidth
+                            label="Address Name"
+                            name="name"
+                            value={addressFormData.name}
+                            onChange={handleAddressFormChange}
+                            placeholder="e.g., Home, Office, Summer House"
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Street Address"
+                            name="streetAddress"
+                            value={addressFormData.streetAddress}
+                            onChange={handleAddressFormChange}
+                            multiline
+                            rows={3}
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                        />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="City"
+                                    name="city"
+                                    value={addressFormData.city}
+                                    onChange={handleAddressFormChange}
+                                    sx={{
+                                        mb: { xs: 2, sm: 0 },
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="State/Province"
+                                    name="state"
+                                    value={addressFormData.state}
+                                    onChange={handleAddressFormChange}
+                                    sx={{
+                                        mb: { xs: 2, sm: 0 },
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Postal Code"
+                                    name="postalCode"
+                                    value={addressFormData.postalCode}
+                                    onChange={handleAddressFormChange}
+                                    sx={{
+                                        mb: { xs: 2, sm: 0 },
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Country"
+                                    name="country"
+                                    value={addressFormData.country}
+                                    onChange={handleAddressFormChange}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={addressFormData.isDefault}
+                                    onChange={handleAddressFormChange}
+                                    name="isDefault"
+                                    color="primary"
+                                />
+                            }
+                            label="Set as default address"
+                            sx={{ mt: 2 }}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{
+                    p: 3,
+                    pt: 0,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    mt: 3
+                }}>
+                    <Button
+                        onClick={onClose}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            color: 'text.secondary'
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveAddress}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            px: 3,
+                            borderRadius: 1,
+                        }}
+                    >
+                        {address ? 'Save Changes' : 'Add Address'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        );
     };
 
     return (
@@ -373,26 +610,6 @@ const Profile = () => {
                                         {activeTab === 2 && 'Payment Methods'}
                                         {activeTab === 3 && 'Notifications'}
                                     </Typography>
-                                    {(activeTab === 1 || activeTab === 2) && (
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<AddIcon />}
-                                            onClick={activeTab === 1 ? handleAddAddress : handleAddCard}
-                                            sx={{
-                                                px: 4,
-                                                py: 1.5,
-                                                borderRadius: 2,
-                                                textTransform: 'none',
-                                                fontWeight: 500,
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                                }
-                                            }}
-                                        >
-                                            Add New {activeTab === 1 ? 'Address' : 'Card'}
-                                        </Button>
-                                    )}
                                 </Box>
 
                                 {/* Tab Content */}
@@ -586,164 +803,401 @@ const Profile = () => {
                                     )}
 
                                     {activeTab === 1 && (
-                                        <Grid container spacing={2}>
+                                        <Grid container spacing={3}>
                                             {addresses.map((address) => (
-                                                <Grid item xs={12} key={address.id}>
+                                                <Grid item xs={12} sm={6} key={address.id}>
                                                     <Card
                                                         sx={{
+                                                            height: '100%',
                                                             borderRadius: 2,
-                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                                            '&:hover': {
-                                                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                                            },
+                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                                            transition: 'all 0.3s ease',
                                                             position: 'relative',
-                                                            overflow: 'visible'
+                                                            '&:hover': {
+                                                                transform: 'translateY(-2px)',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                                            },
                                                         }}
                                                     >
                                                         {address.isDefault && (
-                                                            <Chip
-                                                                label="Default"
-                                                                color="primary"
-                                                                size="small"
+                                                            <Box
                                                                 sx={{
                                                                     position: 'absolute',
-                                                                    top: -10,
+                                                                    top: 16,
                                                                     right: 16,
-                                                                    fontWeight: 500,
+                                                                    zIndex: 1,
                                                                 }}
-                                                            />
+                                                            >
+                                                                <Chip
+                                                                    label="Default Address"
+                                                                    color="primary"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 500,
+                                                                        bgcolor: 'primary.main',
+                                                                        '& .MuiChip-label': {
+                                                                            px: 1,
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            </Box>
                                                         )}
-                                                        <CardContent sx={{ pt: 3 }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                                <LocationIcon sx={{
-                                                                    mr: 1,
-                                                                    color: 'primary.main',
-                                                                    fontSize: 24
-                                                                }} />
-                                                                <Typography variant="h6" sx={{
-                                                                    fontWeight: 600,
-                                                                    fontSize: '1.1rem'
-                                                                }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Box sx={{ mb: 2 }}>
+                                                                <Typography
+                                                                    variant="h6"
+                                                                    sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        fontWeight: 600,
+                                                                        color: 'text.primary',
+                                                                    }}
+                                                                >
+                                                                    <LocationIcon
+                                                                        sx={{
+                                                                            color: 'primary.main',
+                                                                            fontSize: 24,
+                                                                        }}
+                                                                    />
                                                                     {address.type}
                                                                 </Typography>
                                                             </Box>
-                                                            <Typography
-                                                                variant="body1"
-                                                                color="text.secondary"
-                                                                sx={{ ml: 4 }}
+
+                                                            <Box
+                                                                sx={{
+                                                                    p: 2,
+                                                                    bgcolor: 'grey.50',
+                                                                    borderRadius: 1,
+                                                                    mb: 2,
+                                                                }}
                                                             >
-                                                                {address.address}
-                                                            </Typography>
+                                                                <Typography
+                                                                    variant="body1"
+                                                                    sx={{
+                                                                        color: 'text.secondary',
+                                                                        lineHeight: 1.6,
+                                                                    }}
+                                                                >
+                                                                    {address.address}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    gap: 1,
+                                                                    mt: 3,
+                                                                }}
+                                                            >
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    size="small"
+                                                                    startIcon={<EditIcon />}
+                                                                    onClick={() => handleEditAddress(address)}
+                                                                    sx={{
+                                                                        borderRadius: 1,
+                                                                        textTransform: 'none',
+                                                                        fontWeight: 500,
+                                                                        flex: 1,
+                                                                        borderColor: 'primary.main',
+                                                                        color: 'primary.main',
+                                                                        '&:hover': {
+                                                                            borderColor: 'primary.dark',
+                                                                            bgcolor: 'primary.50',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </Button>
+                                                                {!address.isDefault && (
+                                                                    <Button
+                                                                        variant="outlined"
+                                                                        size="small"
+                                                                        startIcon={<StarOutlineIcon />}
+                                                                        sx={{
+                                                                            borderRadius: 1,
+                                                                            textTransform: 'none',
+                                                                            fontWeight: 500,
+                                                                            flex: 1,
+                                                                            borderColor: 'warning.main',
+                                                                            color: 'warning.main',
+                                                                            '&:hover': {
+                                                                                borderColor: 'warning.dark',
+                                                                                bgcolor: 'warning.50',
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        Set as Default
+                                                                    </Button>
+                                                                )}
+                                                                <IconButton
+                                                                    onClick={() => handleDeleteAddress(address.id)}
+                                                                    sx={{
+                                                                        color: 'error.main',
+                                                                        '&:hover': {
+                                                                            bgcolor: 'error.50',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <DeleteOutlineIcon />
+                                                                </IconButton>
+                                                            </Box>
                                                         </CardContent>
-                                                        <CardActions sx={{
-                                                            px: 2,
-                                                            pb: 2,
-                                                            borderTop: '1px solid',
-                                                            borderColor: 'divider',
-                                                            mt: 1
-                                                        }}>
-                                                            <Button
-                                                                size="small"
-                                                                sx={{
-                                                                    textTransform: 'none',
-                                                                    fontWeight: 500,
-                                                                    color: 'primary.main'
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </Button>
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() => handleDeleteAddress(address.id)}
-                                                                sx={{
-                                                                    textTransform: 'none',
-                                                                    fontWeight: 500,
-                                                                    color: 'error.main'
-                                                                }}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        </CardActions>
                                                     </Card>
                                                 </Grid>
                                             ))}
+
+                                            {/* Add New Address Card */}
+                                            <Grid item xs={12} sm={6}>
+                                                <Card
+                                                    onClick={() => {
+                                                        setSelectedAddress(null);
+                                                        setOpenAddressDialog(true);
+                                                    }}
+                                                    sx={{
+                                                        height: '100%',
+                                                        borderRadius: 2,
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                                        transition: 'all 0.3s ease',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        bgcolor: 'grey.50',
+                                                        border: '2px dashed',
+                                                        borderColor: 'grey.300',
+                                                        '&:hover': {
+                                                            borderColor: 'primary.main',
+                                                            bgcolor: 'primary.50',
+                                                            transform: 'translateY(-2px)',
+                                                        },
+                                                    }}
+                                                >
+                                                    <CardContent
+                                                        sx={{
+                                                            textAlign: 'center',
+                                                            py: 5,
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            gap: 2,
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 64,
+                                                                height: 64,
+                                                                borderRadius: '50%',
+                                                                bgcolor: 'primary.main',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                mb: 1,
+                                                            }}
+                                                        >
+                                                            <AddIcon sx={{ fontSize: 32, color: 'white' }} />
+                                                        </Box>
+                                                        <Box>
+                                                            <Typography
+                                                                variant="h6"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: 'primary.main',
+                                                                    mb: 1,
+                                                                }}
+                                                            >
+                                                                Add New Address
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                }}
+                                                            >
+                                                                Click to add a new delivery address
+                                                            </Typography>
+                                                        </Box>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
                                         </Grid>
                                     )}
                                     {activeTab === 2 && (
-                                        <Grid container spacing={2}>
+                                        <Grid container spacing={3}>
                                             {cards.map((card) => (
                                                 <Grid item xs={12} sm={6} key={card.id}>
                                                     <Card
                                                         sx={{
-                                                            borderRadius: 2,
-                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                                            '&:hover': {
-                                                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                                            },
                                                             height: '100%',
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
+                                                            borderRadius: 2,
+                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                                            transition: 'all 0.3s ease',
+                                                            position: 'relative',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-2px)',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                                            },
                                                         }}
                                                     >
-                                                        <CardContent sx={{ flex: 1 }}>
-                                                            <Box sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                mb: 2,
-                                                                pb: 2,
-                                                                borderBottom: '1px solid',
-                                                                borderColor: 'divider'
-                                                            }}>
-                                                                <CreditCardIcon sx={{
-                                                                    mr: 1,
-                                                                    color: 'primary.main',
-                                                                    fontSize: 28
-                                                                }} />
-                                                                <Typography variant="h6" sx={{
-                                                                    fontWeight: 600,
-                                                                    fontSize: '1.1rem'
-                                                                }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Box sx={{ mb: 2 }}>
+                                                                <Typography
+                                                                    variant="h6"
+                                                                    sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        fontWeight: 600,
+                                                                        color: 'text.primary',
+                                                                    }}
+                                                                >
+                                                                    <CreditCardIcon
+                                                                        sx={{
+                                                                            color: 'primary.main',
+                                                                            fontSize: 24,
+                                                                        }}
+                                                                    />
                                                                     {card.type}
                                                                 </Typography>
                                                             </Box>
-                                                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                                                •••• •••• •••• {card.last4}
-                                                            </Typography>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Expires: {card.expiry}
-                                                            </Typography>
+
+                                                            <Box
+                                                                sx={{
+                                                                    p: 2,
+                                                                    bgcolor: 'grey.50',
+                                                                    borderRadius: 1,
+                                                                    mb: 2,
+                                                                }}
+                                                            >
+                                                                <Typography
+                                                                    variant="body1"
+                                                                    sx={{
+                                                                        color: 'text.secondary',
+                                                                        lineHeight: 1.6,
+                                                                    }}
+                                                                >
+                                                                    •••• •••• •••• {card.last4}
+                                                                    <br />
+                                                                    Expires: {card.expiry}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    gap: 1,
+                                                                    mt: 3,
+                                                                }}
+                                                            >
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    size="small"
+                                                                    startIcon={<EditIcon />}
+                                                                    sx={{
+                                                                        borderRadius: 1,
+                                                                        textTransform: 'none',
+                                                                        fontWeight: 500,
+                                                                        flex: 1,
+                                                                        borderColor: 'primary.main',
+                                                                        color: 'primary.main',
+                                                                        '&:hover': {
+                                                                            borderColor: 'primary.dark',
+                                                                            bgcolor: 'primary.50',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </Button>
+                                                                <IconButton
+                                                                    onClick={() => handleDeleteCard(card.id)}
+                                                                    sx={{
+                                                                        color: 'error.main',
+                                                                        '&:hover': {
+                                                                            bgcolor: 'error.50',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <DeleteOutlineIcon />
+                                                                </IconButton>
+                                                            </Box>
                                                         </CardContent>
-                                                        <CardActions sx={{
-                                                            p: 2,
-                                                            pt: 1,
-                                                            borderTop: '1px solid',
-                                                            borderColor: 'divider'
-                                                        }}>
-                                                            <Button
-                                                                size="small"
-                                                                sx={{
-                                                                    textTransform: 'none',
-                                                                    fontWeight: 500,
-                                                                    color: 'primary.main'
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </Button>
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() => handleDeleteCard(card.id)}
-                                                                sx={{
-                                                                    textTransform: 'none',
-                                                                    fontWeight: 500,
-                                                                    color: 'error.main'
-                                                                }}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        </CardActions>
                                                     </Card>
                                                 </Grid>
                                             ))}
+
+                                            {/* Add New Card Card */}
+                                            <Grid item xs={12} sm={6}>
+                                                <Card
+                                                    onClick={() => {
+                                                        setOpenCardDialog(true);
+                                                    }}
+                                                    sx={{
+                                                        height: '100%',
+                                                        borderRadius: 2,
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                                        transition: 'all 0.3s ease',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        bgcolor: 'grey.50',
+                                                        border: '2px dashed',
+                                                        borderColor: 'grey.300',
+                                                        '&:hover': {
+                                                            borderColor: 'primary.main',
+                                                            bgcolor: 'primary.50',
+                                                            transform: 'translateY(-2px)',
+                                                        },
+                                                    }}
+                                                >
+                                                    <CardContent
+                                                        sx={{
+                                                            textAlign: 'center',
+                                                            py: 5,
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            gap: 2,
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 64,
+                                                                height: 64,
+                                                                borderRadius: '50%',
+                                                                bgcolor: 'primary.main',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                mb: 1,
+                                                            }}
+                                                        >
+                                                            <AddIcon sx={{ fontSize: 32, color: 'white' }} />
+                                                        </Box>
+                                                        <Box>
+                                                            <Typography
+                                                                variant="h6"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    color: 'primary.main',
+                                                                    mb: 1,
+                                                                }}
+                                                            >
+                                                                Add New Card
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                }}
+                                                            >
+                                                                Click to add a new payment method
+                                                            </Typography>
+                                                        </Box>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
                                         </Grid>
                                     )}
 
