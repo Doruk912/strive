@@ -1,5 +1,6 @@
 package com.strive.backend.controller;
 
+import com.strive.backend.dto.UserDTO;
 import com.strive.backend.model.User;
 import com.strive.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +37,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody User user) {
+    public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User userDetails) {
         try {
-            User updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(updatedUser);
+            User updatedUser = userService.updateUser(id, userDetails);
+            UserDTO userDTO = UserDTO.fromUser(updatedUser, null); // token is handled separately
+            return ResponseEntity.ok(userDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
