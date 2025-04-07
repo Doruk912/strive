@@ -31,37 +31,57 @@ const PromotionalBanner = () => {
 
     const promotions = [
         {
-            title: "Fast Delivery!",
-            subtitle: "Order now in New York,",
-            highlight: "get it in 3 hours!",
+            title: "FAST DELIVERY!",
+            subtitle: "ORDER NOW IN NEW YORK,",
+            highlight: "GET IT IN 3 HOURS!",
             icon: <LocalShippingOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
             backgroundColor: "#4051B5",
         },
         {
-            title: "Special Offer!",
-            subtitle: "Get 20% off",
-            highlight: "on all sports equipment",
+            title: "SPECIAL OFFER!",
+            subtitle: "GET 20% OFF",
+            highlight: "ON ALL SPORTS EQUIPMENT",
+            highlightStyle: {
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 600,
+                fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
+                color: '#ffffff',
+                textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                letterSpacing: '0.5px',
+                display: 'inline-block',
+                padding: '0 5px',
+                position: 'relative',
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: '5px',
+                    width: '100%',
+                    height: '2px',
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                }
+            },
             icon: <LocalOfferOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
             backgroundColor: "#2E7D32",
         },
         {
-            title: "New Collection!",
-            subtitle: "Discover our",
-            highlight: "Summer 2024 collection",
+            title: "NEW COLLECTION!",
+            subtitle: "DISCOVER OUR",
+            highlight: "SUMMER 2024 COLLECTION",
             icon: <NewReleasesOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
             backgroundColor: "#C2185B",
         },
         {
-            title: "Members Only!",
-            subtitle: "Join our club and get",
-            highlight: "exclusive benefits",
+            title: "MEMBERS ONLY!",
+            subtitle: "JOIN OUR CLUB AND GET",
+            highlight: "EXCLUSIVE BENEFITS",
             icon: <CardMembershipOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
             backgroundColor: "#F57C00",
         },
         {
-            title: "Free Returns!",
-            subtitle: "Try at home with",
-            highlight: "30-day free returns",
+            title: "FREE RETURNS!",
+            subtitle: "TRY AT HOME WITH",
+            highlight: "30-DAY FREE RETURNS",
             icon: <AssignmentReturnOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
             backgroundColor: "#0097A7",
         }
@@ -219,6 +239,7 @@ const PromotionalBanner = () => {
                                     mb: 0.5,
                                     letterSpacing: '0.5px',
                                     color: 'white',
+                                    textTransform: 'uppercase',
                                 }}
                             >
                                 {promotions[activeSlide].title}
@@ -237,6 +258,7 @@ const PromotionalBanner = () => {
                                     sx={{
                                         fontSize: { xs: '1.1rem', md: '1.3rem' },
                                         fontWeight: 600,
+                                        textTransform: 'uppercase',
                                     }}
                                 >
                                     {promotions[activeSlide].subtitle}
@@ -247,6 +269,7 @@ const PromotionalBanner = () => {
                                         fontSize: { xs: '1.1rem', md: '1.3rem' },
                                         fontWeight: 600,
                                         color: '#a5f3ff',
+                                        textTransform: 'uppercase',
                                         ...(promotions[activeSlide].highlightStyle || {})
                                     }}
                                 >

@@ -231,15 +231,27 @@ const Home = () => {
             >
                 <Box sx={{ my: 4 }}>
                     <Typography
-                        variant="h5"
+                        variant="h4"
                         sx={{
+                            fontFamily: "'Playfair Display', serif",
                             fontWeight: 600,
-                            mb: 3,
-                            fontSize: { xs: '1.5rem', md: '2rem' },
-                            letterSpacing: '0.5px'
+                            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+                            color: '#1a1a1a',
+                            textAlign: 'left',
+                            marginBottom: '1.5rem',
+                            position: 'relative',
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                bottom: '-10px',
+                                left: 0,
+                                width: '60px',
+                                height: '3px',
+                                backgroundColor: '#4CAF50',
+                            }
                         }}
                     >
-                        Popular Categories
+                        POPULAR CATEGORIES
                     </Typography>
 
                     <Box sx={{ position: 'relative' }}>
@@ -371,14 +383,27 @@ const Home = () => {
             >
                 <Box sx={{ my: 4, position: 'relative' }}>
                     <Typography
-                        variant="h5"
-                        gutterBottom
+                        variant="h4"
                         sx={{
-                            fontWeight: 'bold',
-                            mb: 3,
+                            fontFamily: "'Playfair Display', serif",
+                            fontWeight: 600,
+                            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+                            color: '#1a1a1a',
+                            textAlign: 'left',
+                            marginBottom: '1.5rem',
+                            position: 'relative',
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                bottom: '-10px',
+                                left: 0,
+                                width: '60px',
+                                height: '3px',
+                                backgroundColor: '#4CAF50',
+                            }
                         }}
                     >
-                        Featured Products
+                        FEATURED PRODUCTS
                     </Typography>
                     <Box sx={{ position: 'relative' }}>
                         {/* Left arrow button */}

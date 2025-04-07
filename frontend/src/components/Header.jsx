@@ -75,24 +75,24 @@ const Header = () => {
 
     const categories = [
         {
-            name: 'New',
+            name: 'NEW',
             path: '/new',
-            subcategories: ['Trending Products', 'New Arrivals', 'Highlights'],
+            subcategories: ['TRENDING PRODUCTS', 'NEW ARRIVALS', 'HIGHLIGHTS'],
         },
         {
-            name: 'Men',
+            name: 'MEN',
             path: '/men',
-            subcategories: ['Jackets', 'Boots', 'Pants', 'Innerwear', 'Accessories', 'Highlights'],
+            subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
         },
         {
-            name: 'Women',
+            name: 'WOMEN',
             path: '/women',
-            subcategories: ['Jackets', 'Boots', 'Pants', 'Innerwear', 'Accessories', 'Highlights'],
+            subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
         },
         {
-            name: 'Sports',
+            name: 'SPORTS',
             path: '/sports',
-            subcategories: ['Basketball', 'Soccer', 'Baseball', 'Tennis', 'Running', 'Yoga'],
+            subcategories: ['BASKETBALL', 'SOCCER', 'BASEBALL', 'TENNIS', 'RUNNING', 'YOGA'],
         },
     ];
 
