@@ -1,11 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Container, Typography, Box, Card, CardMedia, Button, IconButton } from '@mui/material';
+import { Container, Typography, Box, Card, CardMedia, Button, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { featuredProducts, popularCategories } from '../mockData/Products';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import StarIcon from '@mui/icons-material/Star';
 import PromotionalBanner from "../components/PromotionalBanner";
 import { useFavorites } from '../context/FavoritesContext';
 import {Helmet} from "react-helmet";
@@ -440,99 +443,146 @@ const Home = () => {
                                     onMouseEnter={() => setHoveredProduct(product.id)}
                                     onMouseLeave={() => setHoveredProduct(null)}
                                     sx={{
-                                        boxShadow: 'none',
-                                        borderRadius: 0,
-                                        background: 'transparent',
-                                        position: 'relative',
-                                        width: '280px', // Increased width to fit only 4 boxes in a row
-                                        flexShrink: 0,
-                                        border: 'none',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        borderRadius: '12px',
+                                        border: '1px solid rgba(0,0,0,0.08)',
+                                        transition: 'all 0.3s ease',
                                         cursor: 'pointer',
-                                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                        width: '280px',
+                                        flexShrink: 0,
+                                        aspectRatio: '1/1.4',
                                         '&:hover': {
-                                            transform: 'scale(1.05)', // Slight scale on hover
-                                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', // Add shadow on hover
-                                        },
+                                            transform: 'translateY(-4px)',
+                                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                            borderColor: 'rgba(0,0,0,0.12)'
+                                        }
                                     }}
                                 >
-                                    {/* Favorite button */}
-                                    {hoveredProduct === product.id && (
+                                    <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
+                                        <CardMedia
+                                            component="img"
+                                            height="100%"
+                                            width="100%"
+                                            image={product.image}
+                                            alt={product.name}
+                                            sx={{
+                                                objectFit: 'cover',
+                                                backgroundColor: '#f5f5f5',
+                                                transition: 'transform 0.3s ease',
+                                                height: '100%',
+                                                '&:hover': {
+                                                    transform: 'scale(1.05)'
+                                                }
+                                            }}
+                                        />
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 12,
+                                                left: 12,
+                                                backgroundColor: 'rgba(0,0,0,0.6)',
+                                                color: 'white',
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            {product.category}
+                                        </Box>
                                         <IconButton
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                toggleFavorite(product); // Pass the entire product object
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleFavorite(product);
                                             }}
                                             sx={{
                                                 position: 'absolute',
-                                                top: 8,
-                                                right: 8,
-                                                zIndex: 1,
-                                                color: favoriteItems && favoriteItems.some(item => item.id === product.id) ? '#000000' : '#000',
-                                                backgroundColor: '',
-                                                padding: '4px',
-                                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                                top: 12,
+                                                right: 12,
+                                                backgroundColor: 'rgba(255,255,255,0.9)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,1)'
+                                                }
                                             }}
                                         >
                                             {favoriteItems.some(item => item.id === product.id) ? (
-                                                <FavoriteIcon sx={{ fontSize: '1.2rem' }} />
+                                                <FavoriteIcon sx={{ color: '#ff4081' }} />
                                             ) : (
-                                                <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />
+                                                <FavoriteBorderIcon />
                                             )}
                                         </IconButton>
-                                    )}
-
-                                    {/* Product image */}
-                                    <CardMedia
-                                        component="img"
-                                        image={product.image}
-                                        alt={product.name}
-                                        sx={{
-                                            height: '240px', // Increased height to match the new width
-                                            objectFit: 'cover',
-                                            backgroundColor: '#f5f5f5',
-                                        }}
-                                    />
-
-                                    {/* Product info with gray background */}
-                                    <Box
-                                        sx={{
-                                            backgroundColor: '#868686',
-                                            color: 'white',
-                                            padding: '8px',
-                                            display: 'flex',
-                                            justifyContent: 'space-between', // Align name and price
-                                            alignItems: 'center', // Vertically center content
-                                            borderTop: '1px solid rgba(255, 255, 255, 0.1)', // Add a subtle border
-                                        }}
-                                    >
-                                        {/* Product Name (Left-aligned) */}
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
+                                    </Box>
+                                    <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', backgroundColor: '#ffffff' }}>
+                                        <Typography 
+                                            variant="subtitle1" 
+                                            sx={{ 
+                                                mb: 0.5,
+                                                fontFamily: 'Montserrat',
+                                                fontWeight: 500,
                                                 fontSize: '0.9rem',
-                                                fontWeight: 'bold',
+                                                color: '#1a1a1a'
                                             }}
                                         >
                                             {product.name}
                                         </Typography>
-
-                                        {/* Price (Right-aligned in a smaller rectangular box) */}
-                                        <Box
-                                            sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white background
-                                                padding: '4px 8px',
-                                                borderRadius: '4px', // Rounded corners
-                                            }}
-                                        >
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    fontSize: '0.8rem',
-                                                    color: 'white',
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                            <Typography 
+                                                variant="h6" 
+                                                sx={{ 
+                                                    fontFamily: 'Playfair Display',
+                                                    fontWeight: 600,
+                                                    fontSize: '1rem',
+                                                    color: '#1a1a1a'
                                                 }}
                                             >
                                                 ${product.price}
                                             </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <StarIcon sx={{ fontSize: '0.7rem', color: '#ffd700' }} />
+                                                <Typography variant="body2" sx={{ fontSize: '0.7rem', color: '#666' }}>
+                                                    {product.rating}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Typography 
+                                                variant="caption" 
+                                                sx={{ 
+                                                    backgroundColor: '#f5f5f5',
+                                                    padding: '1px 8px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '0.7rem',
+                                                    color: '#666'
+                                                }}
+                                            >
+                                                {product.gender}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <Tooltip title="Hızlı Bakış">
+                                                    <IconButton 
+                                                        size="small"
+                                                        sx={{ 
+                                                            color: '#666',
+                                                            '&:hover': { color: '#1a1a1a' }
+                                                        }}
+                                                    >
+                                                        <VisibilityIcon sx={{ fontSize: '1.1rem' }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Sepete Ekle">
+                                                    <IconButton 
+                                                        size="small"
+                                                        sx={{ 
+                                                            color: '#666',
+                                                            '&:hover': { color: '#1a1a1a' }
+                                                        }}
+                                                    >
+                                                        <ShoppingCartIcon sx={{ fontSize: '1.1rem' }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
                                         </Box>
                                     </Box>
                                 </Card>
