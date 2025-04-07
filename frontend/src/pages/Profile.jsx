@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Container,
     Paper,
@@ -11,7 +11,6 @@ import {
     Alert,
     Card,
     CardContent,
-    CardActions,
     List,
     ListItem,
     ListItemText,
@@ -22,10 +21,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem, ListItemIcon, IconButton, FormControlLabel,
+    ListItemIcon, IconButton, FormControlLabel,
 } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -37,19 +33,13 @@ import {
     LocationOn as LocationIcon,
     Notifications as NotificationsIcon,
     Person as PersonIcon,
+    Edit as EditIcon,
+    StarOutline as StarOutlineIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-
-function StarOutlineIcon() {
-    return null;
-}
-
-function EditIcon() {
-    return null;
-}
 
 const Profile = () => {
     const { user, login } = useAuth();
@@ -91,6 +81,57 @@ const Profile = () => {
         promotions: false,
         newsletter: true,
     });
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [cardFormData, setCardFormData] = useState({
+        cardNumber: '',
+        expiryDate: '',
+        cvv: ''
+    });
+    const [openEditCardDialog, setOpenEditCardDialog] = useState(false);
+
+// Add these handlers after the existing handler functions
+    const handleEditCard = (card) => {
+        setSelectedCard(card);
+        setCardFormData({
+            cardNumber: `•••• •••• •••• ${card.last4}`,
+            expiryDate: card.expiry,
+            cvv: ''
+        });
+        setOpenEditCardDialog(true);
+    };
+
+    const handleCloseCardDialog = () => {
+        setOpenCardDialog(false);
+        setOpenEditCardDialog(false);
+        setSelectedCard(null);
+        setCardFormData({
+            cardNumber: '',
+            expiryDate: '',
+            cvv: ''
+        });
+    };
+
+    const handleSaveCard = () => {
+        if (selectedCard) {
+            setCards(prev => prev.map(card =>
+                card.id === selectedCard.id
+                    ? {
+                        ...card,
+                        expiry: cardFormData.expiryDate
+                    }
+                    : card
+            ));
+        }
+        handleCloseCardDialog();
+    };
+
+    const handleCardFormChange = (e) => {
+        const { name, value } = e.target;
+        setCardFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
     const formatPhoneNumber = (phone) => {
         const cleaned = phone.replace(/\D/g, '');
@@ -205,14 +246,6 @@ const Profile = () => {
         }));
     };
 
-    const handleAddAddress = () => {
-        setOpenAddressDialog(true);
-    };
-
-    const handleAddCard = () => {
-        setOpenCardDialog(true);
-    };
-
     const handleDeleteAddress = (id) => {
         setAddresses(prev => prev.filter(addr => addr.id !== id));
     };
@@ -225,7 +258,7 @@ const Profile = () => {
         setSelectedAddress(address);
         setAddressFormData({
             name: address.type,
-            streetAddress: address.address.split(',')[0],
+            streetAddress: address.address.split(',')[0].trim(),
             city: address.address.split(',')[1]?.trim() || '',
             state: address.address.split(',')[2]?.trim() || '',
             postalCode: address.address.split(',')[3]?.trim() || '',
@@ -235,52 +268,14 @@ const Profile = () => {
         setOpenEditDialog(true);
     };
 
-    const handleAddressFormChange = (e) => {
-        const { name, value, checked } = e.target;
-        setAddressFormData(prev => ({
-            ...prev,
-            [name]: name === 'isDefault' ? checked : value
-        }));
-    };
-
-    const handleSaveAddress = () => {
-        const formattedAddress = `${addressFormData.streetAddress}, ${addressFormData.city}, ${addressFormData.state}, ${addressFormData.postalCode}, ${addressFormData.country}`;
-
-        if (selectedAddress) {
-            setAddresses(prev => prev.map(addr =>
-                addr.id === selectedAddress.id
-                    ? {
-                        ...addr,
-                        type: addressFormData.name,
-                        address: formattedAddress,
-                        isDefault: addressFormData.isDefault
-                    }
-                    : addressFormData.isDefault
-                        ? { ...addr, isDefault: false }
-                        : addr
-            ));
-        } else {
-            const newAddress = {
-                id: Date.now(),
-                type: addressFormData.name,
-                address: formattedAddress,
-                isDefault: addressFormData.isDefault
-            };
-
-            setAddresses(prev => addressFormData.isDefault
-                ? [...prev.map(addr => ({ ...addr, isDefault: false })), newAddress]
-                : [...prev, newAddress]
-            );
-        }
-
-        handleCloseDialog();
-    };
-
     const handleCloseDialog = () => {
         setOpenAddressDialog(false);
         setOpenEditDialog(false);
         setSelectedAddress(null);
-        setAddressFormData({
+    };
+
+    const AddressDialog = ({ open, onClose, address }) => {
+        const [formData, setFormData] = useState({
             name: '',
             streetAddress: '',
             city: '',
@@ -289,9 +284,74 @@ const Profile = () => {
             country: '',
             isDefault: false
         });
-    };
 
-    const AddressDialog = ({ open, onClose, address }) => {
+        useEffect(() => {
+            if (address) {
+                setFormData({
+                    name: address.type,
+                    streetAddress: address.address.split(',')[0].trim(),
+                    city: address.address.split(',')[1]?.trim() || '',
+                    state: address.address.split(',')[2]?.trim() || '',
+                    postalCode: address.address.split(',')[3]?.trim() || '',
+                    country: address.address.split(',')[4]?.trim() || '',
+                    isDefault: address.isDefault
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    streetAddress: '',
+                    city: '',
+                    state: '',
+                    postalCode: '',
+                    country: '',
+                    isDefault: false
+                });
+            }
+        }, [address]);
+
+        const handleFormChange = (e) => {
+            const { name, value, checked } = e.target;
+            setFormData(prev => ({
+                ...prev,
+                [name]: name === 'isDefault' ? checked : value
+            }));
+        };
+
+        const handleSave = () => {
+            const formattedAddress = `${formData.streetAddress}, ${formData.city}, ${formData.state}, ${formData.postalCode}, ${formData.country}`;
+
+            if (address) {
+                // Edit existing address
+                setAddresses(prev => prev.map(addr =>
+                    addr.id === address.id
+                        ? {
+                            ...addr,
+                            type: formData.name,
+                            address: formattedAddress,
+                            isDefault: formData.isDefault
+                        }
+                        : formData.isDefault
+                            ? { ...addr, isDefault: false }
+                            : addr
+                ));
+            } else {
+                // Add new address
+                const newAddress = {
+                    id: Date.now(),
+                    type: formData.name,
+                    address: formattedAddress,
+                    isDefault: formData.isDefault
+                };
+
+                setAddresses(prev => formData.isDefault
+                    ? [...prev.map(addr => ({ ...addr, isDefault: false })), newAddress]
+                    : [...prev, newAddress]
+                );
+            }
+
+            onClose();
+        };
+
         return (
             <Dialog
                 open={open}
@@ -320,8 +380,8 @@ const Profile = () => {
                             fullWidth
                             label="Address Name"
                             name="name"
-                            value={addressFormData.name}
-                            onChange={handleAddressFormChange}
+                            value={formData.name}
+                            onChange={handleFormChange}
                             placeholder="e.g., Home, Office, Summer House"
                             sx={{
                                 mb: 3,
@@ -334,8 +394,8 @@ const Profile = () => {
                             fullWidth
                             label="Street Address"
                             name="streetAddress"
-                            value={addressFormData.streetAddress}
-                            onChange={handleAddressFormChange}
+                            value={formData.streetAddress}
+                            onChange={handleFormChange}
                             multiline
                             rows={3}
                             sx={{
@@ -351,8 +411,8 @@ const Profile = () => {
                                     fullWidth
                                     label="City"
                                     name="city"
-                                    value={addressFormData.city}
-                                    onChange={handleAddressFormChange}
+                                    value={formData.city}
+                                    onChange={handleFormChange}
                                     sx={{
                                         mb: { xs: 2, sm: 0 },
                                         '& .MuiOutlinedInput-root': {
@@ -366,8 +426,8 @@ const Profile = () => {
                                     fullWidth
                                     label="State/Province"
                                     name="state"
-                                    value={addressFormData.state}
-                                    onChange={handleAddressFormChange}
+                                    value={formData.state}
+                                    onChange={handleFormChange}
                                     sx={{
                                         mb: { xs: 2, sm: 0 },
                                         '& .MuiOutlinedInput-root': {
@@ -381,8 +441,8 @@ const Profile = () => {
                                     fullWidth
                                     label="Postal Code"
                                     name="postalCode"
-                                    value={addressFormData.postalCode}
-                                    onChange={handleAddressFormChange}
+                                    value={formData.postalCode}
+                                    onChange={handleFormChange}
                                     sx={{
                                         mb: { xs: 2, sm: 0 },
                                         '& .MuiOutlinedInput-root': {
@@ -396,8 +456,8 @@ const Profile = () => {
                                     fullWidth
                                     label="Country"
                                     name="country"
-                                    value={addressFormData.country}
-                                    onChange={handleAddressFormChange}
+                                    value={formData.country}
+                                    onChange={handleFormChange}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 1
@@ -409,8 +469,8 @@ const Profile = () => {
                         <FormControlLabel
                             control={
                                 <Switch
-                                    checked={addressFormData.isDefault}
-                                    onChange={handleAddressFormChange}
+                                    checked={formData.isDefault}
+                                    onChange={handleFormChange}
                                     name="isDefault"
                                     color="primary"
                                 />
@@ -422,7 +482,6 @@ const Profile = () => {
                 </DialogContent>
                 <DialogActions sx={{
                     p: 3,
-                    pt: 0,
                     borderTop: '1px solid',
                     borderColor: 'divider',
                     mt: 3
@@ -439,7 +498,7 @@ const Profile = () => {
                     </Button>
                     <Button
                         variant="contained"
-                        onClick={handleSaveAddress}
+                        onClick={handleSave}
                         sx={{
                             textTransform: 'none',
                             fontWeight: 500,
@@ -1094,6 +1153,7 @@ const Profile = () => {
                                                                     variant="outlined"
                                                                     size="small"
                                                                     startIcon={<EditIcon />}
+                                                                    onClick={() => handleEditCard(card)}
                                                                     sx={{
                                                                         borderRadius: 1,
                                                                         textTransform: 'none',
@@ -1267,134 +1327,11 @@ const Profile = () => {
                 </Container>
             </Box>
             {/* Add Address Dialog */}
-            <Dialog
-                open={openAddressDialog}
-                onClose={() => setOpenAddressDialog(false)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 2,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                    }
-                }}
-            >
-                <DialogTitle sx={{
-                    fontWeight: 600,
-                    pb: 2,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    px: 3,
-                }}>
-                    Add New Address
-                </DialogTitle>
-                <DialogContent sx={{ p: 3 }}>
-                    <Box sx={{ pt: 2 }}>
-                        <FormControl fullWidth sx={{ mb: 3 }}>
-                            <InputLabel>Address Type</InputLabel>
-                            <Select
-                                label="Address Type"
-                                sx={{ borderRadius: 1 }}
-                            >
-                                <MenuItem value="home">Home</MenuItem>
-                                <MenuItem value="work">Work</MenuItem>
-                                <MenuItem value="other">Other</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <TextField
-                            fullWidth
-                            label="Street Address"
-                            multiline
-                            rows={3}
-                            sx={{
-                                mb: 3,
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 1
-                                }
-                            }}
-                        />
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="City"
-                                    sx={{
-                                        mb: { xs: 2, sm: 0 },
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="State/Province"
-                                    sx={{
-                                        mb: { xs: 2, sm: 0 },
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Postal Code"
-                                    sx={{
-                                        mb: { xs: 2, sm: 0 },
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Country"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{
-                    p: 3,
-                    pt: 0,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    mt: 3
-                }}>
-                    <Button
-                        onClick={() => setOpenAddressDialog(false)}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            color: 'text.secondary'
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={() => setOpenAddressDialog(false)}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            px: 3,
-                            borderRadius: 1,
-                        }}
-                    >
-                        Save Address
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <AddressDialog
+                open={openAddressDialog || openEditDialog}
+                onClose={handleCloseDialog}
+                address={selectedAddress}
+            />
 
             {/* Add Card Dialog */}
             <Dialog
@@ -1461,7 +1398,6 @@ const Profile = () => {
                 </DialogContent>
                 <DialogActions sx={{
                     p: 3,
-                    pt: 0,
                     borderTop: '1px solid',
                     borderColor: 'divider',
                     mt: 3
@@ -1487,6 +1423,109 @@ const Profile = () => {
                         }}
                     >
                         Add Card
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Edit Card Dialog */}
+            <Dialog
+                open={openEditCardDialog}
+                onClose={handleCloseCardDialog}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    fontWeight: 600,
+                    pb: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    px: 3,
+                }}>
+                    Edit Card
+                </DialogTitle>
+                <DialogContent sx={{ p: 3 }}>
+                    <Box sx={{ pt: 2 }}>
+                        <TextField
+                            fullWidth
+                            label="Card Number"
+                            name="cardNumber"
+                            value={cardFormData.cardNumber}
+                            disabled
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                        />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Expiry Date"
+                                    name="expiryDate"
+                                    placeholder="MM/YY"
+                                    value={cardFormData.expiryDate}
+                                    onChange={handleCardFormChange}
+                                    sx={{
+                                        mb: { xs: 2, sm: 0 },
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="CVV"
+                                    name="cvv"
+                                    type="password"
+                                    value={cardFormData.cvv}
+                                    onChange={handleCardFormChange}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 1
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{
+                    p: 3,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    mt: 3
+                }}>
+                    <Button
+                        onClick={handleCloseCardDialog}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            color: 'text.secondary'
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveCard}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            px: 3,
+                            borderRadius: 1,
+                        }}
+                    >
+                        Save Changes
                     </Button>
                 </DialogActions>
             </Dialog>
