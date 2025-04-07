@@ -13,6 +13,7 @@ public class LoginResponse {
     private String firstName;
     private String lastName;
     private String phone;
+    private String countryCode;
     private String role;
     private String token;
 }

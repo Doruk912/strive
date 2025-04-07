@@ -9,6 +9,7 @@ CREATE TABLE users (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     phone VARCHAR(20),
+    country_code VARCHAR(5),
     role ENUM('CUSTOMER', 'ADMIN', 'MANAGER') NOT NULL DEFAULT 'CUSTOMER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -87,13 +88,18 @@ CREATE TABLE reviews (
 
 -- Passwords: '123456'
 
-INSERT INTO users (email, password, first_name, last_name, phone, role) VALUES
-('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', '+1234567890', 'ADMIN'),
-('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', '+1234567893', 'MANAGER'),
-('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', '+1234567891', 'CUSTOMER'),
-('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , 'CUSTOMER')
+INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
+('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', '1234567890', '+1', 'ADMIN'),
+('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', '1234567893', '+1', 'MANAGER'),
+('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
+('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
+
+INSERT INTO categories (name, image_url) VALUES
+('Electronics', 'https://example.com/electronics.jpg'),
+('Books', 'https://example.com/books.jpg'),
+('Clothing', 'https://example.com/clothing.jpg');
 
 INSERT INTO products (name, description, price, category_id) VALUES
-('Product 1', 'Description for product 1', 19.99, 1),
-('Product 2', 'Description for product 2', 29.99, 2),
-('Product 3', 'Description for product 3', 39.99, 3);
+('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),
+('Science Fiction Novel', 'An exciting science fiction novel that takes you on an interstellar journey.', 19.99, 2),
+('T-Shirt', 'A comfortable cotton t-shirt available in various sizes.', 9.99, 3);

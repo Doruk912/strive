@@ -31,6 +31,9 @@ public class User {
     @Column(length = 20)
     private String phone;
 
+    @Column(length = 5)
+    private String countryCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role = UserRole.CUSTOMER;

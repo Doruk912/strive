@@ -10,6 +10,7 @@ public class UserDTO {
     private String firstName;
     private String lastName;
     private String phone;
+    private String countryCode;
     private String role;
     private String token;
 
@@ -20,6 +21,7 @@ public class UserDTO {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setPhone(user.getPhone());
+        dto.setCountryCode(user.getCountryCode());
         dto.setRole(user.getRole().name());
         dto.setToken(token);
         return dto;

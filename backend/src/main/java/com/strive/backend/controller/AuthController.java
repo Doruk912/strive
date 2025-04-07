@@ -33,6 +33,7 @@ public class AuthController {
             userDTO.setFirstName(loginResponse.getFirstName());
             userDTO.setLastName(loginResponse.getLastName());
             userDTO.setPhone(loginResponse.getPhone());
+            userDTO.setCountryCode(loginResponse.getCountryCode());
             userDTO.setRole(loginResponse.getRole());
             userDTO.setToken(loginResponse.getToken());
 

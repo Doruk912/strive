@@ -40,7 +40,15 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody User userDetails) {
         try {
             User updatedUser = userService.updateUser(id, userDetails);
-            UserDTO userDTO = UserDTO.fromUser(updatedUser, null); // token is handled separately
+
+            // Get token from auth header and include in response
+            String token = null;
+            String authHeader = userDetails.getClass().getName(); // This is a placeholder
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
+
+            UserDTO userDTO = UserDTO.fromUser(updatedUser, token);
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

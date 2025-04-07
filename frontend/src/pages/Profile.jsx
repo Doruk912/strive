@@ -71,7 +71,7 @@ const Profile = () => {
         lastName: user?.lastName || '',
         email: user?.email || '',
         phoneNumber: user?.phone ? formatPhoneNumber(user.phone) : '',
-        countryCode: user?.countryCode || '+90',
+        countryCode: user?.countryCode || '+90' // Default to +90 if no country code
     }));
     const [phoneError, setPhoneError] = useState('');
 
@@ -126,7 +126,6 @@ const Profile = () => {
         const { name, value } = e.target;
 
         if (name === 'phoneNumber') {
-            // Only allow digits
             const numbersOnly = value.replace(/\D/g, '');
             const formattedValue = formatPhoneNumber(numbersOnly);
             setFormData(prev => ({
@@ -142,9 +141,19 @@ const Profile = () => {
         }
     };
 
+    const handleCountryCodeChange = (value, country) => {
+        setFormData(prev => ({
+            ...prev,
+            countryCode: '+' + country.dialCode
+        }));
+    };
+
     const handleSubmit = async () => {
         try {
             const apiUrl = 'http://localhost:8080/api/users/' + user.userId;
+            const phoneNumber = formData.phoneNumber.replace(/\s/g, '');
+            const isPhoneNumberBlank = !phoneNumber; // Check if the phone number is blank
+
             const response = await fetch(apiUrl, {
                 method: 'PUT',
                 headers: {
@@ -156,7 +165,8 @@ const Profile = () => {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
-                    phone: formData.phoneNumber.replace(/\s/g, '') || null, // Remove spaces
+                    phone: isPhoneNumberBlank ? null : phoneNumber, // Set to null if blank
+                    countryCode: isPhoneNumberBlank ? null : formData.countryCode // Set to null if blank
                 }),
             });
 
@@ -166,11 +176,14 @@ const Profile = () => {
 
             const responseData = await response.json();
 
-            // Update the user context with the new data, including phone
+            // Add the token from the current user to the response data
+            responseData.token = user.token;
+
             login({
                 ...user,
                 ...responseData,
-                phone: responseData.phone ? formatPhoneNumber(responseData.phone) : ''
+                phone: responseData.phone ? formatPhoneNumber(responseData.phone) : '',
+                countryCode: responseData.countryCode || '+90'
             });
 
             setShowSuccess(true);
@@ -450,14 +463,9 @@ const Profile = () => {
                                                     }}>
                                                         <Box sx={{ width: '30%' }}>
                                                             <PhoneInput
-                                                                country={'tr'}
-                                                                value={formData.countryCode.replace('+', '')}
-                                                                onChange={(value, country) => {
-                                                                    setFormData(prev => ({
-                                                                        ...prev,
-                                                                        countryCode: '+' + country.dialCode
-                                                                    }));
-                                                                }}
+                                                                country={formData.countryCode ? formData.countryCode.replace('+', '') : 'tr'}
+                                                                value={formData.countryCode ? formData.countryCode.replace('+', '') : '90'}
+                                                                onChange={handleCountryCodeChange}
                                                                 inputProps={{
                                                                     style: {
                                                                         width: '100%',
@@ -465,11 +473,10 @@ const Profile = () => {
                                                                         fontSize: '16px',
                                                                         borderRadius: '4px',
                                                                         border: '1px solid rgba(0, 0, 0, 0.23)',
-                                                                        cursor: 'pointer' // Add cursor pointer to indicate it's clickable
+                                                                        cursor: 'pointer'
                                                                     },
-                                                                    readOnly: true, // Prevent keyboard input
+                                                                    readOnly: true,
                                                                     onClick: () => {
-                                                                        // Programmatically open the dropdown when clicked
                                                                         const dropdownButton = document.querySelector('.react-tel-input .selected-flag');
                                                                         if (dropdownButton) {
                                                                             dropdownButton.click();

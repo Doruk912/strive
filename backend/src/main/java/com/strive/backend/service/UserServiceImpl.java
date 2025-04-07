@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(Integer id, User userDetails) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Update only the fields that are provided
         if (userDetails.getFirstName() != null) {
@@ -51,14 +51,18 @@ public class UserServiceImpl implements UserService {
         if (userDetails.getLastName() != null) {
             user.setLastName(userDetails.getLastName());
         }
-        if (userDetails.getPhone() != null) {
-            // If phone is just the country code, set it to null
-            if (userDetails.getPhone().length() <= 3) {
-                user.setPhone(null);
-            } else {
-                user.setPhone(userDetails.getPhone());
-            }
+
+        // Handle phone and country code together
+        if (userDetails.getPhone() == null || userDetails.getPhone().isEmpty()) {
+            // If phone is null or empty, set both phone and country code to null
+            user.setPhone(null);
+            user.setCountryCode(null);
+        } else {
+            // Otherwise, update both with provided values
+            user.setPhone(userDetails.getPhone());
+            user.setCountryCode(userDetails.getCountryCode());
         }
+
         if (userDetails.getEmail() != null) {
             user.setEmail(userDetails.getEmail());
         }

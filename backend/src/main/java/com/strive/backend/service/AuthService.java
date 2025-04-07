@@ -43,6 +43,7 @@ public class AuthService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getPhone(),
+                user.getCountryCode(),
                 user.getRole().name(),
                 token
         );
