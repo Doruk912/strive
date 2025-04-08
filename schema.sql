@@ -99,6 +99,19 @@ CREATE TABLE addresses (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE notification_preferences (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    email_notifications BOOLEAN DEFAULT TRUE,
+    order_updates BOOLEAN DEFAULT TRUE,
+    promotions BOOLEAN DEFAULT FALSE,
+    newsletter BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_preferences (user_id)
+);
+
 -- Passwords: '123456'
 
 INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
@@ -106,6 +119,13 @@ INSERT INTO users (email, password, first_name, last_name, phone, country_code, 
 ('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
 ('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
 ('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
+
+-- Insert default notification preferences for existing users
+INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
+(1, TRUE, TRUE, FALSE, TRUE),  -- Admin
+(2, TRUE, TRUE, FALSE, TRUE),  -- Manager
+(3, TRUE, TRUE, FALSE, TRUE),  -- John
+(4, TRUE, TRUE, FALSE, TRUE);  -- Jane
 
 INSERT INTO categories (name, image_url) VALUES
 ('Electronics', 'https://example.com/electronics.jpg'),

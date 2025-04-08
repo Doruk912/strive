@@ -43,6 +43,7 @@ import { Navigate } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { addressService } from '../services/addressService';
+import { notificationPreferencesService } from '../services/notificationPreferencesService';
 
 const Profile = () => {
     const { user, login } = useAuth();
@@ -114,6 +115,34 @@ const Profile = () => {
         }
     };
 
+    // Add this useEffect to fetch notification preferences when component mounts
+    useEffect(() => {
+        if (user?.userId) {
+            fetchNotificationPreferences();
+        }
+    }, [user?.userId]);
+
+    const fetchNotificationPreferences = async () => {
+        try {
+            const preferences = await notificationPreferencesService.getUserPreferences(user.userId, user.token);
+            setNotificationPreferences(preferences);
+        } catch (error) {
+            console.error('Error fetching notification preferences:', error);
+        }
+    };
+
+    const handleNotificationChange = async (preference) => {
+        try {
+            const updatedPreferences = {
+                ...notificationPreferences,
+                [preference]: !notificationPreferences[preference]
+            };
+            await notificationPreferencesService.updatePreferences(user.userId, updatedPreferences, user.token);
+            setNotificationPreferences(updatedPreferences);
+        } catch (error) {
+            console.error('Error updating notification preferences:', error);
+        }
+    };
 
     const handleDeleteAddress = async (id) => {
         try {
@@ -218,13 +247,6 @@ const Profile = () => {
             console.error('Error updating profile:', error);
             setErrorMessage(error.message);
         }
-    };
-
-    const handleNotificationChange = (preference) => {
-        setNotificationPreferences(prev => ({
-            ...prev,
-            [preference]: !prev[preference]
-        }));
     };
 
     const handleEditAddress = (address) => {
@@ -1076,6 +1098,7 @@ const Profile = () => {
                                                     animation: 'slideIn 0.3s ease-out'
                                                 }}
                                             >
+                                                Notification Preferences
                                             </Typography>
 
                                             <List sx={{
