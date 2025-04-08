@@ -85,12 +85,25 @@ CREATE TABLE reviews (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE addresses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    name VARCHAR(25) NOT NULL,
+    street_address VARCHAR(255) NOT NULL,
+    city VARCHAR(25) NOT NULL,
+    state VARCHAR(25),
+    postal_code VARCHAR(25),
+    country VARCHAR(25) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
 -- Passwords: '123456'
 
 INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
-('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', '1234567890', '+1', 'ADMIN'),
-('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', '1234567893', '+1', 'MANAGER'),
+('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', null , null , 'ADMIN'),
+('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
 ('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
 ('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
 
@@ -103,3 +116,7 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),
 ('Science Fiction Novel', 'An exciting science fiction novel that takes you on an interstellar journey.', 19.99, 2),
 ('T-Shirt', 'A comfortable cotton t-shirt available in various sizes.', 9.99, 3);
+
+INSERT INTO addresses (user_id, name, street_address, city, state, postal_code, country) VALUES
+(4, 'Home', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey'),
+(4, 'Work', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey');
