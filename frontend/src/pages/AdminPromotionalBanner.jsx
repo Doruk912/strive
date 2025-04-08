@@ -24,6 +24,7 @@ import {
     Delete as DeleteIcon,
     Add as AddIcon,
 } from '@mui/icons-material';
+import {styled} from "@mui/material/styles";
 
 const icons = [
     'LocalShippingOutlined',
@@ -40,6 +41,13 @@ const colors = [
     '#F57C00',
     '#0097A7',
 ];
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    '&.MuiTableCell-head': {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.common.white,
+    },
+}));
 
 const AdminPromotionalBanner = () => {
     const [banners, setBanners] = useState([
@@ -130,13 +138,13 @@ const AdminPromotionalBanner = () => {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Title</TableCell>
-                            <TableCell>Subtitle</TableCell>
-                            <TableCell>Highlight</TableCell>
-                            <TableCell>Icon</TableCell>
-                            <TableCell>Background Color</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Actions</TableCell>
+                            <StyledTableCell>Title</StyledTableCell>
+                            <StyledTableCell>Subtitle</StyledTableCell>
+                            <StyledTableCell>Highlight</StyledTableCell>
+                            <StyledTableCell>Icon</StyledTableCell>
+                            <StyledTableCell>Background Color</StyledTableCell>
+                            <StyledTableCell>Status</StyledTableCell>
+                            <StyledTableCell>Actions</StyledTableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

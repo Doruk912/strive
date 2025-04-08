@@ -23,6 +23,14 @@ import StockManagementDialog from '../components/StockManagementDialog';
 import CommonDialog from '../components/AdminDialog';
 import ImageManagementDialog from '../components/ImageManagementDialog';
 import { adminProducts as initialProducts } from '../mockData/Products';
+import {styled} from "@mui/material/styles";
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    '&.MuiTableCell-head': {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.common.white,
+    },
+}));
 
 const Products = () => {
     const [products, setProducts] = useState(initialProducts);
@@ -136,13 +144,13 @@ const Products = () => {
             >
                 <Table>
                     <TableHead>
-                        <TableRow sx={{ backgroundColor: 'grey.100' }}>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Image</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Category</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Stock</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                        <TableRow>
+                            <StyledTableCell>Image</StyledTableCell>
+                            <StyledTableCell>Name</StyledTableCell>
+                            <StyledTableCell>Category</StyledTableCell>
+                            <StyledTableCell>Price</StyledTableCell>
+                            <StyledTableCell>Stock</StyledTableCell>
+                            <StyledTableCell>Actions</StyledTableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

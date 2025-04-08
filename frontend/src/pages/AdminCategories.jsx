@@ -1,371 +1,465 @@
-import React, { useState} from 'react';
+import { useState } from 'react';
 import {
     Box,
-    Typography,
     Button,
     Table,
     TableBody,
     TableCell,
-    TableContainer,
     TableHead,
     TableRow,
     Paper,
-    IconButton,
+    Typography,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
     TextField,
+    IconButton,
     Snackbar,
-    Alert,
-    Collapse
+    Alert
 } from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    ExpandMore as ExpandMoreIcon,
-    ExpandLess as ExpandLessIcon
-} from '@mui/icons-material';
-import { popularCategories } from '../mockData/Categories';
+import { styled } from '@mui/material/styles';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
-const Categories = () => {
-    const [categories, setCategories] = useState(popularCategories);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [formData, setFormData] = useState({ id: null, name: '', image: '', parentId: null });
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-    const [expandedCategoryId, setExpandedCategoryId] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    '&.MuiTableCell-head': {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.common.white,
+    },
+}));
 
-    const handleOpenDialog = (category = { id: null, name: '', image: '', parentId: null }) => {
-        setFormData(category);
-        setOpenDialog(true);
+const CategoryRow = styled(TableRow)(({ theme, level = 0 }) => ({
+    '& > *:first-child': {
+        paddingLeft: theme.spacing(2 + level * 3),
+    },
+    '&:hover': {
+        backgroundColor: theme.palette.action.hover,
+    },
+}));
+
+// Mock data for initial categories
+const initialCategories = [
+    {
+        id: 1,
+        name: "Electronics",
+        image: "/api/placeholder/400/320",
+        parentId: null,
+        children: [
+            {
+                id: 4,
+                name: "Smartphones",
+                parentId: 1,
+                children: [
+                    { id: 8, name: "Android", parentId: 4, children: [] },
+                    { id: 9, name: "iPhone", parentId: 4, children: [] }
+                ]
+            },
+            {
+                id: 5,
+                name: "Laptops",
+                parentId: 1,
+                children: []
+            }
+        ]
+    },
+    {
+        id: 2,
+        name: "Clothing",
+        image: "/api/placeholder/400/320",
+        parentId: null,
+        children: [
+            { id: 6, name: "Men's", parentId: 2, children: [] },
+            { id: 7, name: "Women's", parentId: 2, children: [] }
+        ]
+    },
+    {
+        id: 3,
+        name: "Books",
+        image: "/api/placeholder/400/320",
+        parentId: null,
+        children: []
+    }
+];
+
+export default function CategoryManagement() {
+    const [categories, setCategories] = useState(initialCategories);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [currentCategory, setCurrentCategory] = useState({ id: null, name: '', image: '', parentId: null });
+    const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState(null);
+    const [expandedCategories, setExpandedCategories] = useState({});
+
+    // Toggle category expansion
+    const toggleExpand = (id) => {
+        setExpandedCategories(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
     };
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-        setFormData({ id: null, name: '', image: '', parentId: null });
+    // Open dialog for adding/editing category
+    const openDialog = (category = { id: null, name: '', image: '', parentId: null }) => {
+        setCurrentCategory(category);
+        setDialogOpen(true);
     };
 
-    const handleSaveCategory = async () => {
-        if (!formData.name.trim()) {
-            setSnackbar({ open: true, message: 'Name is required', severity: 'error' });
+    // Close dialog
+    const closeDialog = () => {
+        setDialogOpen(false);
+        setCurrentCategory({ id: null, name: '', image: '', parentId: null });
+    };
+
+    // Generate new unique ID
+    const generateId = () => {
+        return Math.max(0, ...getAllCategoryIds(categories)) + 1;
+    };
+
+    // Get all category IDs (flattened)
+    const getAllCategoryIds = (cats) => {
+        let ids = [];
+        cats.forEach(cat => {
+            ids.push(cat.id);
+            if (cat.children && cat.children.length > 0) {
+                ids = [...ids, ...getAllCategoryIds(cat.children)];
+            }
+        });
+        return ids;
+    };
+
+    // Find category by ID in the nested structure
+    const findCategoryById = (cats, id) => {
+        for (let cat of cats) {
+            if (cat.id === id) return cat;
+            if (cat.children && cat.children.length > 0) {
+                const found = findCategoryById(cat.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    // Save category changes
+    const saveCategory = () => {
+        if (!currentCategory.name.trim()) {
+            showNotification('Category name is required', 'error');
             return;
         }
 
-        // Here you would typically upload the image to your server
-        // and get back the URL before saving the category
-        let imageUrl = formData.image;
-        if (selectedFile) {
-            // Example upload logic (replace with your actual upload implementation)
-            // imageUrl = await uploadImage(selectedFile);
-        }
-
-        if (formData.id) {
-            setCategories(categories.map(cat => {
-                if (cat.id === formData.id) {
-                    return { ...cat, name: formData.name, image: imageUrl };
-                }
-                if (cat.subcategories) {
-                    cat.subcategories = cat.subcategories.map(sub =>
-                        sub.id === formData.id ? { ...sub, name: formData.name } : sub
-                    );
-                }
-                return cat;
-            }));
-            setSnackbar({ open: true, message: 'Updated successfully', severity: 'success' });
+        if (currentCategory.id) {
+            // Update existing category
+            updateCategory(categories, currentCategory);
+            showNotification('Category updated successfully');
         } else {
-            const newId = Date.now();
-            if (formData.parentId) {
-                setCategories(categories.map(cat =>
-                    cat.id === formData.parentId ? {
-                        ...cat,
-                        subcategories: [...cat.subcategories, {
-                            id: newId,
-                            name: formData.name,
-                            parentId: formData.parentId
-                        }]
-                    } : cat
-                ));
-            } else {
-                setCategories([...categories, {
-                    ...formData,
-                    id: newId,
-                    image: imageUrl,
-                    subcategories: []
-                }]);
-            }
-            setSnackbar({ open: true, message: 'Added successfully', severity: 'success' });
-        }
-
-        setSelectedFile(null);
-        handleCloseDialog();
-    };
-
-    const handleDeleteCategory = (id, parentId = null) => {
-        if (window.confirm('Are you sure you want to delete this item?')) {
-            if (parentId) {
-                setCategories(categories.map(cat => cat.id === parentId ? {
-                    ...cat,
-                    subcategories: cat.subcategories.filter(sub => sub.id !== id)
-                } : cat));
-            } else {
-                setCategories(categories.filter(cat => cat.id !== id));
-            }
-            setSnackbar({ open: true, message: 'Deleted successfully', severity: 'success' });
-        }
-    };
-
-    const handleToggleExpand = (id) => {
-        setExpandedCategoryId(expandedCategoryId === id ? null : id);
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbar({ open: false, message: '', severity: 'success' });
-    };
-
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        setSelectedFile(file);
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setFormData({ ...formData, image: e.target.result });
+            // Add new category
+            const newId = generateId();
+            const newCategory = {
+                id: newId,
+                name: currentCategory.name,
+                image: currentCategory.image || "/api/placeholder/400/320",
+                parentId: currentCategory.parentId,
+                children: []
             };
-            reader.readAsDataURL(file);
+
+            if (currentCategory.parentId) {
+                // Add as child of parent
+                addChildToCategory(categories, currentCategory.parentId, newCategory);
+            } else {
+                // Add as root category
+                setCategories([...categories, newCategory]);
+            }
+            showNotification('Category added successfully');
         }
+
+        closeDialog();
+    };
+
+    // Add child to parent category in the nested structure
+    const addChildToCategory = (cats, parentId, newChild) => {
+        const updatedCategories = [...cats];
+
+        for (let i = 0; i < updatedCategories.length; i++) {
+            if (updatedCategories[i].id === parentId) {
+                updatedCategories[i].children = [...updatedCategories[i].children, newChild];
+                setCategories(updatedCategories);
+                return true;
+            }
+
+            if (updatedCategories[i].children && updatedCategories[i].children.length > 0) {
+                const added = addChildToCategory(updatedCategories[i].children, parentId, newChild);
+                if (added) {
+                    setCategories(updatedCategories);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    // Update category in the nested structure
+    const updateCategory = (cats, updatedCategory) => {
+        const updatedCategories = [...cats];
+
+        for (let i = 0; i < updatedCategories.length; i++) {
+            if (updatedCategories[i].id === updatedCategory.id) {
+                updatedCategories[i].name = updatedCategory.name;
+                if (updatedCategory.image) {
+                    updatedCategories[i].image = updatedCategory.image;
+                }
+                setCategories(updatedCategories);
+                return true;
+            }
+
+            if (updatedCategories[i].children && updatedCategories[i].children.length > 0) {
+                const updated = updateCategory(updatedCategories[i].children, updatedCategory);
+                if (updated) {
+                    setCategories(updatedCategories);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    // Open confirm dialog to delete category
+    const confirmDeleteCategory = (id, parentId = null) => {
+        setCategoryToDelete({ id, parentId });
+        setConfirmDialogOpen(true);
+    };
+
+    // Delete category after confirmation
+    const deleteCategory = () => {
+        const { id, parentId } = categoryToDelete;
+
+        if (parentId) {
+            // Delete from parent's children
+            const updatedCategories = [...categories];
+            const parent = findParentCategory(updatedCategories, parentId);
+
+            if (parent) {
+                parent.children = parent.children.filter(child => child.id !== id);
+                setCategories(updatedCategories);
+            }
+        } else {
+            // Delete root category
+            setCategories(categories.filter(cat => cat.id !== id));
+        }
+
+        setConfirmDialogOpen(false);
+        showNotification('Category deleted successfully');
+    };
+
+    // Find parent category in the nested structure
+    const findParentCategory = (cats, parentId) => {
+        for (let cat of cats) {
+            if (cat.id === parentId) return cat;
+            if (cat.children && cat.children.length > 0) {
+                const found = findParentCategory(cat.children, parentId);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    // Show notification
+    const showNotification = (message, type = 'success') => {
+        setNotification({ show: true, message, type });
+        setTimeout(() => {
+            setNotification({ show: false, message: '', type: 'success' });
+        }, 3000);
+    };
+
+    // Recursive component to render category tree
+    const CategoryItem = ({ category, level = 0, parentId = null }) => {
+        const isExpanded = expandedCategories[category.id];
+        const hasChildren = category.children && category.children.length > 0;
+
+        return (
+            <>
+                <CategoryRow level={level}>
+                    <TableCell>
+                        <Box display="flex" alignItems="center">
+                            {hasChildren && (
+                                <IconButton size="small" onClick={() => toggleExpand(category.id)}>
+                                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                </IconButton>
+                            )}
+                            <Typography variant="body1" sx={{ ml: hasChildren ? 1 : 4 }}>
+                                {category.name}
+                            </Typography>
+                        </Box>
+                    </TableCell>
+                    <TableCell>
+                        {!parentId && category.image && (
+                            <Box
+                                component="img"
+                                src={category.image}
+                                alt={category.name}
+                                sx={{
+                                    width: 50,
+                                    height: 50,
+                                    objectFit: 'cover',
+                                    borderRadius: 1,
+                                }}
+                            />
+                        )}
+                    </TableCell>
+                    <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => openDialog(category)}
+                            >
+                                <EditIcon />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => confirmDeleteCategory(category.id, parentId)}
+                            >
+                                <DeleteIcon />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => openDialog({ parentId: category.id })}
+                            >
+                                <AddIcon />
+                            </IconButton>
+                        </Box>
+                    </TableCell>
+                </CategoryRow>
+                {isExpanded && hasChildren && category.children.map(child => (
+                    <CategoryItem
+                        key={child.id}
+                        category={child}
+                        level={level + 1}
+                        parentId={category.id}
+                    />
+                ))}
+            </>
+        );
     };
 
     return (
         <Box sx={{ mt: -10 }}>
-            <Paper sx={{ p: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5">Categories Management</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenDialog()}
-                >
-                    Add Category
-                </Button>
-            </Paper>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h5" component="h2">
+                        Manage Categories
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => openDialog()}
+                    >
+                        Add New Category
+                    </Button>
+                </Box>
 
-            <TableContainer component={Paper}>
+            <Paper>
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell />
-                            <TableCell>Name</TableCell>
-                            <TableCell>Image</TableCell>
-                            <TableCell>Actions</TableCell>
+                            <StyledTableCell>Name</StyledTableCell>
+                            <StyledTableCell>Image</StyledTableCell>
+                            <StyledTableCell>Actions</StyledTableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {categories.map(category => (
-                            <React.Fragment key={category.id}>
-                                <TableRow>
-                                    <TableCell>
-                                        <IconButton onClick={() => handleToggleExpand(category.id)}>
-                                            {expandedCategoryId === category.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                        </IconButton>
-                                    </TableCell>
-                                    <TableCell>{category.name}</TableCell>
-                                    <TableCell>
-                                        <img
-                                            src={category.image || '/default-category-image.jpg'}
-                                            alt={category.name}
-                                            style={{ width: 50, height: 50, objectFit: 'cover' }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton onClick={() => handleOpenDialog(category)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteCategory(category.id)} color="error">
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell colSpan={4} style={{ paddingBottom: 0, paddingTop: 0 }}>
-                                        <Collapse in={expandedCategoryId === category.id} timeout="auto" unmountOnExit>
-                                            <Box margin={1}>
-                                                <Typography variant="h6" gutterBottom component="div">
-                                                    Subcategories
-                                                </Typography>
-                                                <Button
-                                                    variant="outlined"
-                                                    startIcon={<AddIcon />}
-                                                    onClick={() => handleOpenDialog({ parentId: category.id })}
-                                                    sx={{ mb: 2 }}
-                                                >
-                                                    Add Subcategory
-                                                </Button>
-                                                <Table size="small" aria-label="subcategories">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell>Name</TableCell>
-                                                            <TableCell>Actions</TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {category.subcategories.map(subcategory => (
-                                                            <TableRow key={subcategory.id}>
-                                                                <TableCell>{subcategory.name}</TableCell>
-                                                                <TableCell>
-                                                                    <IconButton onClick={() => handleOpenDialog(subcategory)}>
-                                                                        <EditIcon />
-                                                                    </IconButton>
-                                                                    <IconButton onClick={() => handleDeleteCategory(subcategory.id, category.id)} color="error">
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </Box>
-                                        </Collapse>
-                                    </TableCell>
-                                </TableRow>
-                            </React.Fragment>
+                            <CategoryItem key={category.id} category={category} />
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
+            </Paper>
 
-            <Dialog
-                open={openDialog}
-                onClose={handleCloseDialog}
-                PaperProps={{
-                    sx: {
-                        width: '400px',
-                        borderRadius: '8px'
-                    }
-                }}
-            >
-                <DialogTitle
-                    sx={{
-                        borderBottom: '1px solid #e0e0e0',
-                        p: 2,
-                        fontSize: '16px',
-                        fontWeight: 500
-                    }}
-                >
-                    {formData.id ? 'Edit Item' : 'Add Item'}
+            {/* Add/Edit Dialog */}
+            <Dialog open={dialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    {currentCategory.id ? 'Edit Category' : 'Add Category'}
+                    {currentCategory.parentId && ' (Subcategory)'}
                 </DialogTitle>
-                <DialogContent sx={{ p: 2 }}>
-                    <Box sx={{ mb: 2 }}>
-                        <Typography
-                            sx={{
-                                fontSize: '14px',
-                                color: '#666',
-                                mb: 1
-                            }}
-                        >
-                            Name
-                        </Typography>
+                <DialogContent>
+                    <Box sx={{ pt: 2 }}>
                         <TextField
                             fullWidth
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '4px',
-                                }
-                            }}
+                            label="Category Name"
+                            value={currentCategory.name}
+                            onChange={(e) => setCurrentCategory({...currentCategory, name: e.target.value})}
+                            margin="normal"
                         />
-                    </Box>
-                    {!formData.parentId && (
-                        <Box>
-                            <input
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                id="image-upload"
-                                type="file"
-                                onChange={handleFileChange}
-                            />
-                            <label htmlFor="image-upload">
+                        {!currentCategory.parentId && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    Image Upload
+                                </Typography>
                                 <Button
-                                    component="span"
-                                    fullWidth
                                     variant="outlined"
-                                    sx={{
-                                        textTransform: 'none',
-                                        color: '#2196f3',
-                                        borderColor: '#2196f3',
-                                        '&:hover': {
-                                            borderColor: '#2196f3',
-                                            backgroundColor: 'rgba(33, 150, 243, 0.04)'
-                                        }
-                                    }}
+                                    component="label"
+                                    fullWidth
+                                    sx={{ height: 100 }}
                                 >
-                                    UPLOAD IMAGE
-                                </Button>
-                            </label>
-                            {formData.image && (
-                                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                                    <img
-                                        src={formData.image}
-                                        alt="Preview"
-                                        style={{
-                                            maxWidth: '100%',
-                                            maxHeight: '200px',
-                                            objectFit: 'contain'
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        hidden
+                                        onChange={(e) => {
+                                            if (e.target.files[0]) {
+                                                setCurrentCategory({
+                                                    ...currentCategory,
+                                                    image: "/api/placeholder/400/320"
+                                                });
+                                            }
                                         }}
                                     />
-                                </Box>
-                            )}
-                        </Box>
-                    )}
+                                </Button>
+                            </Box>
+                        )}
+                    </Box>
                 </DialogContent>
-                <DialogActions
-                    sx={{
-                        borderTop: '1px solid #e0e0e0',
-                        p: 2,
-                        '& .MuiButton-root': {
-                            minWidth: '64px',
-                            textTransform: 'uppercase',
-                            fontWeight: 500
-                        }
-                    }}
-                >
-                    <Button
-                        onClick={handleCloseDialog}
-                        sx={{
-                            color: '#2196f3'
-                        }}
-                    >
-                        CANCEL
-                    </Button>
-                    <Button
-                        onClick={handleSaveCategory}
-                        variant="contained"
-                        sx={{
-                            backgroundColor: '#2196f3',
-                            '&:hover': {
-                                backgroundColor: '#1976d2'
-                            }
-                        }}
-                    >
-                        SAVE
+                <DialogActions>
+                    <Button onClick={closeDialog}>Cancel</Button>
+                    <Button onClick={saveCategory} variant="contained">
+                        Save
                     </Button>
                 </DialogActions>
             </Dialog>
 
+            {/* Confirm Delete Dialog */}
+            <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this category?
+                        {categoryToDelete && !categoryToDelete.parentId &&
+                            " This will also delete all its subcategories."}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={deleteCategory} color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Notification */}
             <Snackbar
-                open={snackbar.open}
+                open={notification.show}
                 autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                onClose={() => setNotification({ show: false, message: '', type: 'success' })}
             >
-                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled">
-                    {snackbar.message}
+                <Alert severity={notification.type} sx={{ width: '100%' }}>
+                    {notification.message}
                 </Alert>
             </Snackbar>
         </Box>
     );
-};
-
-export default Categories;
+}
