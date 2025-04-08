@@ -11,10 +11,7 @@ import {
     FormControlLabel,
     Button,
     Tooltip,
-    Divider,
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { products } from '../mockData/Products';
@@ -40,14 +37,6 @@ const Products = () => {
     };
 
     const isFavorite = (productId) => favoriteItems.some(item => item.id === productId);
-
-    const toggleFavorite = (product) => {
-        if (isFavorite(product.id)) {
-            removeFromFavorites(product.id);
-        } else {
-            addToFavorites(product);
-        }
-    };
 
     const filteredProducts = products;
 

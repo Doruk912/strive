@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Container, Grid, Card, CardMedia, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Container} from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
@@ -9,10 +9,6 @@ import NewReleasesOutlinedIcon from '@mui/icons-material/NewReleasesOutlined';
 import CardMembershipOutlinedIcon from '@mui/icons-material/CardMembershipOutlined';
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined';
 import { useSwipeable } from 'react-swipeable';
-import StarIcon from '@mui/icons-material/Star';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { products } from '../mockData/Products';
 
 const slideIn = keyframes`
     from {
@@ -91,17 +87,6 @@ const PromotionalBanner = () => {
         trackMouse: false,
         trackTouch: true,
     });
-
-    // Function to get related products
-    const getRelatedProducts = (currentProduct) => {
-        return products
-            .filter(p => 
-                p.id !== currentProduct.id && 
-                (p.category === currentProduct.category || 
-                 p.gender === currentProduct.gender)
-            )
-            .slice(0, 4); // Get up to 4 related products
-    };
 
     return (
         <Container

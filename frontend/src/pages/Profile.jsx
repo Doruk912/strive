@@ -21,7 +21,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    ListItemIcon, IconButton, FormControlLabel,
+    ListItemIcon, IconButton,
 } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -29,12 +29,10 @@ import 'react-phone-input-2/lib/material.css';
 import {
     Save as SaveIcon,
     Add as AddIcon,
-    CreditCard as CreditCardIcon,
     LocationOn as LocationIcon,
     Notifications as NotificationsIcon,
     Person as PersonIcon,
     Edit as EditIcon,
-    StarOutline as StarOutlineIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -48,7 +46,6 @@ const Profile = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [openAddressDialog, setOpenAddressDialog] = useState(false);
-    const [openCardDialog, setOpenCardDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [addressFormData, setAddressFormData] = useState({
@@ -82,23 +79,13 @@ const Profile = () => {
     }));
     const [phoneError, setPhoneError] = useState('');
     const [addresses, setAddresses] = useState([]);
-    const [cards, setCards] = useState([
-        { id: 1, type: 'Visa', last4: '4242', expiry: '12/25' },
-        { id: 2, type: 'Mastercard', last4: '8888', expiry: '06/24' },
-    ]);
     const [notificationPreferences, setNotificationPreferences] = useState({
         emailNotifications: true,
         orderUpdates: true,
         promotions: false,
         newsletter: true,
     });
-    const [selectedCard, setSelectedCard] = useState(null);
-    const [cardFormData, setCardFormData] = useState({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: ''
-    });
-    const [openEditCardDialog, setOpenEditCardDialog] = useState(false);
+
     const [isLoading, setIsLoading] = useState(false);
     const [addressError, setAddressError] = useState('');
 
@@ -114,6 +101,7 @@ const Profile = () => {
             setIsLoading(true);
             const userAddresses = await addressService.getUserAddresses(user.userId, user.token);
             setAddresses(userAddresses);
+            setAddressError('');
         } catch (error) {
             setAddressError(error.message || 'Failed to load addresses');
             console.error('Error fetching addresses:', error);
@@ -122,31 +110,6 @@ const Profile = () => {
         }
     };
 
-    const handleSaveAddress = async () => {
-        try {
-            const addressData = {
-                userId: user.userId,
-                name: addressFormData.name,
-                streetAddress: addressFormData.streetAddress,
-                city: addressFormData.city,
-                state: addressFormData.state,
-                postalCode: addressFormData.postalCode,
-                country: addressFormData.country
-            };
-
-            if (selectedAddress) {
-                await addressService.updateAddress(selectedAddress.id, addressData, user.token);
-            } else {
-                await addressService.createAddress(addressData, user.token);
-            }
-
-            await fetchAddresses();
-            handleCloseDialog();
-        } catch (error) {
-            setAddressError(error.message || 'Failed to save address');
-            console.error('Error saving address:', error);
-        }
-    };
 
     const handleDeleteAddress = async (id) => {
         try {
@@ -156,49 +119,6 @@ const Profile = () => {
             setAddressError(error.message || 'Failed to delete address');
             console.error('Error deleting address:', error);
         }
-    };
-
-    const handleEditCard = (card) => {
-        setSelectedCard(card);
-        setCardFormData({
-            cardNumber: `•••• •••• •••• ${card.last4}`,
-            expiryDate: card.expiry,
-            cvv: ''
-        });
-        setOpenEditCardDialog(true);
-    };
-
-    const handleCloseCardDialog = () => {
-        setOpenCardDialog(false);
-        setOpenEditCardDialog(false);
-        setSelectedCard(null);
-        setCardFormData({
-            cardNumber: '',
-            expiryDate: '',
-            cvv: ''
-        });
-    };
-
-    const handleSaveCard = () => {
-        if (selectedCard) {
-            setCards(prev => prev.map(card =>
-                card.id === selectedCard.id
-                    ? {
-                        ...card,
-                        expiry: cardFormData.expiryDate
-                    }
-                    : card
-            ));
-        }
-        handleCloseCardDialog();
-    };
-
-    const handleCardFormChange = (e) => {
-        const { name, value } = e.target;
-        setCardFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
     };
 
     const userFullName = user?.firstName && user?.lastName
@@ -301,10 +221,6 @@ const Profile = () => {
             ...prev,
             [preference]: !prev[preference]
         }));
-    };
-
-    const handleDeleteCard = (id) => {
-        setCards(prev => prev.filter(card => card.id !== id));
     };
 
     const handleEditAddress = (address) => {
@@ -428,6 +344,7 @@ const Profile = () => {
                 }
 
                 onClose();
+                fetchAddresses();
             } catch (error) {
                 console.error('Error saving address:', error);
                 setErrors({ submit: error.message || 'Failed to save address' });
@@ -661,7 +578,6 @@ const Profile = () => {
                                     {[
                                         { icon: <PersonIcon />, label: 'Profile Details', value: 0 },
                                         { icon: <LocationIcon />, label: 'Addresses', value: 1 },
-                                        { icon: <CreditCardIcon />, label: 'Payment Methods', value: 2 },
                                         { icon: <NotificationsIcon />, label: 'Notifications', value: 3 },
                                     ].map((item) => (
                                         <ListItem
@@ -749,7 +665,6 @@ const Profile = () => {
                                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
                                         {activeTab === 0 && 'Profile Details'}
                                         {activeTab === 1 && 'Addresses'}
-                                        {activeTab === 2 && 'Payment Methods'}
                                         {activeTab === 3 && 'Notifications'}
                                     </Typography>
                                 </Box>
@@ -1137,184 +1052,6 @@ const Profile = () => {
                                             )}
                                         </Grid>
                                     )}
-                                    {activeTab === 2 && (
-                                        <Grid container spacing={3}>
-                                            {cards.map((card) => (
-                                                <Grid item xs={12} sm={6} key={card.id}>
-                                                    <Card
-                                                        sx={{
-                                                            height: '100%',
-                                                            borderRadius: 2,
-                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                                            transition: 'all 0.3s ease',
-                                                            position: 'relative',
-                                                            '&:hover': {
-                                                                transform: 'translateY(-2px)',
-                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                                            },
-                                                        }}
-                                                    >
-                                                        <CardContent sx={{ p: 3 }}>
-                                                            <Box sx={{ mb: 2 }}>
-                                                                <Typography
-                                                                    variant="h6"
-                                                                    sx={{
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        gap: 1,
-                                                                        fontWeight: 600,
-                                                                        color: 'text.primary',
-                                                                    }}
-                                                                >
-                                                                    <CreditCardIcon
-                                                                        sx={{
-                                                                            color: 'primary.main',
-                                                                            fontSize: 24,
-                                                                        }}
-                                                                    />
-                                                                    {card.type}
-                                                                </Typography>
-                                                            </Box>
-
-                                                            <Box
-                                                                sx={{
-                                                                    p: 2,
-                                                                    bgcolor: 'grey.50',
-                                                                    borderRadius: 1,
-                                                                    mb: 2,
-                                                                }}
-                                                            >
-                                                                <Typography
-                                                                    variant="body1"
-                                                                    sx={{
-                                                                        color: 'text.secondary',
-                                                                        lineHeight: 1.6,
-                                                                    }}
-                                                                >
-                                                                    •••• •••• •••• {card.last4}
-                                                                    <br />
-                                                                    Expires: {card.expiry}
-                                                                </Typography>
-                                                            </Box>
-
-                                                            <Box
-                                                                sx={{
-                                                                    display: 'flex',
-                                                                    gap: 1,
-                                                                    mt: 3,
-                                                                }}
-                                                            >
-                                                                <Button
-                                                                    variant="outlined"
-                                                                    size="small"
-                                                                    startIcon={<EditIcon />}
-                                                                    onClick={() => handleEditCard(card)}
-                                                                    sx={{
-                                                                        borderRadius: 1,
-                                                                        textTransform: 'none',
-                                                                        fontWeight: 500,
-                                                                        flex: 1,
-                                                                        borderColor: 'primary.main',
-                                                                        color: 'primary.main',
-                                                                        '&:hover': {
-                                                                            borderColor: 'primary.dark',
-                                                                            bgcolor: 'primary.50',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    Edit
-                                                                </Button>
-                                                                <IconButton
-                                                                    onClick={() => handleDeleteCard(card.id)}
-                                                                    sx={{
-                                                                        color: 'error.main',
-                                                                        '&:hover': {
-                                                                            bgcolor: 'error.50',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <DeleteOutlineIcon />
-                                                                </IconButton>
-                                                            </Box>
-                                                        </CardContent>
-                                                    </Card>
-                                                </Grid>
-                                            ))}
-
-                                            {/* Add New Card Card */}
-                                            <Grid item xs={12} sm={6}>
-                                                <Card
-                                                    onClick={() => {
-                                                        setOpenCardDialog(true);
-                                                    }}
-                                                    sx={{
-                                                        height: '100%',
-                                                        borderRadius: 2,
-                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                                        transition: 'all 0.3s ease',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        bgcolor: 'grey.50',
-                                                        border: '2px dashed',
-                                                        borderColor: 'grey.300',
-                                                        '&:hover': {
-                                                            borderColor: 'primary.main',
-                                                            bgcolor: 'primary.50',
-                                                            transform: 'translateY(-2px)',
-                                                        },
-                                                    }}
-                                                >
-                                                    <CardContent
-                                                        sx={{
-                                                            textAlign: 'center',
-                                                            py: 5,
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            alignItems: 'center',
-                                                            gap: 2,
-                                                        }}
-                                                    >
-                                                        <Box
-                                                            sx={{
-                                                                width: 64,
-                                                                height: 64,
-                                                                borderRadius: '50%',
-                                                                bgcolor: 'primary.main',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                mb: 1,
-                                                            }}
-                                                        >
-                                                            <AddIcon sx={{ fontSize: 32, color: 'white' }} />
-                                                        </Box>
-                                                        <Box>
-                                                            <Typography
-                                                                variant="h6"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: 'primary.main',
-                                                                    mb: 1,
-                                                                }}
-                                                            >
-                                                                Add New Card
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    color: 'text.secondary',
-                                                                }}
-                                                            >
-                                                                Click to add a new payment method
-                                                            </Typography>
-                                                        </Box>
-                                                    </CardContent>
-                                                </Card>
-                                            </Grid>
-                                        </Grid>
-                                    )}
 
                                     {activeTab === 3 && (
                                         <Box sx={{ maxWidth: 600 }}>
@@ -1387,203 +1124,6 @@ const Profile = () => {
                 onClose={handleCloseDialog}
                 address={selectedAddress}
             />
-
-            {/* Add Card Dialog */}
-            <Dialog
-                open={openCardDialog}
-                onClose={() => setOpenCardDialog(false)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 2,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                    }
-                }}
-            >
-                <DialogTitle sx={{
-                    fontWeight: 600,
-                    pb: 2,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    px: 3,
-                }}>
-                    Add New Card
-                </DialogTitle>
-                <DialogContent sx={{ p: 3 }}>
-                    <Box sx={{ pt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label="Card Number"
-                            sx={{
-                                mb: 3,
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 1
-                                }
-                            }}
-                        />
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Expiry Date"
-                                    placeholder="MM/YY"
-                                    sx={{
-                                        mb: { xs: 2, sm: 0 },
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="CVV"
-                                    type="password"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{
-                    p: 3,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    mt: 3
-                }}>
-                    <Button
-                        onClick={() => setOpenCardDialog(false)}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            color: 'text.secondary'
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={() => setOpenCardDialog(false)}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            px: 3,
-                            borderRadius: 1,
-                        }}
-                    >
-                        Add Card
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Edit Card Dialog */}
-            <Dialog
-                open={openEditCardDialog}
-                onClose={handleCloseCardDialog}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 2,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                    }
-                }}
-            >
-                <DialogTitle sx={{
-                    fontWeight: 600,
-                    pb: 2,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    px: 3,
-                }}>
-                    Edit Card
-                </DialogTitle>
-                <DialogContent sx={{ p: 3 }}>
-                    <Box sx={{ pt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label="Card Number"
-                            name="cardNumber"
-                            value={cardFormData.cardNumber}
-                            disabled
-                            sx={{
-                                mb: 3,
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 1
-                                }
-                            }}
-                        />
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Expiry Date"
-                                    name="expiryDate"
-                                    placeholder="MM/YY"
-                                    value={cardFormData.expiryDate}
-                                    onChange={handleCardFormChange}
-                                    sx={{
-                                        mb: { xs: 2, sm: 0 },
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="CVV"
-                                    name="cvv"
-                                    type="password"
-                                    value={cardFormData.cvv}
-                                    onChange={handleCardFormChange}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{
-                    p: 3,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    mt: 3
-                }}>
-                    <Button
-                        onClick={handleCloseCardDialog}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            color: 'text.secondary'
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleSaveCard}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            px: 3,
-                            borderRadius: 1,
-                        }}
-                    >
-                        Save Changes
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             {/* Delete Confirmation Dialog */}
             <Dialog

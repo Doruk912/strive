@@ -11,9 +11,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import StarIcon from '@mui/icons-material/Star';
 import { useFavorites } from '../context/FavoritesContext';
 import {Helmet} from "react-helmet";
