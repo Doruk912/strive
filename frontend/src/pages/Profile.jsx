@@ -33,6 +33,10 @@ import {
     Notifications as NotificationsIcon,
     Person as PersonIcon,
     Edit as EditIcon,
+    Email as EmailIcon,
+    LocalShipping as LocalShippingIcon,
+    LocalOffer as LocalOfferIcon,
+    Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -1054,61 +1058,137 @@ const Profile = () => {
                                     )}
 
                                     {activeTab === 3 && (
-                                        <Box sx={{ maxWidth: 600 }}>
+                                        <Box
+                                            sx={{
+                                                maxWidth: 600,
+                                                '@keyframes slideIn': {
+                                                    from: { opacity: 0, transform: 'translateY(10px)' },
+                                                    to: { opacity: 1, transform: 'translateY(0)' }
+                                                },
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    mb: 3,
+                                                    fontWeight: 600,
+                                                    color: 'primary.main',
+                                                    animation: 'slideIn 0.3s ease-out'
+                                                }}
+                                            >
+                                            </Typography>
+
                                             <List sx={{
                                                 bgcolor: 'background.paper',
                                                 borderRadius: 2,
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                p: 2,
+                                                animation: 'slideIn 0.3s ease-out',
+                                                '&:hover': {
+                                                    boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+                                                    transition: 'box-shadow 0.3s ease-in-out'
+                                                }
                                             }}>
                                                 {[
                                                     {
                                                         id: 'emailNotifications',
                                                         title: 'Email Notifications',
-                                                        description: 'Receive notifications via email'
+                                                        description: 'Receive notifications via email',
+                                                        Icon: EmailIcon
                                                     },
                                                     {
                                                         id: 'orderUpdates',
                                                         title: 'Order Updates',
-                                                        description: 'Get notified about your order status'
+                                                        description: 'Get notified about your order status',
+                                                        Icon: LocalShippingIcon
                                                     },
                                                     {
                                                         id: 'promotions',
                                                         title: 'Promotions',
-                                                        description: 'Receive promotional offers and deals'
+                                                        description: 'Receive promotional offers and deals',
+                                                        Icon: LocalOfferIcon
                                                     },
                                                     {
                                                         id: 'newsletter',
                                                         title: 'Newsletter',
-                                                        description: 'Subscribe to our newsletter'
+                                                        description: 'Subscribe to our newsletter',
+                                                        Icon: CampaignIcon
                                                     }
-                                                ].map((item, index) => (
-                                                    <ListItem
-                                                        key={item.id}
-                                                        sx={{
-                                                            borderBottom:
-                                                                index !== 3 ? '1px solid' : 'none',
-                                                            borderColor: 'divider',
-                                                            py: 2
-                                                        }}
-                                                    >
-                                                        <ListItemText
-                                                            primary={item.title}
-                                                            secondary={item.description}
-                                                            primaryTypographyProps={{
-                                                                fontWeight: 500,
-                                                                mb: 0.5
+                                                ].map((item, index) => {
+                                                    const Icon = item.Icon;
+                                                    return (
+                                                        <ListItem
+                                                            key={item.id}
+                                                            sx={{
+                                                                borderBottom: index !== 3 ? '1px solid' : 'none',
+                                                                borderColor: 'divider',
+                                                                py: 2,
+                                                                transition: 'all 0.2s ease-in-out',
+                                                                '&:hover': {
+                                                                    bgcolor: 'action.hover',
+                                                                    transform: 'translateX(4px)'
+                                                                }
                                                             }}
-                                                        />
-                                                        <ListItemSecondaryAction>
-                                                            <Switch
-                                                                edge="end"
-                                                                checked={notificationPreferences[item.id]}
-                                                                onChange={() => handleNotificationChange(item.id)}
-                                                                color="primary"
+                                                        >
+                                                            <ListItemIcon sx={{ minWidth: 45 }}>
+                                                                <Icon color="primary" />
+                                                            </ListItemIcon>
+
+                                                            <ListItemText
+                                                                primary={item.title}
+                                                                secondary={item.description}
+                                                                primaryTypographyProps={{
+                                                                    fontWeight: 600,
+                                                                    fontSize: '1.1rem',
+                                                                    mb: 0.5,
+                                                                    color: 'text.primary'
+                                                                }}
+                                                                secondaryTypographyProps={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.9rem'
+                                                                }}
                                                             />
-                                                        </ListItemSecondaryAction>
-                                                    </ListItem>
-                                                ))}
+
+                                                            <ListItemSecondaryAction>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                    <Switch
+                                                                        edge="end"
+                                                                        checked={notificationPreferences[item.id]}
+                                                                        onChange={() => handleNotificationChange(item.id)}
+                                                                        color="primary"
+                                                                        sx={{
+                                                                            '& .MuiSwitch-switchBase.Mui-checked': {
+                                                                                color: 'primary.main',
+                                                                            },
+                                                                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                                                                backgroundColor: 'primary.main',
+                                                                            },
+                                                                            '& .MuiSwitch-thumb': {
+                                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                                            },
+                                                                            '& .MuiSwitch-track': {
+                                                                                opacity: 0.8,
+                                                                                backgroundColor: 'grey.300',
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    {notificationPreferences[item.id] && (
+                                                                        <Box
+                                                                            sx={{
+                                                                                width: 8,
+                                                                                height: 8,
+                                                                                borderRadius: '50%',
+                                                                                bgcolor: 'success.main',
+                                                                                ml: 1,
+                                                                                animation: 'slideIn 0.2s ease-out'
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </Box>
+                                                            </ListItemSecondaryAction>
+                                                        </ListItem>
+                                                    );
+                                                })}
                                             </List>
                                         </Box>
                                     )}
