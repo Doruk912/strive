@@ -90,17 +90,22 @@ public class FeaturedCategoryService {
         }
 
         // Find the category to swap with
-        FeaturedCategory categoryToSwap = featuredCategoryRepository.findAllByOrderByDisplayOrderAsc()
-                .stream()
+        List<FeaturedCategory> categories = featuredCategoryRepository.findAllByOrderByDisplayOrderAsc();
+        FeaturedCategory categoryToSwap = categories.stream()
                 .filter(fc -> fc.getDisplayOrder() == newOrder)
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Category to swap not found"));
 
-        // Swap display orders
-        categoryToSwap.setDisplayOrder(currentOrder);
-        featuredCategory.setDisplayOrder(newOrder);
+        // Use a temporary order value (1000) that's outside our valid range
+        featuredCategory.setDisplayOrder(1000);
+        featuredCategoryRepository.save(featuredCategory);
 
+        // Update the other category
+        categoryToSwap.setDisplayOrder(currentOrder);
         featuredCategoryRepository.save(categoryToSwap);
+
+        // Finally update to the desired position
+        featuredCategory.setDisplayOrder(newOrder);
         featuredCategoryRepository.save(featuredCategory);
     }
 

@@ -12,6 +12,7 @@ import StarIcon from '@mui/icons-material/Star';
 import PromotionalBanner from "../components/PromotionalBanner";
 import { useFavorites } from '../context/FavoritesContext';
 import {Helmet} from "react-helmet";
+import { featuredCategoryService } from '../services/featuredCategoryService';
 
 const Home = () => {
     const navigate = useNavigate(); // Initialize useNavigate
@@ -21,7 +22,25 @@ const Home = () => {
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
     const [activeDot, setActiveDot] = useState(0);
+    const [popularCategories, setPopularCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
+    useEffect(() => {
+        const fetchFeaturedCategories = async () => {
+            try {
+                const categories = await featuredCategoryService.getAllFeaturedCategories();
+                setPopularCategories(categories);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching featured categories:', error);
+                setError('Failed to load categories');
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedCategories();
+    }, []);
 
     const checkScrollPosition = () => {
         if (scrollContainerRef.current) {
@@ -80,8 +99,8 @@ const Home = () => {
     };
 
     // Function to handle category click
-    const handleCategoryClick = (categoryName) => {
-        navigate(`/products?category=${categoryName}`); // Navigate to Products.jsx with category name
+    const handleCategoryClick = (categoryId) => {
+        navigate(`/products?category=${categoryId}`); // Navigate to Products.jsx with category name
     };
 
     return (
@@ -255,118 +274,126 @@ const Home = () => {
                     </Typography>
 
                     <Box sx={{ position: 'relative' }}>
-                        <Box
-                            ref={scrollContainerRef}
-                            onScroll={handleScrollUpdate}
-                            sx={{
-                                display: 'flex',
-                                overflowX: { xs: 'auto', md: 'hidden' },
-                                gap: { xs: 2, md: 2 }, // Reduced gap
-                                scrollSnapType: 'x mandatory',
-                                '&::-webkit-scrollbar': { display: 'none' },
-                                scrollbarWidth: 'none',
-                                msOverflowStyle: 'none',
-                                pb: 2
-                            }}
-                        >
-                            {popularCategories.map((category) => (
-                                <Box
-                                    key={category.id}
-                                    sx={{
-                                        flex: {
-                                            xs: '0 0 42%', // Shows about 2.2 categories on mobile
-                                            md: '1', // Equal width on desktop (1/6 since we have 6 categories)
-                                        },
-                                        scrollSnapAlign: 'start',
-                                        cursor: 'pointer',
-                                    }}
-                                    onClick={() => handleCategoryClick(category.name)} // Add onClick handler
-                                >
-                                    <Card
+                        {loading ? (
+                            <Typography>Loading categories...</Typography>
+                        ) : error ? (
+                            <Typography color="error">{error}</Typography>
+                        ) : (
+                            <Box
+                                ref={scrollContainerRef}
+                                onScroll={handleScrollUpdate}
+                                sx={{
+                                    display: 'flex',
+                                    overflowX: { xs: 'auto', md: 'hidden' },
+                                    gap: { xs: 2, md: 2 },
+                                    scrollSnapType: 'x mandatory',
+                                    '&::-webkit-scrollbar': { display: 'none' },
+                                    scrollbarWidth: 'none',
+                                    msOverflowStyle: 'none',
+                                    pb: 2
+                                }}
+                            >
+                                {popularCategories.map((category) => (
+                                    <Box
+                                        key={category.id}
                                         sx={{
-                                            boxShadow: 'none',
-                                            borderRadius: '4px',
-                                            overflow: 'hidden',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                '& .category-image': {
-                                                    transform: 'scale(1.05)',
-                                                }
+                                            flex: {
+                                                xs: '0 0 42%',
+                                                md: '1',
                                             },
+                                            scrollSnapAlign: 'start',
+                                            cursor: 'pointer',
                                         }}
+                                        onClick={() => handleCategoryClick(category.categoryId)}
                                     >
-                                        <Box sx={{
-                                            position: 'relative',
-                                            paddingTop: '140%', // More vertical aspect ratio
-                                            overflow: 'hidden',
-                                            backgroundColor: '#f5f5f5'
-                                        }}>
-                                            <CardMedia
-                                                component="img"
-                                                image={category.image}
-                                                alt={category.name}
-                                                className="category-image"
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: 'cover',
-                                                    transition: 'transform 0.3s ease',
-                                                }}
-                                            />
-                                        </Box>
-                                        <Box
+                                        <Card
                                             sx={{
-                                                py: 1.5, // Reduced padding
-                                                px: 1,
-                                                backgroundColor: 'white',
-                                                textAlign: 'center',
+                                                boxShadow: 'none',
+                                                borderRadius: '4px',
+                                                overflow: 'hidden',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-4px)',
+                                                    '& .category-image': {
+                                                        transform: 'scale(1.05)',
+                                                    }
+                                                },
                                             }}
                                         >
-                                            <Typography
+                                            <Box sx={{
+                                                position: 'relative',
+                                                paddingTop: '140%',
+                                                overflow: 'hidden',
+                                                backgroundColor: '#f5f5f5'
+                                            }}>
+                                                <CardMedia
+                                                    component="img"
+                                                    image={category.imageBase64 ? `data:${category.imageType};base64,${category.imageBase64}` : '/placeholder-image.jpg'}
+                                                    alt={category.name}
+                                                    className="category-image"
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        transition: 'transform 0.3s ease',
+                                                    }}
+                                                />
+                                            </Box>
+                                            <Box
                                                 sx={{
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: 600,
-                                                    color: '#2B2B2B',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.5px',
+                                                    py: 1.5,
+                                                    px: 1,
+                                                    backgroundColor: 'white',
+                                                    textAlign: 'center',
                                                 }}
                                             >
-                                                {category.name}
-                                            </Typography>
-                                        </Box>
-                                    </Card>
-                                </Box>
-                            ))}
-                        </Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: 600,
+                                                        color: '#2B2B2B',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.5px',
+                                                    }}
+                                                >
+                                                    {category.name}
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+                                    </Box>
+                                ))}
+                            </Box>
+                        )}
 
                         {/* Dot Navigation for Mobile */}
-                        <Box
-                            sx={{
-                                display: { xs: 'flex', md: 'none' },
-                                justifyContent: 'center',
-                                gap: 1,
-                                mt: 2
-                            }}
-                        >
-                            {[...Array(Math.ceil(popularCategories.length / 2))].map((_, index) => (
-                                <Box
-                                    key={index}
-                                    onClick={() => handleDotClick(index)}
-                                    sx={{
-                                        width: 6,
-                                        height: 6,
-                                        borderRadius: '50%',
-                                        bgcolor: activeDot === index ? '#000' : '#E0E0E0',
-                                        cursor: 'pointer',
-                                        transition: 'background-color 0.3s'
-                                    }}
-                                />
-                            ))}
-                        </Box>
+                        {!loading && !error && (
+                            <Box
+                                sx={{
+                                    display: { xs: 'flex', md: 'none' },
+                                    justifyContent: 'center',
+                                    gap: 1,
+                                    mt: 2
+                                }}
+                            >
+                                {[...Array(Math.ceil(popularCategories.length / 2))].map((_, index) => (
+                                    <Box
+                                        key={index}
+                                        onClick={() => handleDotClick(index)}
+                                        sx={{
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: '50%',
+                                            bgcolor: activeDot === index ? '#000' : '#E0E0E0',
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.3s'
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                        )}
                     </Box>
                 </Box>
             </Container>
