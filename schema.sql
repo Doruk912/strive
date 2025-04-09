@@ -216,11 +216,11 @@ INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 
 INSERT INTO featured_categories (category_id, display_order) VALUES
 (9, 1),
-(6, 2),
-(4, 3), 
-(37, 4), 
-(34, 5),
-(36, 6);
+(6, 2),   -- Men's Footwear
+(4, 3),   -- Outdoor
+(37, 4),  -- Winter Sports
+(34, 5),  -- Backpacks
+(36, 6);  -- Water Sports
 
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),
