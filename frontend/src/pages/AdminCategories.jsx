@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -16,7 +16,11 @@ import {
     TextField,
     IconButton,
     Snackbar,
-    Alert
+    Alert,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
@@ -24,6 +28,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     '&.MuiTableCell-head': {
@@ -41,60 +47,124 @@ const CategoryRow = styled(TableRow)(({ theme, level = 0 }) => ({
     },
 }));
 
-// Mock data for initial categories
-const initialCategories = [
-    {
-        id: 1,
-        name: "Electronics",
-        image: "/api/placeholder/400/320",
-        parentId: null,
-        children: [
-            {
-                id: 4,
-                name: "Smartphones",
-                parentId: 1,
-                children: [
-                    { id: 8, name: "Android", parentId: 4, children: [] },
-                    { id: 9, name: "iPhone", parentId: 4, children: [] }
-                ]
-            },
-            {
-                id: 5,
-                name: "Laptops",
-                parentId: 1,
-                children: []
-            }
-        ]
-    },
-    {
-        id: 2,
-        name: "Clothing",
-        image: "/api/placeholder/400/320",
-        parentId: null,
-        children: [
-            { id: 6, name: "Men's", parentId: 2, children: [] },
-            { id: 7, name: "Women's", parentId: 2, children: [] }
-        ]
-    },
-    {
-        id: 3,
-        name: "Books",
-        image: "/api/placeholder/400/320",
-        parentId: null,
-        children: []
-    }
-];
-
 export default function CategoryManagement() {
-    const [categories, setCategories] = useState(initialCategories);
+    const navigate = useNavigate();
+    const [categories, setCategories] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [currentCategory, setCurrentCategory] = useState({ id: null, name: '', image: '', parentId: null });
+    const [currentCategory, setCurrentCategory] = useState({ id: null, name: '', parentId: null });
     const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState(null);
     const [expandedCategories, setExpandedCategories] = useState({});
+    const [selectedImage, setSelectedImage] = useState(null);
 
-    // Toggle category expansion
+    // Get token from localStorage
+    const getAuthToken = () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user?.token;
+    };
+
+    // Configure axios defaults
+    useEffect(() => {
+        const token = getAuthToken();
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        fetchCategories();
+    }, [navigate]);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/categories');
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            if (error.response?.status === 401) {
+                navigate('/login');
+            } else {
+                showNotification(
+                    error.response?.data?.message || 'Error fetching categories. Please try again later.',
+                    'error'
+                );
+            }
+        }
+    };
+
+    const handleImageChange = (e) => {
+        if (e.target.files[0]) {
+            setSelectedImage(e.target.files[0]);
+        }
+    };
+
+    const saveCategory = async () => {
+        if (!currentCategory.name.trim()) {
+            showNotification('Category name is required', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('category', new Blob([JSON.stringify({
+            name: currentCategory.name,
+            parentId: currentCategory.parentId
+        })], { type: 'application/json' }));
+
+        if (selectedImage) {
+            formData.append('image', selectedImage);
+        }
+
+        try {
+            if (currentCategory.id) {
+                await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                showNotification('Category updated successfully');
+            } else {
+                await axios.post('http://localhost:8080/api/categories', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                showNotification('Category added successfully');
+            }
+            fetchCategories();
+            closeDialog();
+        } catch (error) {
+            console.error('Error saving category:', error);
+            if (error.response?.status === 401) {
+                navigate('/login');
+            } else {
+                showNotification(
+                    error.response?.data?.message || 'Error saving category. Please try again later.',
+                    'error'
+                );
+            }
+        }
+    };
+
+    const deleteCategory = async () => {
+        try {
+            await axios.delete(`http://localhost:8080/api/categories/${categoryToDelete.id}`);
+            showNotification('Category deleted successfully');
+            fetchCategories();
+            setConfirmDialogOpen(false);
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            if (error.response?.status === 401) {
+                navigate('/login');
+            } else {
+                showNotification(
+                    error.response?.data?.message || 'Error deleting category. Please try again later.',
+                    'error'
+                );
+            }
+        }
+    };
+
     const toggleExpand = (id) => {
         setExpandedCategories(prev => ({
             ...prev,
@@ -102,172 +172,23 @@ export default function CategoryManagement() {
         }));
     };
 
-    // Open dialog for adding/editing category
-    const openDialog = (category = { id: null, name: '', image: '', parentId: null }) => {
+    const openDialog = (category = { id: null, name: '', parentId: null }) => {
         setCurrentCategory(category);
+        setSelectedImage(null);
         setDialogOpen(true);
     };
 
-    // Close dialog
     const closeDialog = () => {
         setDialogOpen(false);
-        setCurrentCategory({ id: null, name: '', image: '', parentId: null });
+        setCurrentCategory({ id: null, name: '', parentId: null });
+        setSelectedImage(null);
     };
 
-    // Generate new unique ID
-    const generateId = () => {
-        return Math.max(0, ...getAllCategoryIds(categories)) + 1;
-    };
-
-    // Get all category IDs (flattened)
-    const getAllCategoryIds = (cats) => {
-        let ids = [];
-        cats.forEach(cat => {
-            ids.push(cat.id);
-            if (cat.children && cat.children.length > 0) {
-                ids = [...ids, ...getAllCategoryIds(cat.children)];
-            }
-        });
-        return ids;
-    };
-
-    // Find category by ID in the nested structure
-    const findCategoryById = (cats, id) => {
-        for (let cat of cats) {
-            if (cat.id === id) return cat;
-            if (cat.children && cat.children.length > 0) {
-                const found = findCategoryById(cat.children, id);
-                if (found) return found;
-            }
-        }
-        return null;
-    };
-
-    // Save category changes
-    const saveCategory = () => {
-        if (!currentCategory.name.trim()) {
-            showNotification('Category name is required', 'error');
-            return;
-        }
-
-        if (currentCategory.id) {
-            // Update existing category
-            updateCategory(categories, currentCategory);
-            showNotification('Category updated successfully');
-        } else {
-            // Add new category
-            const newId = generateId();
-            const newCategory = {
-                id: newId,
-                name: currentCategory.name,
-                image: currentCategory.image || "/api/placeholder/400/320",
-                parentId: currentCategory.parentId,
-                children: []
-            };
-
-            if (currentCategory.parentId) {
-                // Add as child of parent
-                addChildToCategory(categories, currentCategory.parentId, newCategory);
-            } else {
-                // Add as root category
-                setCategories([...categories, newCategory]);
-            }
-            showNotification('Category added successfully');
-        }
-
-        closeDialog();
-    };
-
-    // Add child to parent category in the nested structure
-    const addChildToCategory = (cats, parentId, newChild) => {
-        const updatedCategories = [...cats];
-
-        for (let i = 0; i < updatedCategories.length; i++) {
-            if (updatedCategories[i].id === parentId) {
-                updatedCategories[i].children = [...updatedCategories[i].children, newChild];
-                setCategories(updatedCategories);
-                return true;
-            }
-
-            if (updatedCategories[i].children && updatedCategories[i].children.length > 0) {
-                const added = addChildToCategory(updatedCategories[i].children, parentId, newChild);
-                if (added) {
-                    setCategories(updatedCategories);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
-    // Update category in the nested structure
-    const updateCategory = (cats, updatedCategory) => {
-        const updatedCategories = [...cats];
-
-        for (let i = 0; i < updatedCategories.length; i++) {
-            if (updatedCategories[i].id === updatedCategory.id) {
-                updatedCategories[i].name = updatedCategory.name;
-                if (updatedCategory.image) {
-                    updatedCategories[i].image = updatedCategory.image;
-                }
-                setCategories(updatedCategories);
-                return true;
-            }
-
-            if (updatedCategories[i].children && updatedCategories[i].children.length > 0) {
-                const updated = updateCategory(updatedCategories[i].children, updatedCategory);
-                if (updated) {
-                    setCategories(updatedCategories);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
-    // Open confirm dialog to delete category
-    const confirmDeleteCategory = (id, parentId = null) => {
-        setCategoryToDelete({ id, parentId });
+    const confirmDeleteCategory = (id) => {
+        setCategoryToDelete({ id });
         setConfirmDialogOpen(true);
     };
 
-    // Delete category after confirmation
-    const deleteCategory = () => {
-        const { id, parentId } = categoryToDelete;
-
-        if (parentId) {
-            // Delete from parent's children
-            const updatedCategories = [...categories];
-            const parent = findParentCategory(updatedCategories, parentId);
-
-            if (parent) {
-                parent.children = parent.children.filter(child => child.id !== id);
-                setCategories(updatedCategories);
-            }
-        } else {
-            // Delete root category
-            setCategories(categories.filter(cat => cat.id !== id));
-        }
-
-        setConfirmDialogOpen(false);
-        showNotification('Category deleted successfully');
-    };
-
-    // Find parent category in the nested structure
-    const findParentCategory = (cats, parentId) => {
-        for (let cat of cats) {
-            if (cat.id === parentId) return cat;
-            if (cat.children && cat.children.length > 0) {
-                const found = findParentCategory(cat.children, parentId);
-                if (found) return found;
-            }
-        }
-        return null;
-    };
-
-    // Show notification
     const showNotification = (message, type = 'success') => {
         setNotification({ show: true, message, type });
         setTimeout(() => {
@@ -275,8 +196,34 @@ export default function CategoryManagement() {
         }, 3000);
     };
 
-    // Recursive component to render category tree
-    const CategoryItem = ({ category, level = 0, parentId = null }) => {
+    const handleRemoveImage = async () => {
+        try {
+            await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}`, {
+                name: currentCategory.name,
+                parentId: currentCategory.parentId,
+                removeImage: true
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            showNotification('Image removed successfully');
+            fetchCategories();
+            closeDialog();
+        } catch (error) {
+            console.error('Error removing image:', error);
+            if (error.response?.status === 401) {
+                navigate('/login');
+            } else {
+                showNotification(
+                    error.response?.data?.message || 'Error removing image. Please try again later.',
+                    'error'
+                );
+            }
+        }
+    };
+
+    const CategoryItem = ({ category, level = 0 }) => {
         const isExpanded = expandedCategories[category.id];
         const hasChildren = category.children && category.children.length > 0;
 
@@ -296,10 +243,10 @@ export default function CategoryManagement() {
                         </Box>
                     </TableCell>
                     <TableCell>
-                        {!parentId && category.image && (
+                        {category.imageBase64 && (
                             <Box
                                 component="img"
-                                src={category.image}
+                                src={`data:${category.imageType};base64,${category.imageBase64}`}
                                 alt={category.name}
                                 sx={{
                                     width: 50,
@@ -322,7 +269,7 @@ export default function CategoryManagement() {
                             <IconButton
                                 size="small"
                                 color="error"
-                                onClick={() => confirmDeleteCategory(category.id, parentId)}
+                                onClick={() => confirmDeleteCategory(category.id)}
                             >
                                 <DeleteIcon />
                             </IconButton>
@@ -341,7 +288,6 @@ export default function CategoryManagement() {
                         key={child.id}
                         category={child}
                         level={level + 1}
-                        parentId={category.id}
                     />
                 ))}
             </>
@@ -350,18 +296,18 @@ export default function CategoryManagement() {
 
     return (
         <Box sx={{ mt: -10 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h5" component="h2">
-                        Manage Categories
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => openDialog()}
-                    >
-                        Add New Category
-                    </Button>
-                </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h5" component="h2">
+                    Manage Categories
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => openDialog()}
+                >
+                    Add New Category
+                </Button>
+            </Box>
 
             <Paper>
                 <Table>
@@ -395,11 +341,34 @@ export default function CategoryManagement() {
                             onChange={(e) => setCurrentCategory({...currentCategory, name: e.target.value})}
                             margin="normal"
                         />
-                        {!currentCategory.parentId && (
-                            <Box sx={{ mt: 2 }}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                    Image Upload
-                                </Typography>
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                Image Upload
+                            </Typography>
+                            {currentCategory.imageBase64 ? (
+                                <Box sx={{ mb: 2 }}>
+                                    <Box
+                                        component="img"
+                                        src={`data:${currentCategory.imageType};base64,${currentCategory.imageBase64}`}
+                                        alt={currentCategory.name}
+                                        sx={{
+                                            width: '100%',
+                                            height: 200,
+                                            objectFit: 'contain',
+                                            borderRadius: 1,
+                                            mb: 1
+                                        }}
+                                    />
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={handleRemoveImage}
+                                        fullWidth
+                                    >
+                                        Remove Image
+                                    </Button>
+                                </Box>
+                            ) : (
                                 <Button
                                     variant="outlined"
                                     component="label"
@@ -410,18 +379,31 @@ export default function CategoryManagement() {
                                     <input
                                         type="file"
                                         hidden
-                                        onChange={(e) => {
-                                            if (e.target.files[0]) {
-                                                setCurrentCategory({
-                                                    ...currentCategory,
-                                                    image: "/api/placeholder/400/320"
-                                                });
-                                            }
-                                        }}
+                                        accept="image/*"
+                                        onChange={handleImageChange}
                                     />
                                 </Button>
-                            </Box>
-                        )}
+                            )}
+                            {selectedImage && (
+                                <Box sx={{ mt: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Selected: {selectedImage.name}
+                                    </Typography>
+                                    <Box
+                                        component="img"
+                                        src={URL.createObjectURL(selectedImage)}
+                                        alt="Preview"
+                                        sx={{
+                                            width: '100%',
+                                            height: 200,
+                                            objectFit: 'contain',
+                                            borderRadius: 1,
+                                            mt: 1
+                                        }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
                     </Box>
                 </DialogContent>
                 <DialogActions>
