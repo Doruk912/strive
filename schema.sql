@@ -34,7 +34,6 @@ CREATE TABLE featured_categories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
-    UNIQUE (display_order),
     CHECK (display_order BETWEEN 1 AND 6)
 );
 
