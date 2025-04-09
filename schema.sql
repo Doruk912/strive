@@ -214,6 +214,14 @@ INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 ('Skiing', 37, NULL, NULL),
 ('Snowboarding', 37, NULL, NULL);
 
+INSERT INTO featured_categories (category_id, display_order) VALUES
+(9, 1),
+(6, 2),
+(4, 3), 
+(37, 4), 
+(34, 5),
+(36, 6);
+
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),
 ('Science Fiction Novel', 'An exciting science fiction novel that takes you on an interstellar journey.', 19.99, 2),
