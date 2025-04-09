@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strive.backend.dto.CategoryDTO;
 import com.strive.backend.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,36 +19,40 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
-    @PostMapping
-    public ResponseEntity<CategoryDTO> createCategory(
-            @RequestPart("category") CategoryDTO categoryDTO,
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) throws IOException {
+        return ResponseEntity.ok(categoryService.createCategory(categoryDTO, null));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CategoryDTO> createCategoryWithImage(
+            @RequestPart("category") String categoryJson,
             @RequestPart(value = "image", required = false) MultipartFile image) throws IOException {
+        CategoryDTO categoryDTO = objectMapper.readValue(categoryJson, CategoryDTO.class);
         return ResponseEntity.ok(categoryService.createCategory(categoryDTO, image));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CategoryDTO> updateCategory(
             @PathVariable Long id,
-            @RequestBody(required = false) CategoryDTO categoryDTO,
-            @RequestPart(value = "category", required = false) String categoryJson,
+            @RequestBody CategoryDTO categoryDTO) throws IOException {
+        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDTO, null));
+    }
+
+    @PutMapping(value = "/{id}/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CategoryDTO> updateCategoryWithImage(
+            @PathVariable Long id,
+            @RequestPart("category") String categoryJson,
             @RequestPart(value = "image", required = false) MultipartFile image) throws IOException {
-        
-        // If the request is multipart form data
-        if (categoryJson != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            categoryDTO = mapper.readValue(categoryJson, CategoryDTO.class);
-        }
-        
-        // If categoryDTO is still null, create an empty one
-        if (categoryDTO == null) {
-            categoryDTO = new CategoryDTO();
-        }
-        
+        CategoryDTO categoryDTO = objectMapper.readValue(categoryJson, CategoryDTO.class);
         return ResponseEntity.ok(categoryService.updateCategory(id, categoryDTO, image));
     }
 

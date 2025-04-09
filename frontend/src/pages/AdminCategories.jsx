@@ -17,10 +17,6 @@ import {
     IconButton,
     Snackbar,
     Alert,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
@@ -57,6 +53,7 @@ export default function CategoryManagement() {
     const [categoryToDelete, setCategoryToDelete] = useState(null);
     const [expandedCategories, setExpandedCategories] = useState({});
     const [selectedImage, setSelectedImage] = useState(null);
+    const [removeImageDialogOpen, setRemoveImageDialogOpen] = useState(false);
 
     // Get token from localStorage
     const getAuthToken = () => {
@@ -105,30 +102,46 @@ export default function CategoryManagement() {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('category', new Blob([JSON.stringify({
-            name: currentCategory.name,
-            parentId: currentCategory.parentId
-        })], { type: 'application/json' }));
-
-        if (selectedImage) {
-            formData.append('image', selectedImage);
-        }
-
         try {
             if (currentCategory.id) {
-                await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                // Update existing category
+                if (selectedImage) {
+                    // If there's a new image, send as multipart/form-data
+                    const formData = new FormData();
+                    formData.append('image', selectedImage);
+                    formData.append('category', new Blob([JSON.stringify({
+                        name: currentCategory.name,
+                        parentId: currentCategory.parentId
+                    })], { type: 'application/json' }));
+
+                    await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}/with-image`, formData);
+                } else {
+                    // If no new image, send as JSON
+                    await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}`, {
+                        name: currentCategory.name,
+                        parentId: currentCategory.parentId
+                    });
+                }
                 showNotification('Category updated successfully');
             } else {
-                await axios.post('http://localhost:8080/api/categories', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                // Create new category
+                if (selectedImage) {
+                    // If there's an image, send as multipart/form-data
+                    const formData = new FormData();
+                    formData.append('image', selectedImage);
+                    formData.append('category', new Blob([JSON.stringify({
+                        name: currentCategory.name,
+                        parentId: currentCategory.parentId
+                    })], { type: 'application/json' }));
+
+                    await axios.post('http://localhost:8080/api/categories', formData);
+                } else {
+                    // If no image, send as JSON
+                    await axios.post('http://localhost:8080/api/categories', {
+                        name: currentCategory.name,
+                        parentId: currentCategory.parentId
+                    });
+                }
                 showNotification('Category added successfully');
             }
             fetchCategories();
@@ -196,7 +209,12 @@ export default function CategoryManagement() {
         }, 3000);
     };
 
+    const handleRemoveImageClick = () => {
+        setRemoveImageDialogOpen(true);
+    };
+
     const handleRemoveImage = async () => {
+        setRemoveImageDialogOpen(false);
         try {
             await axios.put(`http://localhost:8080/api/categories/${currentCategory.id}`, {
                 name: currentCategory.name,
@@ -362,7 +380,7 @@ export default function CategoryManagement() {
                                     <Button
                                         variant="outlined"
                                         color="error"
-                                        onClick={handleRemoveImage}
+                                        onClick={handleRemoveImageClick}
                                         fullWidth
                                     >
                                         Remove Image
@@ -428,6 +446,22 @@ export default function CategoryManagement() {
                     <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
                     <Button onClick={deleteCategory} color="error" variant="contained">
                         Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Remove Image Warning Dialog */}
+            <Dialog open={removeImageDialogOpen} onClose={() => setRemoveImageDialogOpen(false)}>
+                <DialogTitle>Confirm Image Removal</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to remove this image? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRemoveImageDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleRemoveImage} color="error" variant="contained">
+                        Remove
                     </Button>
                 </DialogActions>
             </Dialog>
