@@ -26,6 +26,18 @@ CREATE TABLE categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
+-- Featured Categories
+CREATE TABLE featured_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    category_id INT NOT NULL,
+    display_order INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+    UNIQUE (display_order),
+    CHECK (display_order BETWEEN 1 AND 6)
+);
+
 -- Products
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -121,55 +133,86 @@ INSERT INTO notification_preferences (user_id, email_notifications, order_update
 (4, TRUE, TRUE, FALSE, TRUE);  -- Jane
 
 INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
+-- Main Categories
 ('Men', NULL, NULL, NULL),
 ('Women', NULL, NULL, NULL),
 ('Sports', NULL, NULL, NULL),
 ('Outdoor', NULL, NULL, NULL),
+
 -- Men's Subcategories
 ('Men''s Clothing', 1, NULL, NULL),
 ('Men''s Footwear', 1, NULL, NULL),
 ('Men''s Accessories', 1, NULL, NULL),
+
+-- Men's Clothing subcategories
 ('Men''s T-Shirts', 5, NULL, NULL),
 ('Men''s Jackets', 5, NULL, NULL),
+
+-- Men's Footwear subcategories
 ('Men''s Running Shoes', 6, NULL, NULL),
 ('Men''s Hiking Boots', 6, NULL, NULL),
+
+-- Men's Accessories subcategories
 ('Men''s Watches', 7, NULL, NULL),
 ('Men''s Hats', 7, NULL, NULL),
+
 -- Women's Subcategories
 ('Women''s Clothing', 2, NULL, NULL),
 ('Women''s Footwear', 2, NULL, NULL),
 ('Women''s Accessories', 2, NULL, NULL),
-('Women''s Dresses', 11, NULL, NULL),
-('Women''s Tops', 11, NULL, NULL),
-('Women''s Running Shoes', 12, NULL, NULL),
-('Women''s Sandals', 12, NULL, NULL),
-('Women''s Jewelry', 13, NULL, NULL),
-('Women''s Bags', 13, NULL, NULL),
+
+-- Women's Clothing subcategories
+('Women''s Dresses', 14, NULL, NULL),
+('Women''s Tops', 14, NULL, NULL),
+
+-- Women's Footwear subcategories
+('Women''s Running Shoes', 15, NULL, NULL),
+('Women''s Sandals', 15, NULL, NULL),
+
+-- Women's Accessories subcategories
+('Women''s Jewelry', 16, NULL, NULL),
+('Women''s Bags', 16, NULL, NULL),
+
 -- Sports Subcategories
 ('Team Sports', 3, NULL, NULL),
 ('Individual Sports', 3, NULL, NULL),
 ('Fitness', 3, NULL, NULL),
 ('Running', 3, NULL, NULL),
 ('Yoga', 3, NULL, NULL),
-('Soccer', 17, NULL, NULL),
-('Basketball', 17, NULL, NULL),
-('Tennis', 18, NULL, NULL),
-('Golf', 18, NULL, NULL),
-('Gym Equipment', 19, NULL, NULL),
-('Fitness Apparel', 19, NULL, NULL),
+
+-- Team Sports subcategories
+('Soccer', 23, NULL, NULL),
+('Basketball', 23, NULL, NULL),
+
+-- Individual Sports subcategories
+('Tennis', 24, NULL, NULL),
+('Golf', 24, NULL, NULL),
+
+-- Fitness subcategories
+('Gym Equipment', 25, NULL, NULL),
+('Fitness Apparel', 25, NULL, NULL),
+
 -- Outdoor Subcategories
 ('Camping & Hiking', 4, NULL, NULL),
 ('Cycling', 4, NULL, NULL),
 ('Water Sports', 4, NULL, NULL),
 ('Winter Sports', 4, NULL, NULL),
-('Tents', 25, NULL, NULL),
-('Backpacks', 25, NULL, NULL),
-('Mountain Bikes', 26, NULL, NULL),
-('Road Bikes', 26, NULL, NULL),
-('Swimming', 27, NULL, NULL),
-('Kayaking', 27, NULL, NULL),
-('Skiing', 28, NULL, NULL),
-('Snowboarding', 28, NULL, NULL);
+
+-- Camping & Hiking subcategories
+('Tents', 34, NULL, NULL),
+('Backpacks', 34, NULL, NULL),
+
+-- Cycling subcategories
+('Mountain Bikes', 35, NULL, NULL),
+('Road Bikes', 35, NULL, NULL),
+
+-- Water Sports subcategories
+('Swimming', 36, NULL, NULL),
+('Kayaking', 36, NULL, NULL),
+
+-- Winter Sports subcategories
+('Skiing', 37, NULL, NULL),
+('Snowboarding', 37, NULL, NULL);
 
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),

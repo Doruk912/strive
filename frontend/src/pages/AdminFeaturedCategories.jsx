@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Paper,
     Typography,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Button,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -19,27 +12,98 @@ import {
     MenuItem,
     IconButton,
     Snackbar,
-    Alert
+    Alert,
+    Grid,
+    Card,
+    CardMedia,
+    CardContent,
+    CardActions,
+    Tooltip,
+    Chip,
+    Button,
+    ListSubheader
 } from '@mui/material';
 import {
     Delete as DeleteIcon,
     Add as AddIcon,
     KeyboardArrowUp as KeyboardArrowUpIcon,
-    KeyboardArrowDown as KeyboardArrowDownIcon
+    KeyboardArrowDown as KeyboardArrowDownIcon,
+    Star as StarIcon,
+    ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
-import { popularCategories } from '../mockData/Categories';
+import { styled } from '@mui/material/styles';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const FeaturedCategories = () => {
-    const [featuredCategories, setFeaturedCategories] = useState([
-        ...popularCategories.slice(0, 6).map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            image: cat.image
-        }))
-    ]);
+const StyledCard = styled(Card)(({ theme }) => ({
+    display: 'flex',
+    height: '140px',
+    transition: 'all 0.2s ease-in-out',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: theme.shadows[4],
+    },
+}));
+
+const StyledCardMedia = styled(CardMedia)({
+    width: '120px',
+    height: '140px',
+    flexShrink: 0,
+    objectFit: 'cover',
+});
+
+const ContentWrapper = styled(Box)({
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    flexGrow: 1,
+});
+
+const AdminFeaturedCategories = () => {
+    const navigate = useNavigate();
+    const [featuredCategories, setFeaturedCategories] = useState([]);
+    const [availableCategories, setAvailableCategories] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    // Get token from localStorage
+    const getAuthToken = () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user?.token;
+    };
+
+    useEffect(() => {
+        const token = getAuthToken();
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        fetchFeaturedCategories();
+        fetchAllCategories();
+    }, [navigate]);
+
+    const fetchFeaturedCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/featured-categories');
+            setFeaturedCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching featured categories:', error);
+            handleError(error);
+        }
+    };
+
+    const fetchAllCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/categories');
+            setAvailableCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            handleError(error);
+        }
+    };
 
     const handleOpenDialog = () => {
         setOpenDialog(true);
@@ -50,119 +114,214 @@ const FeaturedCategories = () => {
         setOpenDialog(false);
     };
 
-    const handleAddCategory = () => {
+    const handleAddCategory = async () => {
         if (!selectedCategory) {
-            setSnackbar({ open: true, message: 'Please select a category', severity: 'error' });
+            showNotification('Please select a category', 'error');
             return;
         }
 
-        const categoryToAdd = popularCategories.find(cat => cat.id === selectedCategory);
-        if (featuredCategories.length >= 6) {
-            setSnackbar({ open: true, message: 'Maximum 6 categories can be featured', severity: 'error' });
-            return;
+        try {
+            await axios.post('http://localhost:8080/api/featured-categories', {
+                categoryId: selectedCategory
+            });
+            await fetchFeaturedCategories();
+            showNotification('Category added to featured list', 'success');
+            handleCloseDialog();
+        } catch (error) {
+            console.error('Error adding featured category:', error);
+            handleError(error);
         }
-
-        if (featuredCategories.some(cat => cat.id === selectedCategory)) {
-            setSnackbar({ open: true, message: 'Category already featured', severity: 'error' });
-            return;
-        }
-
-        setFeaturedCategories([...featuredCategories, {
-            id: categoryToAdd.id,
-            name: categoryToAdd.name,
-            image: categoryToAdd.image
-        }]);
-
-        setSnackbar({ open: true, message: 'Category added to featured list', severity: 'success' });
-        handleCloseDialog();
     };
 
-    const handleDeleteCategory = (categoryId) => {
-        setFeaturedCategories(featuredCategories.filter(cat => cat.id !== categoryId));
-        setSnackbar({ open: true, message: 'Category removed from featured list', severity: 'success' });
+    const handleDeleteCategory = async (id) => {
+        try {
+            await axios.delete(`http://localhost:8080/api/featured-categories/${id}`);
+            await fetchFeaturedCategories();
+            showNotification('Category removed from featured list', 'success');
+        } catch (error) {
+            console.error('Error removing featured category:', error);
+            handleError(error);
+        }
     };
 
-    const moveCategory = (index, direction) => {
-        if (
-            (direction === 'up' && index === 0) ||
-            (direction === 'down' && index === featuredCategories.length - 1)
-        ) return;
+    const handleMoveCategory = async (id, direction) => {
+        try {
+            await axios.put(`http://localhost:8080/api/featured-categories/${id}/order`, {
+                direction: direction
+            });
+            await fetchFeaturedCategories();
+        } catch (error) {
+            console.error('Error updating category order:', error);
+            handleError(error);
+        }
+    };
 
-        const newCategories = [...featuredCategories];
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        [newCategories[index], newCategories[newIndex]] = [newCategories[newIndex], newCategories[index]];
-        setFeaturedCategories(newCategories);
+    const handleError = (error) => {
+        if (error.response?.status === 401) {
+            navigate('/login');
+        } else {
+            showNotification(
+                error.response?.data?.message || 'An error occurred. Please try again.',
+                'error'
+            );
+        }
+    };
+
+    const showNotification = (message, severity = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
+
+    const remainingSlots = 6 - featuredCategories.length;
+
+    const flattenCategories = (categories) => {
+        const flattened = [];
+
+        const processCategory = (category, parentNames = []) => {
+            // Add the current category
+            const displayName = [...parentNames, category.name].join(' → ');
+            flattened.push({
+                ...category,
+                displayName: displayName
+            });
+
+            // Process children if they exist
+            if (category.children && category.children.length > 0) {
+                category.children.forEach(child => {
+                    processCategory(child, [...parentNames, category.name]);
+                });
+            }
+        };
+
+        categories.forEach(category => processCategory(category));
+        return flattened;
+    };
+
+    const renderCategoryName = (category) => {
+        const pathParts = category.displayName.split(' → ');
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {pathParts.map((part, index) => (
+                    <React.Fragment key={index}>
+                        {index > 0 && <ArrowForwardIcon sx={{ mx: 1, fontSize: 16, color: 'text.secondary' }} />}
+                        <Typography
+                            variant="body1"
+                            component="span"
+                            sx={{
+                                color: index === pathParts.length - 1 ? 'text.primary' : 'text.secondary',
+                                fontWeight: index === pathParts.length - 1 ? 500 : 400
+                            }}
+                        >
+                            {part}
+                        </Typography>
+                    </React.Fragment>
+                ))}
+            </Box>
+        );
     };
 
     return (
         <Box sx={{ mt: -10 }}>
-            <Paper sx={{ p: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5">Featured Categories Management</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleOpenDialog}
-                    disabled={featuredCategories.length >= 6}
-                >
-                    Add Featured Category
-                </Button>
-            </Paper>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Box>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+                            Featured Categories
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Manage homepage featured categories
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Chip
+                            icon={<StarIcon />}
+                            label={`${remainingSlots} slots remaining`}
+                            color={remainingSlots === 0 ? "error" : "primary"}
+                            variant="outlined"
+                        />
+                        <Tooltip title={remainingSlots === 0 ? "Maximum categories reached" : "Add new featured category"}>
+                            <span>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleOpenDialog}
+                                    disabled={remainingSlots === 0}
+                                    size="small"
+                                >
+                                    Add Category
+                                </Button>
+                            </span>
+                        </Tooltip>
+                    </Box>
+                </Box>
 
-            <Paper sx={{ p: 3 }}>
-                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                    Use arrows to reorder. Maximum 6 categories can be featured.
-                </Typography>
-
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Order</TableCell>
-                                <TableCell>Image</TableCell>
-                                <TableCell>Name</TableCell>
-                                <TableCell align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {featuredCategories.map((category, index) => (
-                                <TableRow key={category.id}>
-                                    <TableCell>
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => moveCategory(index, 'up')}
-                                            disabled={index === 0}
-                                        >
-                                            <KeyboardArrowUpIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => moveCategory(index, 'down')}
-                                            disabled={index === featuredCategories.length - 1}
-                                        >
-                                            <KeyboardArrowDownIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                    <TableCell>
-                                        <img
-                                            src={category.image}
-                                            alt={category.name}
-                                            style={{ width: 50, height: 50, objectFit: 'cover' }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>{category.name}</TableCell>
-                                    <TableCell align="right">
-                                        <IconButton
-                                            onClick={() => handleDeleteCategory(category.id)}
-                                            color="error"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <Grid container spacing={2}>
+                    {featuredCategories.map((category) => (
+                        <Grid item xs={12} md={6} key={category.id}>
+                            <StyledCard>
+                                <StyledCardMedia
+                                    component="img"
+                                    image={category.imageBase64 ? `data:${category.imageType};base64,${category.imageBase64}` : '/placeholder-image.jpg'}
+                                    alt={category.name}
+                                />
+                                <ContentWrapper>
+                                    <CardContent sx={{ pb: 0 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                            <Typography variant="h6" component="div">
+                                                {category.name}
+                                            </Typography>
+                                            <Chip
+                                                label={`Position ${category.displayOrder}`}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ height: 24 }}
+                                            />
+                                        </Box>
+                                        {category.parentName && (
+                                            <Typography variant="body2" color="text.secondary">
+                                                {category.parentPath}
+                                            </Typography>
+                                        )}
+                                    </CardContent>
+                                    <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Tooltip title="Move up">
+                                                <span>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleMoveCategory(category.id, 'up')}
+                                                        disabled={category.displayOrder === 1}
+                                                    >
+                                                        <KeyboardArrowUpIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
+                                            </Tooltip>
+                                            <Tooltip title="Move down">
+                                                <span>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleMoveCategory(category.id, 'down')}
+                                                        disabled={category.displayOrder === featuredCategories.length}
+                                                    >
+                                                        <KeyboardArrowDownIcon fontSize="small" />
+                                                    </IconButton>
+                                                </span>
+                                            </Tooltip>
+                                        </Box>
+                                        <Tooltip title="Remove from featured">
+                                            <IconButton
+                                                onClick={() => handleDeleteCategory(category.id)}
+                                                color="error"
+                                                size="small"
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </CardActions>
+                                </ContentWrapper>
+                            </StyledCard>
+                        </Grid>
+                    ))}
+                </Grid>
             </Paper>
 
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -173,16 +332,29 @@ const FeaturedCategories = () => {
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
                             displayEmpty
+                            sx={{ borderRadius: 1 }}
+                            MenuProps={{
+                                PaperProps: {
+                                    style: {
+                                        maxHeight: 400
+                                    }
+                                }
+                            }}
                         >
                             <MenuItem value="" disabled>Select a category</MenuItem>
-                            {popularCategories
-                                .filter(cat => !featuredCategories.some(f => f.id === cat.id))
+                            {flattenCategories(availableCategories)
+                                .filter(cat => !featuredCategories.some(f => f.categoryId === cat.id))
                                 .map(category => (
-                                    <MenuItem key={category.id} value={category.id}>
-                                        {category.name}
+                                    <MenuItem 
+                                        key={category.id} 
+                                        value={category.id}
+                                        sx={{ 
+                                            minHeight: '48px'
+                                        }}
+                                    >
+                                        {renderCategoryName(category)}
                                     </MenuItem>
-                                ))
-                            }
+                                ))}
                         </Select>
                     </FormControl>
                 </DialogContent>
@@ -208,4 +380,4 @@ const FeaturedCategories = () => {
     );
 };
 
-export default FeaturedCategories;
+export default AdminFeaturedCategories;
