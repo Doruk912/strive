@@ -44,6 +44,7 @@ CREATE TABLE products (
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     category_id INT,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
@@ -53,28 +54,22 @@ CREATE TABLE products (
 CREATE TABLE product_images (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
-    image_url TEXT NOT NULL,
-    alt_text VARCHAR(255),
+    image_data LONGBLOB NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
     display_order INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- Sizes (per product)
-CREATE TABLE sizes (
+-- Stock per product
+CREATE TABLE stocks (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
     size VARCHAR(50) NOT NULL,
+    quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE (product_id, size),
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-);
-
--- Stock per size
-CREATE TABLE stocks (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    size_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity >= 0),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (size_id) REFERENCES sizes(id) ON DELETE CASCADE
 );
 
 -- Reviews (per product and user)
@@ -222,9 +217,55 @@ INSERT INTO featured_categories (category_id, display_order) VALUES
 (36, 6);  -- Water Sports
 
 INSERT INTO products (name, description, price, category_id) VALUES
-('Smartphone', 'A high-end smartphone with a sleek design and powerful features.', 699.99, 1),
-('Science Fiction Novel', 'An exciting science fiction novel that takes you on an interstellar journey.', 19.99, 2),
-('T-Shirt', 'A comfortable cotton t-shirt available in various sizes.', 9.99, 3);
+-- Men's T-Shirts (category_id: 8)
+('Classic Cotton T-Shirt', 'Comfortable 100% cotton basic t-shirt perfect for everyday wear', 29.99, 8),
+('Performance Sport T-Shirt', 'Moisture-wicking fabric ideal for workouts and sports activities', 34.99, 8),
+('Striped Polo Shirt', 'Classic striped polo shirt made from premium cotton blend', 45.99, 8),
+
+-- Men's Jackets (category_id: 9)
+('Winter Puffer Jacket', 'Warm and comfortable puffer jacket with water-resistant exterior', 129.99, 9),
+('Leather Bomber Jacket', 'Classic leather bomber jacket with premium quality leather', 199.99, 9),
+('Waterproof Rain Jacket', 'Lightweight and packable rain jacket with sealed seams', 89.99, 9),
+
+-- Men's Running Shoes (category_id: 10)
+('Speed Runner Pro', 'Professional running shoes with advanced cushioning technology', 159.99, 10),
+('Daily Trainer X1', 'Comfortable everyday running shoes for regular training', 129.99, 10),
+('Marathon Elite', 'Long-distance running shoes with superior support', 179.99, 10),
+
+-- Women's Dresses (category_id: 17)
+('Summer Floral Dress', 'Light and breezy floral print dress perfect for summer', 79.99, 17),
+('Little Black Dress', 'Classic black cocktail dress for special occasions', 119.99, 17),
+('Maxi Beach Dress', 'Long flowing beach dress with tropical print', 89.99, 17),
+
+-- Women's Running Shoes (category_id: 19)
+('Women\'s Cloud Runner', 'Lightweight running shoes with cloud-like cushioning', 149.99, 19),
+('Women\'s Trail Beast', 'Rugged trail running shoes with excellent grip', 159.99, 19),
+('Women\'s Sprint Elite', 'Speed-focused running shoes for race day', 169.99, 19),
+
+-- Camping & Hiking (category_id: 34)
+('Explorer 4-Person Tent', 'Spacious 4-person tent with weather protection', 299.99, 34),
+('Lightweight Hiking Backpack', '45L hiking backpack with multiple compartments', 149.99, 34),
+('Camping Sleep System', 'All-season sleeping bag with camping pad', 199.99, 34),
+
+-- Winter Sports - Skiing (category_id: 42)
+('All-Mountain Skis', 'Versatile skis for all terrain conditions', 499.99, 42),
+('Professional Ski Boots', 'High-performance ski boots with custom fit', 399.99, 42),
+('Ski Helmet Pro', 'Safety certified ski helmet with adjustable ventilation', 159.99, 42),
+
+-- Water Sports - Swimming (category_id: 40)
+('Competition Swimsuit', 'Professional racing swimsuit with hydrodynamic design', 89.99, 40),
+('Swimming Goggles Elite', 'Anti-fog swimming goggles with UV protection', 34.99, 40),
+('Swim Training Set', 'Complete set including fins, paddles, and pull buoy', 79.99, 40),
+
+-- Fitness Equipment (category_id: 31)
+('Adjustable Dumbbell Set', 'Space-saving adjustable dumbbells from 5-52.5 lbs', 299.99, 31),
+('Yoga Mat Premium', 'Extra thick eco-friendly yoga mat with alignment lines', 49.99, 31),
+('Resistance Bands Set', 'Complete set of resistance bands with different strengths', 29.99, 31),
+
+-- Cycling - Mountain Bikes (category_id: 38)
+('Trail Master Pro Bike', 'Full suspension mountain bike with premium components', 1999.99, 38),
+('Mountain Bike Helmet', 'Ventilated mountain bike helmet with adjustable fit', 89.99, 38),
+('Bike Repair Kit', 'Complete tool kit for mountain bike maintenance', 49.99, 38);
 
 INSERT INTO addresses (user_id, name, street_address, city, state, postal_code, country) VALUES
 (4, 'Home', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey'),

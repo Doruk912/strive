@@ -22,184 +22,167 @@ import {
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
 const StockManagementDialog = ({ open, onClose, product, onSave }) => {
-    const [sizes, setSizes] = useState([]);
-    const [newSize, setNewSize] = useState({ size: '', stock: 0 });
+    const [stocks, setStocks] = useState([]);
+    const [newStock, setNewStock] = useState({ size: '', stock: 0 });
     const [error, setError] = useState('');
 
-    // Initialize sizes when dialog opens with a product
     useEffect(() => {
-        if (product && product.sizes) {
-            setSizes(product.sizes);
+        if (product && product.stocks) {
+            setStocks(product.stocks.map(stock => ({
+                ...stock,
+                stock: stock.stock || 0
+            })));
         }
     }, [product]);
 
-    const handleAddSize = () => {
+    const handleAddStock = () => {
         setError('');
-        if (!newSize.size || newSize.stock < 0) {
-            setError('Please enter valid size and stock values');
+        if (!newStock.size) {
+            setError('Please enter a size');
+            return;
+        }
+
+        if (newStock.stock < 0) {
+            setError('Stock cannot be negative');
             return;
         }
 
         // Check if size already exists
-        if (sizes.some(s => s.size === newSize.size)) {
+        if (stocks.some(s => s.size.toLowerCase() === newStock.size.toLowerCase())) {
             setError('This size already exists');
             return;
         }
 
-        setSizes([...sizes, { ...newSize, stock: Number(newSize.stock) }]);
-        setNewSize({ size: '', stock: 0 });
+        setStocks([...stocks, { ...newStock, stock: Number(newStock.stock) }]);
+        setNewStock({ size: '', stock: 0 });
     };
 
-    const handleDeleteSize = (sizeToDelete) => {
-        const sizeItem = sizes.find(s => s.size === sizeToDelete);
-        if (sizeItem && Number(sizeItem.stock) > 0) {
-            setError(`Cannot delete size ${sizeToDelete} because it has stock. Please set stock to 0 first.`);
+    const handleUpdateStock = (index, value) => {
+        const updatedStocks = [...stocks];
+        if (value >= 0) {
+            updatedStocks[index] = { ...updatedStocks[index], stock: Number(value) };
+            setStocks(updatedStocks);
+        }
+    };
+
+    const handleDeleteStock = (index) => {
+        const stockToDelete = stocks[index];
+        if (stockToDelete.id && Number(stockToDelete.stock) > 0) {
+            setError(`Cannot delete size ${stockToDelete.size} because it has stock. Please set stock to 0 first.`);
             return;
         }
 
         setError('');
-        setSizes(sizes.filter(size => size.size !== sizeToDelete));
-    };
-
-    const handleStockChange = (sizeToUpdate, newStock) => {
-        setSizes(sizes.map(size =>
-            size.size === sizeToUpdate
-                ? { ...size, stock: Number(newStock) }
-                : size
-        ));
+        setStocks(stocks.filter((_, i) => i !== index));
     };
 
     const handleSave = () => {
-        onSave(sizes);
+        if (stocks.some(stock => !stock.size)) {
+            setError('All sizes must have a name');
+            return;
+        }
+
+        if (stocks.some(stock => stock.stock < 0)) {
+            setError('Stock cannot be negative');
+            return;
+        }
+
+        onSave(stocks);
         onClose();
     };
 
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{
-                sx: {
-                    borderRadius: 2,
-                    maxHeight: '80vh'
-                }
-            }}
-        >
-            <DialogTitle sx={{
-                pb: 1,
-                backgroundColor: 'primary.main',
-                color: 'white'
-            }}>
-                <Typography variant="h6" component="div">
-                    Stock Management
-                </Typography>
-                <Typography variant="subtitle2" sx={{ mt: 0.5, opacity: 0.9 }}>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+            <DialogTitle>
+                <Typography variant="h6">Stock Management</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
                     {product?.name}
                 </Typography>
             </DialogTitle>
 
             <Divider />
 
-            <DialogContent sx={{ p: 3 }}>
+            <DialogContent>
                 {error && (
-                    <Box sx={{ mb: 3 }}>
-                        <Alert
-                            severity="error"
-                            variant="filled"
-                            sx={{ borderRadius: 1 }}
-                        >
-                            {error}
-                        </Alert>
-                    </Box>
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
                 )}
 
-                <TableContainer
-                    component={Paper}
-                    sx={{
-                        boxShadow: 2,
-                        borderRadius: 2,
-                        overflow: 'hidden'
-                    }}
-                >
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                        Add New Size
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                        <TextField
+                            label="Size"
+                            value={newStock.size}
+                            onChange={(e) => setNewStock({ ...newStock, size: e.target.value })}
+                            size="small"
+                            sx={{ width: 120 }}
+                        />
+                        <TextField
+                            label="Stock"
+                            type="number"
+                            value={newStock.stock}
+                            onChange={(e) => setNewStock({ ...newStock, stock: e.target.value })}
+                            size="small"
+                            sx={{ width: 120 }}
+                            inputProps={{ min: "0" }}
+                        />
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddStock}
+                        >
+                            Add Size
+                        </Button>
+                    </Box>
+                </Box>
+
+                <TableContainer component={Paper} variant="outlined">
                     <Table>
                         <TableHead>
-                            <TableRow sx={{ backgroundColor: 'grey.100' }}>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Size</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Stock</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
+                            <TableRow>
+                                <TableCell>Size</TableCell>
+                                <TableCell>Stock</TableCell>
+                                <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {sizes.map((sizeItem) => (
-                                <TableRow
-                                    key={sizeItem.size}
-                                    sx={{ '&:hover': { backgroundColor: 'grey.50' } }}
-                                >
-                                    <TableCell>
-                                        <Typography variant="body1">
-                                            {sizeItem.size}
-                                        </Typography>
-                                    </TableCell>
+                            {stocks.map((stock, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{stock.size}</TableCell>
                                     <TableCell>
                                         <TextField
                                             type="number"
+                                            value={stock.stock}
+                                            onChange={(e) => handleUpdateStock(index, e.target.value)}
                                             size="small"
-                                            value={sizeItem.stock}
-                                            onChange={(e) => handleStockChange(sizeItem.size, e.target.value)}
-                                            inputProps={{
-                                                min: 0,
-                                                sx: { textAlign: 'center' }
-                                            }}
-                                            sx={{ width: '100px' }}
+                                            inputProps={{ min: "0" }}
+                                            sx={{ width: 100 }}
                                         />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell align="right">
                                         <IconButton
-                                            onClick={() => handleDeleteSize(sizeItem.size)}
-                                            color="error"
+                                            onClick={() => handleDeleteStock(index)}
                                             size="small"
+                                            color="error"
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            <TableRow sx={{ backgroundColor: 'grey.50' }}>
-                                <TableCell>
-                                    <TextField
-                                        size="small"
-                                        value={newSize.size}
-                                        onChange={(e) => setNewSize({ ...newSize, size: e.target.value })}
-                                        placeholder="Enter size"
-                                        sx={{ width: '120px' }}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <TextField
-                                        size="small"
-                                        type="number"
-                                        value={newSize.stock}
-                                        onChange={(e) => setNewSize({ ...newSize, stock: e.target.value })}
-                                        placeholder="Enter stock"
-                                        inputProps={{
-                                            min: 0,
-                                            sx: { textAlign: 'center' }
-                                        }}
-                                        sx={{ width: '100px' }}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <IconButton
-                                        onClick={handleAddSize}
-                                        color="primary"
-                                        size="small"
-                                    >
-                                        <AddIcon />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
+                            {stocks.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={3} align="center">
+                                        <Typography color="text.secondary">
+                                            No sizes added yet
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -208,18 +191,10 @@ const StockManagementDialog = ({ open, onClose, product, onSave }) => {
             <Divider />
 
             <DialogActions sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                <Button
-                    onClick={onClose}
-                    variant="outlined"
-                    sx={{ mr: 1 }}
-                >
+                <Button onClick={onClose} variant="outlined" sx={{ mr: 1 }}>
                     Cancel
                 </Button>
-                <Button
-                    onClick={handleSave}
-                    variant="contained"
-                    color="primary"
-                >
+                <Button onClick={handleSave} variant="contained" color="primary">
                     Save Changes
                 </Button>
             </DialogActions>

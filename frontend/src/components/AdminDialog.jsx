@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -15,11 +15,50 @@ import {
     Divider,
     Grid,
 } from '@mui/material';
+import axios from 'axios';
 
 const CommonDialog = ({ open, onClose, title, formData, setFormData, onSubmit, type }) => {
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        if (type === 'product' && open) {
+            fetchCategories();
+        }
+    }, [type, open]);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/categories');
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'price' && value < 0) {
+            return; // Prevent negative prices
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const flattenCategories = (categories) => {
+        const flattened = [];
+        const processCategory = (category, parentNames = []) => {
+            const displayName = [...parentNames, category.name].join(' → ');
+            flattened.push({
+                id: category.id,
+                name: displayName
+            });
+            if (category.children && category.children.length > 0) {
+                category.children.forEach(child => {
+                    processCategory(child, [...parentNames, category.name]);
+                });
+            }
+        };
+        categories.forEach(category => processCategory(category));
+        return flattened;
     };
 
     const renderProductFields = () => (
@@ -32,10 +71,11 @@ const CommonDialog = ({ open, onClose, title, formData, setFormData, onSubmit, t
                     fullWidth
                     name="name"
                     label="Product Name"
-                    value={formData.name}
+                    value={formData.name || ''}
                     onChange={handleChange}
                     variant="outlined"
                     size="small"
+                    required
                 />
             </Grid>
 
@@ -44,7 +84,7 @@ const CommonDialog = ({ open, onClose, title, formData, setFormData, onSubmit, t
                     fullWidth
                     name="description"
                     label="Product Description"
-                    value={formData.description}
+                    value={formData.description || ''}
                     onChange={handleChange}
                     multiline
                     rows={3}
@@ -64,27 +104,31 @@ const CommonDialog = ({ open, onClose, title, formData, setFormData, onSubmit, t
                             name="price"
                             label="Price ($)"
                             type="number"
-                            value={formData.price}
+                            value={formData.price || ''}
                             onChange={handleChange}
                             variant="outlined"
                             size="small"
+                            required
+                            inputProps={{ min: "0", step: "0.01" }}
                             InputProps={{
                                 startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>
                             }}
                         />
                     </Grid>
                     <Grid item xs={6}>
-                        <FormControl fullWidth size="small">
+                        <FormControl fullWidth size="small" required>
                             <InputLabel>Category</InputLabel>
                             <Select
-                                name="category"
-                                value={formData.category}
+                                name="categoryId"
+                                value={formData.categoryId || ''}
                                 onChange={handleChange}
                                 label="Category"
                             >
-                                <MenuItem value="Sports">Sports</MenuItem>
-                                <MenuItem value="Fitness">Fitness</MenuItem>
-                                <MenuItem value="Accessories">Accessories</MenuItem>
+                                {flattenCategories(categories).map(category => (
+                                    <MenuItem key={category.id} value={category.id}>
+                                        {category.name}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>
