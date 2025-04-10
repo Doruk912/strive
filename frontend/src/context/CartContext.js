@@ -46,32 +46,41 @@ export const CartProvider = ({ children }) => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    const addToCart = async (product, quantity = 1) => {
-        if (!product.stocks || product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0) < quantity) {
-            console.error('Not enough stock available');
+    const addToCart = async (product, quantity = 1, selectedSize = null) => {
+        if (!selectedSize) {
+            console.error('Size must be selected');
+            return false;
+        }
+
+        const stockForSize = product.stocks?.find(stock => stock.size === selectedSize);
+        if (!stockForSize || stockForSize.stock < quantity) {
+            console.error('Not enough stock available for selected size');
             return false;
         }
 
         setLoading(true);
         try {
             setCartItems(prevItems => {
-                const existingItem = prevItems.find(item => item.id === product.id);
+                const existingItem = prevItems.find(item => 
+                    item.id === product.id && item.selectedSize === selectedSize
+                );
+                
                 if (existingItem) {
-                    const totalStock = product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0);
+                    const stockForSize = product.stocks.find(stock => stock.size === selectedSize);
                     const newQuantity = existingItem.quantity + quantity;
                     
-                    if (newQuantity > totalStock) {
-                        console.error('Not enough stock available');
+                    if (newQuantity > stockForSize.stock) {
+                        console.error('Not enough stock available for selected size');
                         return prevItems;
                     }
 
                     return prevItems.map(item =>
-                        item.id === product.id
+                        (item.id === product.id && item.selectedSize === selectedSize)
                             ? { ...item, quantity: newQuantity }
                             : item
                     );
                 }
-                return [...prevItems, { ...product, quantity }];
+                return [...prevItems, { ...product, quantity, selectedSize }];
             });
             return true;
         } finally {

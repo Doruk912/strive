@@ -65,6 +65,9 @@ const CartNotification = ({ open, product, quantity }) => {
                         <Typography variant="body2" color="text.secondary">
                             Quantity: {quantity}
                         </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Size: {product.selectedSize}
+                        </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
                             ${(product.price * quantity).toFixed(2)}
                         </Typography>

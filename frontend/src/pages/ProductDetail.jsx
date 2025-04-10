@@ -22,6 +22,8 @@ import {
     MobileStepper,
     Paper,
     Avatar,
+    Card,
+    Fade,
 } from '@mui/material';
 import {
     FavoriteBorder as FavoriteBorderIcon,
@@ -40,7 +42,9 @@ const ProductDetail = () => {
     const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
     const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
+    const [selectedSize, setSelectedSize] = useState('');
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [sizeError, setSizeError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeStep, setActiveStep] = useState(0);
@@ -111,26 +115,60 @@ const ProductDetail = () => {
         return path;
     };
 
-    const isInCart = cartItems.some(item => item.id === product?.id);
-    const isFavorite = favoriteItems.some(item => item.id === product?.id);
     const totalStock = product?.stocks?.reduce((total, stock) => total + (stock.stock || 0), 0) || 0;
+    const isInCart = cartItems.some(item => 
+        item.id === product?.id && item.selectedSize === selectedSize
+    );
+    const isFavorite = favoriteItems.some(item => item.id === product?.id);
 
     const handleAddToCart = () => {
-        if (!isInCart && product && totalStock > 0) {
+        if (!selectedSize) {
+            setSizeError(true);
+            return;
+        }
+
+        const stockForSize = product.stocks?.find(stock => stock.size === selectedSize);
+        if (!stockForSize || stockForSize.stock < quantity) {
+            return;
+        }
+
+        if (!isInCart && product) {
             const productWithImage = {
                 ...product,
                 image: product.images && product.images.length > 0
                     ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
                     : '/default-product-image.jpg'
             };
-            const success = addToCart(productWithImage, quantity);
+            const success = addToCart(productWithImage, quantity, selectedSize);
             if (success) {
+                setSizeError(false);
                 setOpenSnackbar(true);
                 setTimeout(() => {
                     setOpenSnackbar(false);
                 }, 3000);
             }
         }
+    };
+
+    const handleSizeChange = (e) => {
+        setSelectedSize(e.target.value);
+        setSizeError(false);
+        // Reset quantity when size changes
+        setQuantity(1);
+    };
+
+    const getSortedSizes = (stocks) => {
+        const sizeOrder = {
+            'XXS': 1, 'XS': 2, 'S': 3, 'M': 4, 'L': 5, 'XL': 6, 'XXL': 7, '3XL': 8,
+            '35': 9, '36': 10, '37': 11, '38': 12, '39': 13, '40': 14, '41': 15, '42': 16, '43': 17, '44': 18, '45': 19,
+            'ONE SIZE': 99
+        };
+
+        return [...stocks].sort((a, b) => {
+            const orderA = sizeOrder[a.size] || 100;
+            const orderB = sizeOrder[b.size] || 100;
+            return orderA - orderB;
+        });
     };
 
     const toggleFavorite = () => {
@@ -382,47 +420,98 @@ const ProductDetail = () => {
 
                         <Divider sx={{ my: 3 }} />
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <FormControl sx={{ width: 100 }}>
-                                <InputLabel>Qty</InputLabel>
-                                <Select
-                                    value={quantity}
-                                    label="Qty"
-                                    onChange={(e) => setQuantity(e.target.value)}
-                                >
-                                    {[...Array(Math.min(10, totalStock))].map((_, i) => (
-                                        <MenuItem key={i + 1} value={i + 1}>
-                                            {i + 1}
-                                        </MenuItem>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                            <Box>
+                                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+                                    Select Size
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {getSortedSizes(product.stocks || []).map((stock) => (
+                                        <Button
+                                            key={stock.size}
+                                            variant={selectedSize === stock.size ? "contained" : "outlined"}
+                                            onClick={() => handleSizeChange({ target: { value: stock.size } })}
+                                            disabled={stock.stock === 0}
+                                            sx={{
+                                                minWidth: '60px',
+                                                height: '40px',
+                                                borderColor: sizeError ? '#f44336' : 'inherit',
+                                                backgroundColor: selectedSize === stock.size ? '#000' : 'transparent',
+                                                color: selectedSize === stock.size ? '#fff' : (stock.stock === 0 ? '#bdbdbd' : '#000'),
+                                                '&:hover': {
+                                                    backgroundColor: selectedSize === stock.size ? '#333' : 'rgba(0,0,0,0.04)',
+                                                },
+                                                '&.Mui-disabled': {
+                                                    borderColor: '#e0e0e0',
+                                                    color: '#bdbdbd',
+                                                }
+                                            }}
+                                        >
+                                            {stock.size}
+                                        </Button>
                                     ))}
-                                </Select>
-                            </FormControl>
+                                </Box>
+                                {sizeError && (
+                                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                                        Please select a size
+                                    </Typography>
+                                )}
+                                {selectedSize && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                        {product.stocks?.find(s => s.size === selectedSize)?.stock || 0} items available in this size
+                                    </Typography>
+                                )}
+                            </Box>
 
-                            <Button
-                                variant="contained"
-                                size="large"
-                                fullWidth
-                                onClick={handleAddToCart}
-                                disabled={totalStock === 0 || isInCart}
-                                sx={{
-                                    backgroundColor: '#000',
-                                    '&:hover': {
-                                        backgroundColor: '#333',
-                                    },
-                                    '&:disabled': {
-                                        backgroundColor: '#ccc',
-                                    },
-                                }}
-                            >
-                                {totalStock === 0 ? 'Out of Stock' : 
-                                 isInCart ? 'Already in Cart' : 
-                                 'Add to Cart'}
-                            </Button>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <FormControl sx={{ width: 100 }}>
+                                    <InputLabel>Qty</InputLabel>
+                                    <Select
+                                        value={quantity}
+                                        label="Qty"
+                                        onChange={(e) => setQuantity(e.target.value)}
+                                        disabled={!selectedSize}
+                                    >
+                                        {[...Array(Math.min(10, selectedSize ? (product.stocks?.find(s => s.size === selectedSize)?.stock || 0) : 0))].map((_, i) => (
+                                            <MenuItem key={i + 1} value={i + 1}>
+                                                {i + 1}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    fullWidth
+                                    onClick={handleAddToCart}
+                                    disabled={totalStock === 0 || isInCart}
+                                    sx={{
+                                        backgroundColor: '#000',
+                                        '&:hover': {
+                                            backgroundColor: '#333',
+                                        },
+                                        '&:disabled': {
+                                            backgroundColor: '#ccc',
+                                        },
+                                    }}
+                                >
+                                    {totalStock === 0 ? 'Out of Stock' : 
+                                     isInCart ? 'Already in Cart' : 
+                                     'Add to Cart'}
+                                </Button>
+                            </Box>
                         </Box>
 
-                        <Typography variant="body2" color="text.secondary">
-                            Free shipping on orders over $50
-                        </Typography>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            size="large"
+                            onClick={() => navigate('/checkout')}
+                            disabled={cartItems.length === 0 || loading}
+                        >
+                            {loading ? <CircularProgress size={24} /> : 'Proceed to Checkout'}
+                        </Button>
                     </Box>
                 </Grid>
             </Grid>

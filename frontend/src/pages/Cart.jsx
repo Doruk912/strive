@@ -148,6 +148,9 @@ const Cart = () => {
                                             <Typography color="text.secondary" gutterBottom>
                                                 ${item.price}
                                             </Typography>
+                                            <Typography color="text.secondary" gutterBottom>
+                                                Size: {item.selectedSize}
+                                            </Typography>
 
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #e0e0e0', borderRadius: 1 }}>
@@ -272,12 +275,6 @@ const Cart = () => {
                                 >
                                     {loading ? <CircularProgress size={24} /> : 'Proceed to Checkout'}
                                 </Button>
-
-                                {cartTotals.shipping > 0 && (
-                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                                        Add ${(50 - cartTotals.subtotal).toFixed(2)} more to get free shipping
-                                    </Typography>
-                                )}
                             </Card>
                         </Fade>
                     </Grid>
