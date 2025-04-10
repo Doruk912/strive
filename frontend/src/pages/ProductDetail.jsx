@@ -19,11 +19,16 @@ import {
     InputLabel,
     CircularProgress,
     Alert,
+    MobileStepper,
+    Paper,
+    Avatar,
 } from '@mui/material';
 import {
     FavoriteBorder as FavoriteBorderIcon,
     Favorite as FavoriteIcon,
     NavigateNext as NavigateNextIcon,
+    KeyboardArrowLeft,
+    KeyboardArrowRight,
 } from '@mui/icons-material';
 import axios from 'axios';
 import CartNotification from '../components/CartNotification';
@@ -38,16 +43,33 @@ const ProductDetail = () => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeStep, setActiveStep] = useState(0);
+    const [reviews, setReviews] = useState([]);
+    const [categoryPath, setCategoryPath] = useState([]);
 
     useEffect(() => {
-        const fetchProduct = async () => {
+        const fetchProductData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`http://localhost:8080/api/products/${id}`);
-                setProduct(response.data);
+                const [productRes, reviewsRes] = await Promise.all([
+                    axios.get(`http://localhost:8080/api/products/${id}`),
+                    axios.get(`http://localhost:8080/api/reviews/product/${id}`)
+                ]);
+                
+                setProduct(productRes.data);
+                setReviews(reviewsRes.data);
+
+                // Fetch category path
+                if (productRes.data.categoryId) {
+                    const categoryRes = await axios.get(`http://localhost:8080/api/categories`);
+                    const categories = categoryRes.data;
+                    const path = findCategoryPath(categories, productRes.data.categoryId);
+                    setCategoryPath(path);
+                }
+
                 setError(null);
             } catch (err) {
-                console.error('Error fetching product:', err);
+                console.error('Error fetching product data:', err);
                 if (err.response && err.response.status === 404) {
                     setError('Product not found');
                 } else {
@@ -59,15 +81,39 @@ const ProductDetail = () => {
         };
 
         if (id) {
-            fetchProduct();
+            fetchProductData();
         }
     }, [id]);
 
+    const findCategoryPath = (categories, targetId) => {
+        const path = [];
+        
+        const findPath = (cats, id) => {
+            for (const cat of cats) {
+                if (cat.id === id) {
+                    path.push(cat);
+                    return true;
+                }
+                if (cat.children && cat.children.length > 0) {
+                    if (findPath(cat.children, id)) {
+                        path.unshift(cat);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        findPath(categories, targetId);
+        return path;
+    };
+
     const isInCart = cartItems.some(item => item.id === product?.id);
     const isFavorite = favoriteItems.some(item => item.id === product?.id);
+    const totalStock = product?.stocks?.reduce((total, stock) => total + (stock.stock || 0), 0) || 0;
 
     const handleAddToCart = () => {
-        if (!isInCart && product) {
+        if (!isInCart && product && totalStock > 0) {
             addToCart(product, quantity);
             setOpenSnackbar(true);
             setTimeout(() => {
@@ -84,6 +130,14 @@ const ProductDetail = () => {
         } else {
             addToFavorites(product);
         }
+    };
+
+    const handleNext = () => {
+        setActiveStep((prevStep) => prevStep + 1);
+    };
+
+    const handleBack = () => {
+        setActiveStep((prevStep) => prevStep - 1);
     };
 
     if (loading) {
@@ -130,6 +184,8 @@ const ProductDetail = () => {
         );
     }
 
+    const maxSteps = product.images?.length || 0;
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Breadcrumbs
@@ -144,14 +200,17 @@ const ProductDetail = () => {
                 >
                     Home
                 </Link>
-                <Link
-                    component="button"
-                    onClick={() => navigate('/shop')}
-                    color="inherit"
-                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-                >
-                    Shop
-                </Link>
+                {categoryPath.map((category, index) => (
+                    <Link
+                        key={category.id}
+                        component="button"
+                        onClick={() => navigate(`/category/${category.id}`)}
+                        color="inherit"
+                        sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                        {category.name}
+                    </Link>
+                ))}
                 <Typography color="text.primary">{product.name}</Typography>
             </Breadcrumbs>
 
@@ -160,26 +219,103 @@ const ProductDetail = () => {
                     <Box
                         sx={{
                             width: '100%',
-                            height: { xs: '300px', md: '500px' },
                             position: 'relative',
                             backgroundColor: '#f5f5f5',
-                            overflow: 'hidden',
                             borderRadius: '8px',
+                            overflow: 'hidden',
                         }}
                     >
-                        <img
-                            src={product.images && product.images[0]
-                                ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
-                                : '/default-product-image.jpg'}
-                            alt={product.name}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                transition: 'transform 0.3s ease',
-                            }}
-                        />
+                        {maxSteps > 0 && (
+                            <>
+                                <Box
+                                    sx={{
+                                        height: { xs: '300px', md: '500px' },
+                                        width: '100%',
+                                        position: 'relative',
+                                    }}
+                                >
+                                    <img
+                                        src={product.images[activeStep]
+                                            ? `data:${product.images[activeStep].imageType};base64,${product.images[activeStep].imageBase64}`
+                                            : '/default-product-image.jpg'}
+                                        alt={`${product.name} - ${activeStep + 1}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                        }}
+                                    />
+                                </Box>
+                                {maxSteps > 1 && (
+                                    <MobileStepper
+                                        steps={maxSteps}
+                                        position="static"
+                                        activeStep={activeStep}
+                                        sx={{
+                                            backgroundColor: 'transparent',
+                                            '& .MuiMobileStepper-dot': {
+                                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                            },
+                                            '& .MuiMobileStepper-dotActive': {
+                                                backgroundColor: 'primary.main',
+                                            },
+                                        }}
+                                        nextButton={
+                                            <Button
+                                                size="small"
+                                                onClick={handleNext}
+                                                disabled={activeStep === maxSteps - 1}
+                                            >
+                                                Next
+                                                <KeyboardArrowRight />
+                                            </Button>
+                                        }
+                                        backButton={
+                                            <Button
+                                                size="small"
+                                                onClick={handleBack}
+                                                disabled={activeStep === 0}
+                                            >
+                                                <KeyboardArrowLeft />
+                                                Back
+                                            </Button>
+                                        }
+                                    />
+                                )}
+                            </>
+                        )}
                     </Box>
+                    {maxSteps > 1 && (
+                        <Box sx={{ display: 'flex', gap: 1, mt: 2, overflowX: 'auto', pb: 1 }}>
+                            {product.images.map((image, index) => (
+                                <Box
+                                    key={index}
+                                    onClick={() => setActiveStep(index)}
+                                    sx={{
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        border: activeStep === index ? '2px solid #2E7D32' : '2px solid transparent',
+                                        '&:hover': {
+                                            opacity: 0.8,
+                                        },
+                                    }}
+                                >
+                                    <img
+                                        src={`data:${image.imageType};base64,${image.imageBase64}`}
+                                        alt={`Thumbnail ${index + 1}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                        }}
+                                    />
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
                 </Grid>
 
                 <Grid item xs={12} md={6}>
@@ -223,17 +359,9 @@ const ProductDetail = () => {
                             <Typography variant="subtitle1" sx={{ mb: 1 }}>
                                 Category: <span style={{ color: '#666' }}>{product.categoryName}</span>
                             </Typography>
-                            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                                Status: <span style={{
-                                    color: product.status === 'ACTIVE' ? '#4caf50' : '#f44336',
-                                    fontWeight: 500
-                                }}>
-                                    {product.status === 'ACTIVE' ? 'In Stock' : 'Out of Stock'}
-                                </span>
-                            </Typography>
                             <Typography variant="subtitle1">
-                                Stock: <span style={{ color: '#666' }}>
-                                    {product.stocks ? product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0) : 0} units
+                                Available: <span style={{ color: totalStock > 0 ? '#4caf50' : '#f44336', fontWeight: 500 }}>
+                                    {totalStock} units
                                 </span>
                             </Typography>
                         </Box>
@@ -248,7 +376,7 @@ const ProductDetail = () => {
                                     label="Qty"
                                     onChange={(e) => setQuantity(e.target.value)}
                                 >
-                                    {[...Array(Math.min(10, product.stock || 0))].map((_, i) => (
+                                    {[...Array(Math.min(10, totalStock))].map((_, i) => (
                                         <MenuItem key={i + 1} value={i + 1}>
                                             {i + 1}
                                         </MenuItem>
@@ -261,7 +389,7 @@ const ProductDetail = () => {
                                 size="large"
                                 fullWidth
                                 onClick={handleAddToCart}
-                                disabled={!product.stock || product.stock === 0 || isInCart || product.status !== 'ACTIVE'}
+                                disabled={totalStock === 0 || isInCart}
                                 sx={{
                                     backgroundColor: '#000',
                                     '&:hover': {
@@ -272,9 +400,8 @@ const ProductDetail = () => {
                                     },
                                 }}
                             >
-                                {!product.stock || product.stock === 0 ? 'Out of Stock' : 
+                                {totalStock === 0 ? 'Out of Stock' : 
                                  isInCart ? 'Already in Cart' : 
-                                 product.status !== 'ACTIVE' ? 'Currently Unavailable' : 
                                  'Add to Cart'}
                             </Button>
                         </Box>
@@ -285,6 +412,47 @@ const ProductDetail = () => {
                     </Box>
                 </Grid>
             </Grid>
+
+            {/* Add Reviews Section */}
+            <Box sx={{ mt: 6 }}>
+                <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+                    Customer Reviews
+                </Typography>
+                {reviews.length > 0 ? (
+                    <Grid container spacing={3}>
+                        {reviews.map((review) => (
+                            <Grid item xs={12} key={review.id}>
+                                <Paper sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <Avatar sx={{ mr: 2 }}>{review.userName?.[0] || 'U'}</Avatar>
+                                        <Box>
+                                            <Typography variant="subtitle1">
+                                                {review.userName || 'Anonymous'}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {new Date(review.createdAt).toLocaleDateString()}
+                                            </Typography>
+                                        </Box>
+                                        <Rating 
+                                            value={review.rating} 
+                                            readOnly 
+                                            size="small" 
+                                            sx={{ ml: 'auto' }}
+                                        />
+                                    </Box>
+                                    <Typography variant="body1">
+                                        {review.comment}
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : (
+                    <Typography variant="body1" color="text.secondary">
+                        No reviews yet. Be the first to review this product!
+                    </Typography>
+                )}
+            </Box>
 
             <CartNotification
                 open={openSnackbar}

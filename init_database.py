@@ -25,13 +25,15 @@ category_image_map = {
     "6.jpg": "Water Sports"
 }
 
-# Map image files to product IDs
+# Map image files to product IDs with display order
 product_image_map = {
-    "trail_master_pro_bike.jpg": 28,    # Trail Master Pro Bike
-    "bike_repair_kit.jpg": 30,          # Bike Repair Kit
-    "performance_tshirt.jpg": 2,        # Performance T-Shirt
-    "explorer_tent.jpg": 16,            # Explorer 4-Person Tent
-    "hiking_backpack.jpg": 17           # Lightweight Hiking Backpack
+    "trail_master_pro_bike.jpg": {"id": 28, "order": 1},    # Trail Master Pro Bike
+    "bike_repair_kit.jpg": {"id": 30, "order": 1},          # Bike Repair Kit
+    "tshirt1.jpg": {"id": 2, "order": 1},                   # Performance T-Shirt - First image
+    "tshirt2.jpg": {"id": 2, "order": 2},                   # Performance T-Shirt - Second image
+    "tshirt3.jpg": {"id": 2, "order": 3},                   # Performance T-Shirt - Third image
+    "explorer_tent.jpg": {"id": 16, "order": 1},            # Explorer 4-Person Tent
+    "hiking_backpack.jpg": {"id": 17, "order": 1}           # Lightweight Hiking Backpack
 }
 
 # Connect to the database
@@ -89,7 +91,7 @@ for filename, category_name in category_image_map.items():
 
 # --- STEP 3: Insert product images ---
 print("\nStep 3: Adding product images...")
-for filename, product_id in product_image_map.items():
+for filename, product_info in product_image_map.items():
     image_path = os.path.join(image_dir, filename)
 
     try:
@@ -102,15 +104,15 @@ for filename, product_id in product_image_map.items():
         # Insert the image into product_images table
         cursor.execute("""
             INSERT INTO product_images (product_id, image_data, image_type, display_order)
-            VALUES (%s, %s, %s, 1)
-        """, (product_id, image_data, file_type))
+            VALUES (%s, %s, %s, %s)
+        """, (product_info['id'], image_data, file_type, product_info['order']))
 
-        print(f"✅ Added image for product ID: {product_id}")
+        print(f"✅ Added image for product ID: {product_info['id']} (Order: {product_info['order']})")
 
     except FileNotFoundError:
         print(f"❌ Image not found: {image_path}")
     except Exception as e:
-        print(f"❌ Failed to add image for product ID {product_id}: {e}")
+        print(f"❌ Failed to add image for product ID {product_info['id']}: {e}")
 
 # Finalize
 conn.commit()

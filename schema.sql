@@ -287,3 +287,61 @@ INSERT INTO featured_products (product_id, display_order) VALUES
 (17, 3),
 (28, 4),
 (30, 5);
+
+-- Stocks for Performance Sport T-Shirt
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(2, 'XS', 25),
+(2, 'S', 40),
+(2, 'M', 50),
+(2, 'L', 45),
+(2, 'XL', 30),
+(2, 'XXL', 20);
+
+-- Stocks for Explorer 4-Person Tent
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(16, 'ONE SIZE', 15);
+
+-- Stocks for Lightweight Hiking Backpack
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(17, '45L', 25);
+
+-- Stocks for Trail Master Pro Bike
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(28, 'S (15")', 8),
+(28, 'M (17")', 12),
+(28, 'L (19")', 10),
+(28, 'XL (21")', 6);
+
+-- Stocks for Bike Repair Kit
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(30, 'ONE SIZE', 35);
+
+-- Reviews for Performance Sport T-Shirt
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
+(2, 3, 5, 'Perfect for my morning runs! The moisture-wicking really works.'),
+(2, 4, 4, 'Good quality shirt, fits as expected. Would buy again.'),
+(2, 2, 5, 'Great performance during intense workouts. Highly recommend!');
+
+-- Reviews for Explorer 4-Person Tent
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
+(16, 3, 5, 'Spacious and easy to set up. Perfect for family camping!'),
+(16, 4, 4, 'Good weather protection, survived a rainy weekend.'),
+(16, 2, 5, 'Excellent quality tent, worth every penny.');
+
+-- Reviews for Lightweight Hiking Backpack
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
+(17, 3, 4, 'Comfortable for long hikes, lots of useful compartments'),
+(17, 4, 5, 'Perfect size for weekend trips, very durable'),
+(17, 2, 4, 'Good organization and comfortable straps');
+
+-- Reviews for Trail Master Pro Bike
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
+(28, 3, 5, 'Amazing bike! Handles trails perfectly'),
+(28, 4, 5, 'Professional quality, smooth riding experience'),
+(28, 2, 4, 'Great components, though a bit pricey');
+
+-- Reviews for Bike Repair Kit
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
+(30, 3, 4, 'Has all the essential tools needed for basic repairs'),
+(30, 4, 5, 'Compact and comprehensive kit, saved me multiple times'),
+(30, 2, 4, 'Good quality tools, convenient carrying case');
