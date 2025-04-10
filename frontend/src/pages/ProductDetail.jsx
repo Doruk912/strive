@@ -45,19 +45,22 @@ const ProductDetail = () => {
     const [error, setError] = useState(null);
     const [activeStep, setActiveStep] = useState(0);
     const [reviews, setReviews] = useState([]);
+    const [averageRating, setAverageRating] = useState(0);
     const [categoryPath, setCategoryPath] = useState([]);
 
     useEffect(() => {
         const fetchProductData = async () => {
             try {
                 setLoading(true);
-                const [productRes, reviewsRes] = await Promise.all([
+                const [productRes, reviewsRes, ratingRes] = await Promise.all([
                     axios.get(`http://localhost:8080/api/products/${id}`),
-                    axios.get(`http://localhost:8080/api/reviews/product/${id}`)
+                    axios.get(`http://localhost:8080/api/reviews/product/${id}`),
+                    axios.get(`http://localhost:8080/api/reviews/product/${id}/rating`)
                 ]);
                 
                 setProduct(productRes.data);
                 setReviews(reviewsRes.data);
+                setAverageRating(ratingRes.data || 0);
 
                 // Fetch category path
                 if (productRes.data.categoryId) {
@@ -200,7 +203,7 @@ const ProductDetail = () => {
                 >
                     Home
                 </Link>
-                {categoryPath.map((category, index) => (
+                {categoryPath.map((category) => (
                     <Link
                         key={category.id}
                         component="button"
@@ -341,9 +344,12 @@ const ProductDetail = () => {
                         </Typography>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Rating value={product.rating || 0} readOnly precision={0.5} />
+                            <Rating value={averageRating} readOnly precision={0.5} />
                             <Typography variant="body2" sx={{ ml: 1 }}>
-                                ({product.rating || 0} / 5)
+                                ({averageRating.toFixed(1)} / 5)
+                            </Typography>
+                            <Typography variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
+                                ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
                             </Typography>
                         </Box>
 
@@ -413,10 +419,10 @@ const ProductDetail = () => {
                 </Grid>
             </Grid>
 
-            {/* Add Reviews Section */}
+            {/* Reviews Section */}
             <Box sx={{ mt: 6 }}>
                 <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                    Customer Reviews
+                    Customer Reviews ({reviews.length})
                 </Typography>
                 {reviews.length > 0 ? (
                     <Grid container spacing={3}>
