@@ -57,7 +57,7 @@ const Products = () => {
     
     // Search and filter states
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     
@@ -143,7 +143,7 @@ const Products = () => {
     const filteredProducts = products
         .filter(product => {
             const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = isProductInCategory(product, categoryFilter);
+            const matchesCategory = categoryFilter === 'all' || isProductInCategory(product, categoryFilter);
             return matchesSearch && matchesCategory;
         })
         .sort((a, b) => {
@@ -367,9 +367,8 @@ const Products = () => {
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
                         label="Filter by Category"
-                        displayEmpty
                     >
-                        <MenuItem value="">All Categories</MenuItem>
+                        <MenuItem value="all">All Categories</MenuItem>
                         {flattenCategories(categories).map((category) => (
                             <MenuItem key={category.id} value={category.id}>
                                 {renderCategoryName(category)}

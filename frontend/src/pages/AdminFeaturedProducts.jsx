@@ -22,10 +22,14 @@ import {
     FormControl,
     InputLabel,
     Stack,
+    IconButton,
 } from '@mui/material';
 import {
     Star as StarIcon,
-    Search as SearchIcon
+    Search as SearchIcon,
+    ArrowForward as ArrowForwardIcon,
+    ArrowUpward as ArrowUpwardIcon,
+    ArrowDownward as ArrowDownwardIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useEffect } from 'react';
@@ -36,7 +40,7 @@ const FeaturedProducts = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
-    const [categories, setCategories] = useState(['all']);
+    const [categories, setCategories] = useState([]);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
@@ -58,20 +62,85 @@ const FeaturedProducts = () => {
     const fetchCategories = async () => {
         try {
             const response = await axios.get('http://localhost:8080/api/categories');
-            setCategories(['all', ...response.data.map(cat => cat.name)]);
+            setCategories(response.data);
         } catch (error) {
             console.error('Error fetching categories:', error);
         }
     };
 
+    const flattenCategories = (categories) => {
+        const flattened = [];
+
+        const processCategory = (category, parentNames = []) => {
+            const displayName = [...parentNames, category.name].join(' → ');
+            flattened.push({
+                ...category,
+                displayName: displayName
+            });
+
+            if (category.children && category.children.length > 0) {
+                category.children.forEach(child => {
+                    processCategory(child, [...parentNames, category.name]);
+                });
+            }
+        };
+
+        categories.forEach(category => processCategory(category));
+        return flattened;
+    };
+
+    const renderCategoryName = (category) => {
+        const pathParts = category.displayName.split(' → ');
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                {pathParts.map((part, index) => (
+                    <React.Fragment key={index}>
+                        {index > 0 && <ArrowForwardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />}
+                        <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{
+                                color: index === pathParts.length - 1 ? 'text.primary' : 'text.secondary',
+                                fontWeight: index === pathParts.length - 1 ? 500 : 400
+                            }}
+                        >
+                            {part}
+                        </Typography>
+                    </React.Fragment>
+                ))}
+            </Box>
+        );
+    };
+
+    const isProductInCategory = (product, categoryId) => {
+        if (categoryId === 'all') return true;
+        if (product.categoryId === categoryId) return true;
+
+        const flattenedCategories = flattenCategories(categories);
+        const productCategory = flattenedCategories.find(c => c.id === product.categoryId);
+        if (!productCategory) return false;
+
+        const categoryPath = productCategory.displayName.split(' → ');
+        const filterCategory = flattenedCategories.find(c => c.id === categoryId);
+        if (!filterCategory) return false;
+
+        return categoryPath.includes(filterCategory.name);
+    };
+
     const filteredProducts = useMemo(() => {
         return products.filter(product => {
             const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = categoryFilter === 'all' || product.categoryName === categoryFilter;
+            const matchesCategory = isProductInCategory(product, categoryFilter);
             const matchesFeatured = !showFeaturedOnly || product.isFeatured;
             return matchesSearch && matchesCategory && matchesFeatured;
         });
     }, [products, searchQuery, categoryFilter, showFeaturedOnly]);
+
+    const featuredProducts = useMemo(() => {
+        return products
+            .filter(p => p.isFeatured)
+            .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    }, [products]);
 
     const handleToggleFeatured = async (productId) => {
         try {
@@ -94,18 +163,36 @@ const FeaturedProducts = () => {
         }
     };
 
-    const handleSave = async () => {
-        try {
-            const featuredProductIds = products
-                .filter(p => p.isFeatured)
-                .sort((a, b) => a.displayOrder - b.displayOrder)
-                .map(p => p.id);
+    const moveProduct = async (index, direction) => {
+        const newProducts = [...featuredProducts];
+        const item = newProducts[index];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
 
-            await axios.put('http://localhost:8080/api/products/featured/reorder', featuredProductIds);
-            showSnackbar('Featured products updated successfully', 'success');
+        if (newIndex < 0 || newIndex >= newProducts.length) return;
+
+        newProducts.splice(index, 1);
+        newProducts.splice(newIndex, 0, item);
+
+        // Update display order for all featured products
+        const updatedProducts = newProducts.map((item, index) => ({
+            ...item,
+            displayOrder: index
+        }));
+
+        try {
+            await axios.put('http://localhost:8080/api/products/featured/reorder', 
+                updatedProducts.map(p => ({ id: p.id, displayOrder: p.displayOrder }))
+            );
+
+            setProducts(prev => prev.map(p => {
+                const updated = updatedProducts.find(up => up.id === p.id);
+                return updated ? { ...p, displayOrder: updated.displayOrder } : p;
+            }));
+
+            showSnackbar('Product order updated successfully', 'success');
         } catch (error) {
-            console.error('Error saving featured products:', error);
-            showSnackbar('Error saving changes', 'error');
+            console.error('Error updating product order:', error);
+            showSnackbar('Error updating product order', 'error');
         }
     };
 
@@ -114,8 +201,6 @@ const FeaturedProducts = () => {
         setSnackbarSeverity(severity);
         setOpenSnackbar(true);
     };
-
-    const featuredCount = products.filter(p => p.isFeatured).length;
 
     return (
         <Box sx={{ mt: -10 }}>
@@ -140,28 +225,83 @@ const FeaturedProducts = () => {
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Chip
-                            label={`${featuredCount} Selected`}
+                            label={`${featuredProducts.length} Featured`}
                             color="secondary"
                             size="small"
                         />
-                        <Button
-                            variant="contained"
-                            onClick={handleSave}
-                            sx={{
-                                backgroundColor: 'white',
-                                color: 'primary.main',
-                                '&:hover': {
-                                    backgroundColor: 'grey.100',
-                                }
-                            }}
-                        >
-                            Save Changes
-                        </Button>
                     </Box>
                 </Box>
             </Paper>
 
-            {/* Filters Section */}
+            {featuredProducts.length > 0 && (
+                <Paper sx={{ p: 3, mb: 3, backgroundColor: 'grey.50' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Current Featured Products
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Use the arrows to change the order of featured products
+                    </Typography>
+                    <Stack spacing={2}>
+                        {featuredProducts.map((product, index) => (
+                            <Paper
+                                key={product.id}
+                                sx={{
+                                    p: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    backgroundColor: 'white'
+                                }}
+                            >
+                                <Box
+                                    component="img"
+                                    src={product.images?.[0]?.url || 'https://via.placeholder.com/50'}
+                                    sx={{
+                                        width: 50,
+                                        height: 50,
+                                        objectFit: 'cover',
+                                        borderRadius: 1
+                                    }}
+                                />
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Typography variant="subtitle1">
+                                        {product.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {product.categoryName}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => moveProduct(index, 'up')}
+                                        disabled={index === 0}
+                                    >
+                                        <ArrowUpwardIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => moveProduct(index, 'down')}
+                                        disabled={index === featuredProducts.length - 1}
+                                    >
+                                        <ArrowDownwardIcon />
+                                    </IconButton>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={product.isFeatured}
+                                                onChange={() => handleToggleFeatured(product.id)}
+                                            />
+                                        }
+                                        label="Featured"
+                                    />
+                                </Box>
+                            </Paper>
+                        ))}
+                    </Stack>
+                </Paper>
+            )}
+
             <Paper
                 sx={{
                     p: 2,
@@ -190,9 +330,6 @@ const FeaturedProducts = () => {
                                     borderColor: 'primary.main',
                                 },
                             },
-                            '& .MuiInputBase-input': {
-                                fontSize: '0.975rem',
-                            },
                         }}
                         InputProps={{
                             startAdornment: (
@@ -207,17 +344,6 @@ const FeaturedProducts = () => {
                         sx={{
                             minWidth: 200,
                             backgroundColor: 'white',
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: 'grey.300',
-                                },
-                                '&:hover fieldset': {
-                                    borderColor: 'grey.400',
-                                },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: 'primary.main',
-                                },
-                            },
                         }}
                     >
                         <InputLabel>Category</InputLabel>
@@ -226,13 +352,10 @@ const FeaturedProducts = () => {
                             onChange={(e) => setCategoryFilter(e.target.value)}
                             label="Category"
                         >
-                            {categories.map(category => (
-                                <MenuItem
-                                    key={category}
-                                    value={category}
-                                    sx={{ textTransform: 'capitalize' }}
-                                >
-                                    {category}
+                            <MenuItem value="all">All Categories</MenuItem>
+                            {flattenCategories(categories).map((category) => (
+                                <MenuItem key={category.id} value={category.id}>
+                                    {renderCategoryName(category)}
                                 </MenuItem>
                             ))}
                         </Select>
@@ -244,21 +367,10 @@ const FeaturedProducts = () => {
                                 onChange={(e) => setShowFeaturedOnly(e.target.checked)}
                             />
                         }
-                        label={
-                            <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>
-                                Show Featured Only
-                            </Typography>
-                        }
+                        label="Show Featured Only"
                     />
                 </Stack>
             </Paper>
-
-            {/* Results Summary */}
-            <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                    Showing {filteredProducts.length} of {products.length} products
-                </Typography>
-            </Box>
 
             <Grid container spacing={3}>
                 {filteredProducts.map((product) => (
