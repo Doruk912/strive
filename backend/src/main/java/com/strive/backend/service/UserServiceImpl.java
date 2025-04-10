@@ -5,17 +5,46 @@ import com.strive.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.Arrays;
 import java.util.List;
+import com.strive.backend.dto.UserUpdateDTO;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Override
+    public List<User> getAllEmployeesAndAdmins() {
+        return userRepository.findByRoleIn(Arrays.asList(User.UserRole.ADMIN, User.UserRole.MANAGER));
+    }
+
+    @Override
+    public User updateEmployee(Integer id, UserUpdateDTO userDetails) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (userDetails.getFirstName() != null) {
+            user.setFirstName(userDetails.getFirstName());
+        }
+        if (userDetails.getLastName() != null) {
+            user.setLastName(userDetails.getLastName());
+        }
+        if (userDetails.getRole() != null) {
+            user.setRole(User.UserRole.valueOf(userDetails.getRole()));
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Integer id) {
+        userRepository.deleteById(id);
+    }
 
     @Override
     public List<User> getAllUsers() {
@@ -34,7 +63,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        // Encode the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -44,7 +72,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Update only the fields that are provided
         if (userDetails.getFirstName() != null) {
             user.setFirstName(userDetails.getFirstName());
         }
@@ -54,11 +81,9 @@ public class UserServiceImpl implements UserService {
 
         // Handle phone and country code together
         if (userDetails.getPhone() == null || userDetails.getPhone().isEmpty()) {
-            // If phone is null or empty, set both phone and country code to null
             user.setPhone(null);
             user.setCountryCode(null);
         } else {
-            // Otherwise, update both with provided values
             user.setPhone(userDetails.getPhone());
             user.setCountryCode(userDetails.getCountryCode());
         }
