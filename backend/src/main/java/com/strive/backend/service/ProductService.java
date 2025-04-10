@@ -241,11 +241,23 @@ public class ProductService {
     public List<ProductDTO> reorderFeaturedProducts(List<Integer> productIds) {
         List<Product> products = productRepository.findAllById(productIds);
         
-        // Update display order for each featured product
-        for (int i = 0; i < products.size(); i++) {
-            Product product = products.get(i);
-            if (product.getFeaturedProduct() != null) {
-                product.getFeaturedProduct().setDisplayOrder(i + 1);
+        // Create a map of product ID to display order
+        Map<Integer, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < productIds.size(); i++) {
+            orderMap.put(productIds.get(i), i + 1);
+        }
+        
+        // Update display order for each product
+        for (Product product : products) {
+            if (product.getFeaturedProduct() == null) {
+                // Create new FeaturedProduct if it doesn't exist
+                FeaturedProduct featuredProduct = new FeaturedProduct();
+                featuredProduct.setProduct(product);
+                featuredProduct.setDisplayOrder(orderMap.get(product.getId()));
+                product.setFeaturedProduct(featuredProduct);
+            } else {
+                // Update existing FeaturedProduct
+                product.getFeaturedProduct().setDisplayOrder(orderMap.get(product.getId()));
             }
         }
 

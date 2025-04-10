@@ -55,7 +55,7 @@ const FeaturedProducts = () => {
             setProducts(response.data);
         } catch (error) {
             console.error('Error fetching products:', error);
-            showSnackbar('Error fetching products', 'error');
+            //showSnackbar('Error fetching products', 'error');
         }
     };
 
@@ -180,14 +180,21 @@ const FeaturedProducts = () => {
         }));
 
         try {
-            await axios.put('http://localhost:8080/api/products/featured/reorder', 
-                updatedProducts.map(p => ({ id: p.id, displayOrder: p.displayOrder }))
-            );
+            // Send only the product IDs in the new order
+            const productIds = updatedProducts.map(p => p.id);
+            const response = await axios.put('http://localhost:8080/api/products/featured/reorder', productIds);
 
-            setProducts(prev => prev.map(p => {
-                const updated = updatedProducts.find(up => up.id === p.id);
-                return updated ? { ...p, displayOrder: updated.displayOrder } : p;
-            }));
+            // Update the products state with the response data
+            setProducts(prev => {
+                const newProducts = [...prev];
+                response.data.forEach(updatedProduct => {
+                    const index = newProducts.findIndex(p => p.id === updatedProduct.id);
+                    if (index !== -1) {
+                        newProducts[index] = updatedProduct;
+                    }
+                });
+                return newProducts;
+            });
 
             showSnackbar('Product order updated successfully', 'success');
         } catch (error) {
