@@ -45,12 +45,15 @@ const CartNotification = ({ open, product, quantity }) => {
                         }}
                     >
                         <img
-                            src={product.image}
+                            src={product.image || '/default-product-image.jpg'}
                             alt={product.name}
                             style={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
+                            }}
+                            onError={(e) => {
+                                e.target.src = '/default-product-image.jpg';
                             }}
                         />
                     </Box>

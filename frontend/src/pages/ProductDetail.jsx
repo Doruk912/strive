@@ -117,11 +117,19 @@ const ProductDetail = () => {
 
     const handleAddToCart = () => {
         if (!isInCart && product && totalStock > 0) {
-            addToCart(product, quantity);
-            setOpenSnackbar(true);
-            setTimeout(() => {
-                setOpenSnackbar(false);
-            }, 3000);
+            const productWithImage = {
+                ...product,
+                image: product.images && product.images.length > 0
+                    ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                    : '/default-product-image.jpg'
+            };
+            const success = addToCart(productWithImage, quantity);
+            if (success) {
+                setOpenSnackbar(true);
+                setTimeout(() => {
+                    setOpenSnackbar(false);
+                }, 3000);
+            }
         }
     };
 

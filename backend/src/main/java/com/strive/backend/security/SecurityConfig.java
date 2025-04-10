@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/featured-categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 
                 // Admin only endpoints - require ADMIN role
                 .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
@@ -51,7 +52,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/cart/**").authenticated()
                 .requestMatchers("/api/orders/**").authenticated()
                 .requestMatchers("/api/user/**").authenticated()
-                .requestMatchers("/api/reviews/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/reviews/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/reviews/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").authenticated()
                 
                 // Any other request needs authentication
                 .anyRequest().authenticated()

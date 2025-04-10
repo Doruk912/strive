@@ -336,9 +336,9 @@ INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
 
 -- Reviews for Trail Master Pro Bike
 INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
-(28, 3, 5, 'Amazing bike! Handles trails perfectly'),
-(28, 4, 5, 'Professional quality, smooth riding experience'),
-(28, 2, 4, 'Great components, though a bit pricey');
+(28, 3, 1, 'Amazing bike! Handles trails perfectly'),
+(28, 4, 2, 'Professional quality, smooth riding experience'),
+(28, 2, 3, 'Great components, though a bit pricey');
 
 -- Reviews for Bike Repair Kit
 INSERT INTO reviews (product_id, user_id, rating, comment) VALUES

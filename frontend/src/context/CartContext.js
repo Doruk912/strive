@@ -1,5 +1,5 @@
 // src/context/CartContext.jsx
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext();
 
@@ -12,46 +12,134 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState([]);
+    const [cartItems, setCartItems] = useState(() => {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return [];
+        
+        const savedCart = localStorage.getItem(`cart_${userId}`);
+        return savedCart ? JSON.parse(savedCart) : [];
+    });
 
-    const addToCart = (product, quantity = 1) => {
-        setCartItems(prevItems => {
-            const existingItem = prevItems.find(item => item.id === product.id);
-            if (existingItem) {
+    const [loading, setLoading] = useState(false);
+
+    // Save to localStorage whenever cart changes
+    useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            localStorage.setItem(`cart_${userId}`, JSON.stringify(cartItems));
+        }
+    }, [cartItems]);
+
+    // Clear cart when user logs out
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'userId' && !e.newValue) {
+                setCartItems([]);
+            }
+            if (e.key === 'userId' && e.newValue) {
+                const savedCart = localStorage.getItem(`cart_${e.newValue}`);
+                setCartItems(savedCart ? JSON.parse(savedCart) : []);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    const addToCart = async (product, quantity = 1) => {
+        if (!product.stocks || product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0) < quantity) {
+            console.error('Not enough stock available');
+            return false;
+        }
+
+        setLoading(true);
+        try {
+            setCartItems(prevItems => {
+                const existingItem = prevItems.find(item => item.id === product.id);
+                if (existingItem) {
+                    const totalStock = product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0);
+                    const newQuantity = existingItem.quantity + quantity;
+                    
+                    if (newQuantity > totalStock) {
+                        console.error('Not enough stock available');
+                        return prevItems;
+                    }
+
+                    return prevItems.map(item =>
+                        item.id === product.id
+                            ? { ...item, quantity: newQuantity }
+                            : item
+                    );
+                }
+                return [...prevItems, { ...product, quantity }];
+            });
+            return true;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const removeFromCart = async (productId) => {
+        setLoading(true);
+        try {
+            setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateQuantity = async (productId, quantity) => {
+        setLoading(true);
+        try {
+            if (quantity <= 0) {
+                await removeFromCart(productId);
+                return;
+            }
+
+            setCartItems(prevItems => {
+                const item = prevItems.find(item => item.id === productId);
+                if (!item) return prevItems;
+
+                const totalStock = item.stocks?.reduce((total, stock) => total + (stock.stock || 0), 0) || 0;
+                if (quantity > totalStock) {
+                    console.error('Not enough stock available');
+                    return prevItems;
+                }
+
                 return prevItems.map(item =>
-                    item.id === product.id
-                        ? { ...item, quantity: item.quantity + quantity }
+                    item.id === productId
+                        ? { ...item, quantity }
                         : item
                 );
-            }
-            return [...prevItems, { ...product, quantity }];
-        });
-    };
-
-    const removeFromCart = (productId) => {
-        setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-    };
-
-    const updateQuantity = (productId, quantity) => {
-        if (quantity <= 0) {
-            removeFromCart(productId);
-            return;
+            });
+        } finally {
+            setLoading(false);
         }
-        setCartItems(prevItems =>
-            prevItems.map(item =>
-                item.id === productId
-                    ? { ...item, quantity }
-                    : item
-            )
-        );
     };
 
     const clearCart = () => {
         setCartItems([]);
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            localStorage.removeItem(`cart_${userId}`);
+        }
     };
 
     const getCartTotal = () => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.18; // 18% tax
+        const shipping = subtotal > 50 ? 0 : 10; // Free shipping over $50
+        
+        return {
+            subtotal,
+            tax,
+            shipping,
+            total: subtotal + tax + shipping
+        };
+    };
+
+    const getItemCount = () => {
+        return cartItems.reduce((total, item) => total + item.quantity, 0);
     };
 
     const value = {
@@ -61,6 +149,8 @@ export const CartProvider = ({ children }) => {
         updateQuantity,
         clearCart,
         getCartTotal,
+        getItemCount,
+        loading
     };
 
     return (
