@@ -367,7 +367,13 @@ const Products = () => {
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
                         label="Filter by Category"
-                        displayEmpty
+                        MenuProps={{
+                            PaperProps: {
+                                style: {
+                                    maxHeight: 300
+                                }
+                            }
+                        }}
                     >
                         <MenuItem value="">All Categories</MenuItem>
                         {flattenCategories(categories).map((category) => (
