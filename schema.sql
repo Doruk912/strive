@@ -280,3 +280,10 @@ INSERT INTO products (name, description, price, category_id) VALUES
 INSERT INTO addresses (user_id, name, street_address, city, state, postal_code, country) VALUES
 (4, 'Home', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey'),
 (4, 'Work', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey');
+
+INSERT INTO featured_products (product_id, display_order) VALUES
+(2, 1),
+(16, 2),
+(17, 3),
+(28, 4),
+(30, 5);

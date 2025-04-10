@@ -16,7 +16,7 @@ sql_file_path = r'C:\Users\Doruk\OneDrive\Masaüstü\Strive\schema.sql'
 image_dir = r'C:\Users\Doruk\OneDrive\Masaüstü\Strive\images'
 
 # Map image files to category names
-image_category_map = {
+category_image_map = {
     "1.jpg": "Men's Jackets",
     "2.jpg": "Men's Footwear",
     "3.jpg": "Outdoor",
@@ -25,11 +25,21 @@ image_category_map = {
     "6.jpg": "Water Sports"
 }
 
+# Map image files to product IDs
+product_image_map = {
+    "trail_master_pro_bike.jpg": 28,    # Trail Master Pro Bike
+    "bike_repair_kit.jpg": 30,          # Bike Repair Kit
+    "performance_tshirt.jpg": 2,        # Performance T-Shirt
+    "explorer_tent.jpg": 16,            # Explorer 4-Person Tent
+    "hiking_backpack.jpg": 17           # Lightweight Hiking Backpack
+}
+
 # Connect to the database
 conn = mysql.connector.connect(**db_config)
 cursor = conn.cursor()
 
 # --- STEP 1: Run SQL file ---
+print("Step 1: Executing SQL Schema...")
 try:
     with open(sql_file_path, 'r', encoding='utf-8') as file:
         sql_commands = file.read()
@@ -51,7 +61,8 @@ except Exception as e:
     print(f"❌ Error while executing SQL schema: {e}")
 
 # --- STEP 2: Insert category images ---
-for filename, category_name in image_category_map.items():
+print("\nStep 2: Adding category images...")
+for filename, category_name in category_image_map.items():
     image_path = os.path.join(image_dir, filename)
 
     try:
@@ -69,15 +80,40 @@ for filename, category_name in image_category_map.items():
             WHERE name = %s
         """, (image_data, file_type, category_name))
 
-        print(f"✅ Updated: {category_name}")
+        print(f"✅ Updated category: {category_name}")
 
     except FileNotFoundError:
         print(f"❌ Image not found: {image_path}")
     except Exception as e:
         print(f"❌ Failed to update {category_name}: {e}")
 
+# --- STEP 3: Insert product images ---
+print("\nStep 3: Adding product images...")
+for filename, product_id in product_image_map.items():
+    image_path = os.path.join(image_dir, filename)
+
+    try:
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+
+        # Determine MIME type
+        file_type = 'image/jpeg' if filename.lower().endswith('.jpg') else 'image/png'
+
+        # Insert the image into product_images table
+        cursor.execute("""
+            INSERT INTO product_images (product_id, image_data, image_type, display_order)
+            VALUES (%s, %s, %s, 1)
+        """, (product_id, image_data, file_type))
+
+        print(f"✅ Added image for product ID: {product_id}")
+
+    except FileNotFoundError:
+        print(f"❌ Image not found: {image_path}")
+    except Exception as e:
+        print(f"❌ Failed to add image for product ID {product_id}: {e}")
+
 # Finalize
 conn.commit()
 cursor.close()
 conn.close()
-print("✅ Done!")
+print("\n✅ All operations completed successfully!")

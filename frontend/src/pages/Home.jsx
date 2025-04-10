@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Container, Typography, Box, Card, CardMedia, Button, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { featuredProducts, popularCategories } from '../mockData/Products';
+import { popularCategories } from '../mockData/Products';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -13,6 +13,7 @@ import PromotionalBanner from "../components/PromotionalBanner";
 import { useFavorites } from '../context/FavoritesContext';
 import {Helmet} from "react-helmet";
 import { featuredCategoryService } from '../services/featuredCategoryService';
+import axios from 'axios';
 
 const Home = () => {
     const navigate = useNavigate(); // Initialize useNavigate
@@ -25,22 +26,34 @@ const Home = () => {
     const [popularCategories, setPopularCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [featuredProducts, setFeaturedProducts] = useState([]); // Add state for featured products
 
     useEffect(() => {
-        const fetchFeaturedCategories = async () => {
-            try {
-                const categories = await featuredCategoryService.getAllFeaturedCategories();
-                setPopularCategories(categories);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching featured categories:', error);
-                setError('Failed to load categories');
-                setLoading(false);
-            }
-        };
-
-        fetchFeaturedCategories();
+        fetchProducts();
+        fetchCategories();
     }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/products/featured');
+            setFeaturedProducts(response.data);
+        } catch (error) {
+            console.error('Error fetching featured products:', error);
+            setError('Failed to load featured products');
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const categories = await featuredCategoryService.getAllFeaturedCategories();
+            setPopularCategories(categories);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching featured categories:', error);
+            setError('Failed to load categories');
+            setLoading(false);
+        }
+    };
 
     const checkScrollPosition = () => {
         if (scrollContainerRef.current) {
@@ -517,7 +530,9 @@ const Home = () => {
                                             component="img"
                                             height="100%"
                                             width="100%"
-                                            image={product.image}
+                                            image={product.images && product.images.length > 0 
+                                                ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                                                : '/placeholder-image.jpg'}
                                             alt={product.name}
                                             sx={{
                                                 objectFit: 'cover',
@@ -542,7 +557,7 @@ const Home = () => {
                                                 fontWeight: 500
                                             }}
                                         >
-                                            {product.category}
+                                            {product.categoryName}
                                         </Box>
                                         <IconButton
                                             onClick={(e) => {
@@ -589,28 +604,18 @@ const Home = () => {
                                                     color: '#1a1a1a'
                                                 }}
                                             >
-                                                ${product.price}
+                                                ${Number(product.price).toFixed(2)}
                                             </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <StarIcon sx={{ fontSize: '0.7rem', color: '#ffd700' }} />
-                                                <Typography variant="body2" sx={{ fontSize: '0.7rem', color: '#666' }}>
-                                                    {product.rating}
-                                                </Typography>
-                                            </Box>
+                                            {product.averageRating && (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <StarIcon sx={{ fontSize: '0.7rem', color: '#ffd700' }} />
+                                                    <Typography variant="body2" sx={{ fontSize: '0.7rem', color: '#666' }}>
+                                                        {product.averageRating.toFixed(1)}
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                         </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography 
-                                                variant="caption" 
-                                                sx={{ 
-                                                    backgroundColor: '#f5f5f5',
-                                                    padding: '1px 8px',
-                                                    borderRadius: '20px',
-                                                    fontSize: '0.7rem',
-                                                    color: '#666'
-                                                }}
-                                            >
-                                                {product.gender}
-                                            </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                                             <Box sx={{ display: 'flex', gap: 1 }}>
                                                 <Tooltip title="Quick View">
                                                     <IconButton 
