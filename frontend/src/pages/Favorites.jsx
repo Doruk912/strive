@@ -49,6 +49,10 @@ const Favorites = () => {
         console.log(`Product ${productId} added to cart`);
     };
 
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`); // Ürün detay sayfasına yönlendirme
+    };
+
     return (
         <>
             <Helmet>
@@ -103,6 +107,8 @@ const Favorites = () => {
                                                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                                             },
                                         }}
+                                        onClick={() => handleProductClick(product.id)} // Tıklama olayı
+                                        style={{ cursor: 'pointer' }} // Tıklanabilir olduğunu göstermek için
                                     >
                                         <Box sx={{ position: 'relative', paddingTop: '100%' }}>
                                             <CardMedia

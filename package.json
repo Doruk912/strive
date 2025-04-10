@@ -1,0 +1,21 @@
+{
+  "name": "cmpe356-project-",
+  "version": "1.0.0",
+  "description": "## Overview Modern e-commerce platform specializing in sports and lifestyle products. Built with performance and user experience in mind.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Doruk912/strive.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Doruk912/strive/issues"
+  },
+  "homepage": "https://github.com/Doruk912/strive#readme"
+}

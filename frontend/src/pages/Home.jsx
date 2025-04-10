@@ -612,7 +612,7 @@ const Home = () => {
                                                 {product.gender}
                                             </Typography>
                                             <Box sx={{ display: 'flex', gap: 1 }}>
-                                                <Tooltip title="Hızlı Bakış">
+                                                <Tooltip title="Quick View">
                                                     <IconButton 
                                                         size="small"
                                                         sx={{ 
@@ -623,7 +623,7 @@ const Home = () => {
                                                         <VisibilityIcon sx={{ fontSize: '1.1rem' }} />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="Sepete Ekle">
+                                                <Tooltip title="Add to Cart">
                                                     <IconButton 
                                                         size="small"
                                                         sx={{ 
