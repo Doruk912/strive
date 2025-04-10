@@ -16,7 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.HashMap;
 
 @Service
 public class ProductService {
@@ -169,5 +172,31 @@ public class ProductService {
         dto.setSize(stock.getSize());
         dto.setStock(stock.getQuantity());
         return dto;
+    }
+
+    @Transactional
+    public ProductDTO reorderProductImages(Integer productId, List<Integer> imageIds) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        // Create a map for quick lookup of display order by image ID
+        Map<Integer, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < imageIds.size(); i++) {
+            orderMap.put(imageIds.get(i), i + 1);
+        }
+
+        // Update display order for each image
+        product.getImages().forEach(image -> {
+            Integer newOrder = orderMap.get(image.getId());
+            if (newOrder != null) {
+                image.setDisplayOrder(newOrder);
+            }
+        });
+
+        // Sort images by display order to ensure they're saved in the correct order
+        product.getImages().sort(Comparator.comparing(ProductImage::getDisplayOrder));
+
+        Product updatedProduct = productRepository.save(product);
+        return convertToDTO(updatedProduct);
     }
 }

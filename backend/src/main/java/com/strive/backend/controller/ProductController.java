@@ -82,4 +82,11 @@ public class ProductController {
             @RequestParam String status) {
         return ResponseEntity.ok(productService.updateProductStatus(id, status));
     }
+
+    @PutMapping("/{productId}/images/reorder")
+    public ResponseEntity<ProductDTO> reorderProductImages(
+            @PathVariable Integer productId,
+            @RequestBody List<Integer> imageIds) {
+        return ResponseEntity.ok(productService.reorderProductImages(productId, imageIds));
+    }
 }

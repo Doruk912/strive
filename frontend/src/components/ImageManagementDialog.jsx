@@ -13,7 +13,9 @@ import {
 } from '@mui/material';
 import {
     Delete as DeleteIcon,
-    CloudUpload as CloudUploadIcon
+    CloudUpload as CloudUploadIcon,
+    ArrowUpward as ArrowUpwardIcon,
+    ArrowDownward as ArrowDownwardIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -24,7 +26,7 @@ const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
 
     useEffect(() => {
         if (product && product.images) {
-            setExistingImages(product.images);
+            setExistingImages(product.images.sort((a, b) => a.displayOrder - b.displayOrder));
         }
     }, [product]);
 
@@ -48,18 +50,69 @@ const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
         }
     };
 
-    const handleSave = async () => {
-        if (selectedFiles.length > 0) {
-            const formData = new FormData();
-            formData.append('product', JSON.stringify({
-                id: product.id,
-                name: product.name,
-                description: product.description,
-                price: product.price,
-                categoryId: product.categoryId,
-                status: product.status
-            }));
+    const handleMoveImage = async (currentIndex, direction) => {
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (newIndex < 0 || newIndex >= existingImages.length) return;
+
+        try {
+            // First update the UI optimistically
+            const reorderedImages = [...existingImages];
+            const [movedImage] = reorderedImages.splice(currentIndex, 1);
+            reorderedImages.splice(newIndex, 0, movedImage);
+            setExistingImages(reorderedImages);
+
+            // Then send the request to the backend
+            const imageIds = reorderedImages.map(img => img.id);
+            console.log('Sending reorder request with image IDs:', imageIds);
             
+            const response = await axios.put(
+                `http://localhost:8080/api/products/${product.id}/images/reorder`,
+                imageIds
+            );
+            console.log('Reorder response:', response.data);
+
+            if (response.data && response.data.images) {
+                // Sort the received images by display order
+                const sortedImages = response.data.images.sort((a, b) => a.displayOrder - b.displayOrder);
+                setExistingImages(sortedImages);
+            }
+            setError('');
+        } catch (error) {
+            console.error('Error reordering images:', error);
+            // Revert the optimistic update on error
+            if (product && product.images) {
+                setExistingImages(product.images.sort((a, b) => a.displayOrder - b.displayOrder));
+            }
+            setError('Failed to reorder images. Please try again.');
+        }
+    };
+
+    const handleSave = async () => {
+        const formData = new FormData();
+        formData.append('product', JSON.stringify({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            categoryId: product.categoryId,
+            status: product.status
+        }));
+        
+        // First save the reordered images
+        try {
+            const imageIds = existingImages.map(img => img.id);
+            await axios.put(
+                `http://localhost:8080/api/products/${product.id}/images/reorder`,
+                imageIds
+            );
+        } catch (error) {
+            console.error('Error saving image order:', error);
+            setError('Failed to save image order. Please try again.');
+            return;
+        }
+
+        // Then handle any new images
+        if (selectedFiles.length > 0) {
             selectedFiles.forEach(file => {
                 formData.append('images', file);
             });
@@ -80,7 +133,7 @@ const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
                 onClose();
             } catch (error) {
                 console.error('Error saving images:', error);
-                setError('Failed to save images. Please try again.');
+                setError('Failed to save new images. Please try again.');
             }
         } else {
             onSave(existingImages);
@@ -102,7 +155,7 @@ const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
                         Current Images
                     </Typography>
                     <Grid container spacing={2}>
-                        {existingImages.map((image) => (
+                        {existingImages.map((image, index) => (
                             <Grid item xs={4} key={image.id}>
                                 <Box
                                     sx={{
@@ -122,20 +175,51 @@ const ImageManagementDialog = ({ open, onClose, product, onSave }) => {
                                             objectFit: 'cover'
                                         }}
                                     />
-                                    <IconButton
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 8,
-                                            right: 8,
-                                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.9)'
-                                            }
-                                        }}
-                                        onClick={() => handleRemoveExistingImage(image.id)}
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: 8,
+                                        right: 8,
+                                        display: 'flex',
+                                        gap: 1,
+                                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                        borderRadius: 1,
+                                        p: 0.5
+                                    }}>
+                                        {index > 0 && (
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleMoveImage(index, 'up')}
+                                                sx={{
+                                                    backgroundColor: 'white',
+                                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' }
+                                                }}
+                                            >
+                                                <ArrowUpwardIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
+                                        {index < existingImages.length - 1 && (
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleMoveImage(index, 'down')}
+                                                sx={{
+                                                    backgroundColor: 'white',
+                                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' }
+                                                }}
+                                            >
+                                                <ArrowDownwardIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleRemoveExistingImage(image.id)}
+                                            sx={{
+                                                backgroundColor: 'white',
+                                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' }
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 </Box>
                             </Grid>
                         ))}

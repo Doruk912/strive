@@ -12,18 +12,31 @@ import {
     Paper,
     IconButton,
     CircularProgress,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TablePagination,
+    InputAdornment,
+    Stack,
+    Divider,
+    ListSubheader,
 } from '@mui/material';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     Inventory as InventoryIcon,
-    Collections as ImagesIcon
+    Collections as ImagesIcon,
+    Search as SearchIcon,
+    Sort as SortIcon,
+    ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import StockManagementDialog from '../components/StockManagementDialog';
 import CommonDialog from '../components/AdminDialog';
 import ImageManagementDialog from '../components/ImageManagementDialog';
-import {styled} from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import axios from 'axios';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -40,6 +53,18 @@ const Products = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [openStockDialog, setOpenStockDialog] = useState(false);
     const [openImageDialog, setOpenImageDialog] = useState(false);
+    const [categories, setCategories] = useState([]);
+    
+    // Search and filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [sortField, setSortField] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+    
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -50,23 +75,116 @@ const Products = () => {
 
     useEffect(() => {
         fetchProducts();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/categories');
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
 
     const fetchProducts = async () => {
         try {
-            console.log('Fetching products...');
             setLoading(true);
             const response = await axios.get('http://localhost:8080/api/products');
-            console.log('Products received:', response.data);
             setProducts(response.data);
         } catch (error) {
             console.error('Error fetching products:', error);
-            if (error.response) {
-                console.error('Response data:', error.response.data);
-                console.error('Response status:', error.response.status);
-            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const flattenCategories = (categories) => {
+        const flattened = [];
+
+        const processCategory = (category, parentNames = []) => {
+            // Add the current category
+            const displayName = [...parentNames, category.name].join(' → ');
+            flattened.push({
+                ...category,
+                displayName: displayName
+            });
+
+            // Process children if they exist
+            if (category.children && category.children.length > 0) {
+                category.children.forEach(child => {
+                    processCategory(child, [...parentNames, category.name]);
+                });
+            }
+        };
+
+        categories.forEach(category => processCategory(category));
+        return flattened;
+    };
+
+    const isProductInCategory = (product, categoryId) => {
+        if (!categoryId) return true;
+        if (product.categoryId === categoryId) return true;
+
+        // Find the product's category in the flattened list
+        const flattenedCategories = flattenCategories(categories);
+        const productCategory = flattenedCategories.find(c => c.id === product.categoryId);
+        if (!productCategory) return false;
+
+        // Check if any part of the product's category path includes the filter category
+        const categoryPath = productCategory.displayName.split(' → ');
+        const filterCategory = flattenedCategories.find(c => c.id === categoryId);
+        if (!filterCategory) return false;
+
+        return categoryPath.includes(filterCategory.name);
+    };
+
+    // Filter and sort products
+    const filteredProducts = products
+        .filter(product => {
+            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = isProductInCategory(product, categoryFilter);
+            return matchesSearch && matchesCategory;
+        })
+        .sort((a, b) => {
+            let comparison = 0;
+            switch (sortField) {
+                case 'name':
+                    comparison = a.name.localeCompare(b.name);
+                    break;
+                case 'price':
+                    comparison = a.price - b.price;
+                    break;
+                case 'category':
+                    comparison = a.categoryName.localeCompare(b.categoryName);
+                    break;
+                default:
+                    comparison = 0;
+            }
+            return sortDirection === 'asc' ? comparison : -comparison;
+        });
+
+    // Pagination calculation
+    const paginatedProducts = filteredProducts.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
         }
     };
 
@@ -155,6 +273,29 @@ const Products = () => {
         }
     };
 
+    const renderCategoryName = (category) => {
+        const pathParts = category.displayName.split(' → ');
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                {pathParts.map((part, index) => (
+                    <React.Fragment key={index}>
+                        {index > 0 && <ArrowForwardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />}
+                        <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{
+                                color: index === pathParts.length - 1 ? 'text.primary' : 'text.secondary',
+                                fontWeight: index === pathParts.length - 1 ? 500 : 400
+                            }}
+                        >
+                            {part}
+                        </Typography>
+                    </React.Fragment>
+                ))}
+            </Box>
+        );
+    };
+
     return (
         <Box sx={{ mt: -10 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -166,6 +307,76 @@ const Products = () => {
                 >
                     Add Product
                 </Button>
+            </Box>
+
+            {/* Search and Filter Controls */}
+            <Box 
+                sx={{ 
+                    display: 'flex',
+                    gap: 2,
+                    mb: 3,
+                    flexDirection: { xs: 'column', sm: 'row' }
+                }}
+            >
+                <TextField
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    sx={{ 
+                        flex: 1,
+                        '& .MuiOutlinedInput-root': {
+                            backgroundColor: 'white',
+                            borderRadius: 2,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            },
+                            '&.Mui-focused': {
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            }
+                        }
+                    }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+                <FormControl
+                    sx={{
+                        minWidth: { xs: '100%', sm: 280 },
+                        '& .MuiOutlinedInput-root': {
+                            backgroundColor: 'white',
+                            borderRadius: 2,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            },
+                            '&.Mui-focused': {
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                            }
+                        }
+                    }}
+                >
+                    <InputLabel>Filter by Category</InputLabel>
+                    <Select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        label="Filter by Category"
+                        displayEmpty
+                    >
+                        <MenuItem value="">All Categories</MenuItem>
+                        {flattenCategories(categories).map((category) => (
+                            <MenuItem key={category.id} value={category.id}>
+                                {renderCategoryName(category)}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
             </Box>
 
             <TableContainer
@@ -180,9 +391,54 @@ const Products = () => {
                     <TableHead>
                         <TableRow>
                             <StyledTableCell>Image</StyledTableCell>
-                            <StyledTableCell>Name</StyledTableCell>
-                            <StyledTableCell>Category</StyledTableCell>
-                            <StyledTableCell>Price</StyledTableCell>
+                            <StyledTableCell>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => handleSort('name')}
+                                >
+                                    Name
+                                    <SortIcon sx={{
+                                        ml: 0.5,
+                                        transform: sortField === 'name' && sortDirection === 'desc' ? 'rotate(180deg)' : 'none'
+                                    }} />
+                                </Box>
+                            </StyledTableCell>
+                            <StyledTableCell>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => handleSort('category')}
+                                >
+                                    Category
+                                    <SortIcon sx={{
+                                        ml: 0.5,
+                                        transform: sortField === 'category' && sortDirection === 'desc' ? 'rotate(180deg)' : 'none'
+                                    }} />
+                                </Box>
+                            </StyledTableCell>
+                            <StyledTableCell>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => handleSort('price')}
+                                >
+                                    Price
+                                    <SortIcon sx={{
+                                        ml: 0.5,
+                                        transform: sortField === 'price' && sortDirection === 'desc' ? 'rotate(180deg)' : 'none'
+                                    }} />
+                                </Box>
+                            </StyledTableCell>
                             <StyledTableCell>Stock</StyledTableCell>
                             <StyledTableCell>Actions</StyledTableCell>
                         </TableRow>
@@ -194,7 +450,7 @@ const Products = () => {
                                     <CircularProgress />
                                 </TableCell>
                             </TableRow>
-                        ) : products.length === 0 ? (
+                        ) : paginatedProducts.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} align="center">
                                     <Typography color="text.secondary">
@@ -203,14 +459,14 @@ const Products = () => {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            products.map((product) => (
+                            paginatedProducts.map((product) => (
                                 <TableRow
                                     key={product.id}
                                     sx={{ '&:hover': { backgroundColor: 'grey.50' } }}
                                 >
                                     <TableCell>
                                         <img
-                                            src={product.images && product.images[0] 
+                                            src={product.images && product.images[0]
                                                 ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
                                                 : '/default-product-image.jpg'}
                                             alt={product.name}
@@ -266,6 +522,15 @@ const Products = () => {
                         )}
                     </TableBody>
                 </Table>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={filteredProducts.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
             </TableContainer>
 
             <CommonDialog
