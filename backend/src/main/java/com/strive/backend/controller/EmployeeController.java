@@ -60,4 +60,31 @@ public class EmployeeController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateUserRole(
+            @PathVariable Integer id,
+            @RequestBody RoleUpdateRequest roleRequest) {
+        try {
+            UserUpdateDTO updateDTO = new UserUpdateDTO();
+            updateDTO.setId(id);
+            updateDTO.setRole(roleRequest.getRole());
+            User updatedUser = userService.updateEmployee(id, updateDTO);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    private static class RoleUpdateRequest {
+        private String role;
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+    }
 }

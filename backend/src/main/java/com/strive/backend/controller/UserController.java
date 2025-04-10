@@ -54,4 +54,10 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable Integer id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok().build();
+    }
 }
