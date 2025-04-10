@@ -16,7 +16,9 @@ import {
     Select,
     MenuItem,
     FormControl,
-    InputLabel
+    InputLabel,
+    CircularProgress,
+    Alert,
 } from '@mui/material';
 import {
     FavoriteBorder as FavoriteBorderIcon,
@@ -36,15 +38,16 @@ const ProductDetail = () => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const isInCart = cartItems.some(item => item.id === product?.id);
-    const isFavorite = favoriteItems.some(item => item.id === product?.id);
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const response = await axios.get(`/api/products/${id}`);
+                setLoading(true);
+                const response = await axios.get(`http://localhost:8080/api/products/${id}`);
                 setProduct(response.data);
+                setError(null);
             } catch (err) {
+                console.error('Error fetching product:', err);
                 if (err.response && err.response.status === 404) {
                     setError('Product not found');
                 } else {
@@ -55,29 +58,16 @@ const ProductDetail = () => {
             }
         };
 
-        fetchProduct();
+        if (id) {
+            fetchProduct();
+        }
     }, [id]);
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-
-    if (!product) {
-        return (
-            <Container>
-                <Typography>Product not found</Typography>
-                <Button
-                    variant="contained"
-                    onClick={() => navigate('/shop')}
-                    sx={{ mt: 2 }}
-                >
-                    Return to Shop
-                </Button>
-            </Container>
-        );
-    }
+    const isInCart = cartItems.some(item => item.id === product?.id);
+    const isFavorite = favoriteItems.some(item => item.id === product?.id);
 
     const handleAddToCart = () => {
-        if (!isInCart) {
+        if (!isInCart && product) {
             addToCart(product, quantity);
             setOpenSnackbar(true);
             setTimeout(() => {
@@ -87,12 +77,58 @@ const ProductDetail = () => {
     };
 
     const toggleFavorite = () => {
+        if (!product) return;
+        
         if (isFavorite) {
             removeFromFavorites(product.id);
         } else {
             addToFavorites(product);
         }
     };
+
+    if (loading) {
+        return (
+            <Container>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                    <CircularProgress />
+                </Box>
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Container>
+                <Box sx={{ p: 3 }}>
+                    <Alert severity="error">{error}</Alert>
+                    <Button
+                        variant="contained"
+                        onClick={() => navigate('/shop')}
+                        sx={{ mt: 2 }}
+                    >
+                        Return to Shop
+                    </Button>
+                </Box>
+            </Container>
+        );
+    }
+
+    if (!product) {
+        return (
+            <Container>
+                <Box sx={{ p: 3 }}>
+                    <Alert severity="warning">Product not found</Alert>
+                    <Button
+                        variant="contained"
+                        onClick={() => navigate('/shop')}
+                        sx={{ mt: 2 }}
+                    >
+                        Return to Shop
+                    </Button>
+                </Box>
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -128,10 +164,13 @@ const ProductDetail = () => {
                             position: 'relative',
                             backgroundColor: '#f5f5f5',
                             overflow: 'hidden',
+                            borderRadius: '8px',
                         }}
                     >
                         <img
-                            src={product.image}
+                            src={product.images && product.images[0]
+                                ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                                : '/default-product-image.jpg'}
                             alt={product.name}
                             style={{
                                 width: '100%',
@@ -151,7 +190,7 @@ const ProductDetail = () => {
                                 position: 'absolute',
                                 right: 0,
                                 top: 0,
-                                color: 'black',
+                                color: isFavorite ? 'error.main' : 'action.active',
                                 transition: 'transform 0.2s ease',
                                 '&:hover': {
                                     transform: 'scale(1.1)',
@@ -166,14 +205,14 @@ const ProductDetail = () => {
                         </Typography>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Rating value={product.rating} readOnly precision={0.5} />
+                            <Rating value={product.rating || 0} readOnly precision={0.5} />
                             <Typography variant="body2" sx={{ ml: 1 }}>
-                                ({product.rating} / 5)
+                                ({product.rating || 0} / 5)
                             </Typography>
                         </Box>
 
                         <Typography variant="h5" sx={{ mb: 2 }}>
-                            ${product.price}
+                            ${Number(product.price).toFixed(2)}
                         </Typography>
 
                         <Typography variant="body1" sx={{ mb: 3 }}>
@@ -182,18 +221,20 @@ const ProductDetail = () => {
 
                         <Box sx={{ mb: 3 }}>
                             <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                                Category: <span style={{ color: '#666' }}>{product.category}</span>
+                                Category: <span style={{ color: '#666' }}>{product.categoryName}</span>
                             </Typography>
                             <Typography variant="subtitle1" sx={{ mb: 1 }}>
                                 Status: <span style={{
-                                color: product.status === 'active' ? '#4caf50' : '#f44336',
-                                fontWeight: 500
-                            }}>
-                                    {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                                    color: product.status === 'ACTIVE' ? '#4caf50' : '#f44336',
+                                    fontWeight: 500
+                                }}>
+                                    {product.status === 'ACTIVE' ? 'In Stock' : 'Out of Stock'}
                                 </span>
                             </Typography>
                             <Typography variant="subtitle1">
-                                Stock: <span style={{ color: '#666' }}>{product.stock} units</span>
+                                Stock: <span style={{ color: '#666' }}>
+                                    {product.stocks ? product.stocks.reduce((total, stock) => total + (stock.stock || 0), 0) : 0} units
+                                </span>
                             </Typography>
                         </Box>
 
@@ -207,7 +248,7 @@ const ProductDetail = () => {
                                     label="Qty"
                                     onChange={(e) => setQuantity(e.target.value)}
                                 >
-                                    {[...Array(Math.min(10, product.stock))].map((_, i) => (
+                                    {[...Array(Math.min(10, product.stock || 0))].map((_, i) => (
                                         <MenuItem key={i + 1} value={i + 1}>
                                             {i + 1}
                                         </MenuItem>
@@ -220,7 +261,7 @@ const ProductDetail = () => {
                                 size="large"
                                 fullWidth
                                 onClick={handleAddToCart}
-                                disabled={product.stock === 0 || isInCart}
+                                disabled={!product.stock || product.stock === 0 || isInCart || product.status !== 'ACTIVE'}
                                 sx={{
                                     backgroundColor: '#000',
                                     '&:hover': {
@@ -231,7 +272,10 @@ const ProductDetail = () => {
                                     },
                                 }}
                             >
-                                {product.stock === 0 ? 'Out of Stock' : isInCart ? 'Already in Cart' : 'Add to Cart'}
+                                {!product.stock || product.stock === 0 ? 'Out of Stock' : 
+                                 isInCart ? 'Already in Cart' : 
+                                 product.status !== 'ACTIVE' ? 'Currently Unavailable' : 
+                                 'Add to Cart'}
                             </Button>
                         </Box>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Grid,
@@ -11,21 +11,44 @@ import {
     FormControlLabel,
     Button,
     Tooltip,
+    CircularProgress,
+    Alert,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { products } from '../mockData/Products';
 import { useFavorites } from '../context/FavoritesContext';
-import {Helmet} from "react-helmet";
+import { Helmet } from "react-helmet";
+import axios from 'axios';
 
 const Products = () => {
     const navigate = useNavigate();
     const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         category: [],
         sportGroup: [],
         gender: [],
     });
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get('http://localhost:8080/api/products');
+            setProducts(response.data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching products:', err);
+            setError('Failed to load products. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFilterChange = (filterType, value) => {
         setFilters((prev) => ({
@@ -38,7 +61,29 @@ const Products = () => {
 
     const isFavorite = (productId) => favoriteItems.some(item => item.id === productId);
 
-    const filteredProducts = products;
+    // Apply filters to products
+    const filteredProducts = products.filter(product => {
+        const categoryMatch = filters.category.length === 0 || filters.category.includes(product.category);
+        const genderMatch = filters.gender.length === 0 || filters.gender.includes(product.gender);
+        // You can add more filter logic here as needed
+        return categoryMatch && genderMatch;
+    });
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
+    }
 
     return (
         <>
