@@ -27,45 +27,95 @@ import {
     Star as StarIcon,
     Search as SearchIcon
 } from '@mui/icons-material';
-import { products } from '../mockData/Products';
+import axios from 'axios';
+import { useEffect } from 'react';
 
 const FeaturedProducts = () => {
-    const [featuredProducts, setFeaturedProducts] = useState(
-        products.map(p => ({ ...p, isFeatured: false }))
-    );
+    const [products, setProducts] = useState([]);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+    const [categories, setCategories] = useState(['all']);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-    const categories = useMemo(() => {
-        const cats = [...new Set(products.map(p => p.category))];
-        return ['all', ...cats];
+    useEffect(() => {
+        fetchProducts();
+        fetchCategories();
     }, []);
 
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/products');
+            setProducts(response.data);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            showSnackbar('Error fetching products', 'error');
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/categories');
+            setCategories(['all', ...response.data.map(cat => cat.name)]);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
+
     const filteredProducts = useMemo(() => {
-        return featuredProducts.filter(product => {
+        return products.filter(product => {
             const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+            const matchesCategory = categoryFilter === 'all' || product.categoryName === categoryFilter;
             const matchesFeatured = !showFeaturedOnly || product.isFeatured;
             return matchesSearch && matchesCategory && matchesFeatured;
         });
-    }, [featuredProducts, searchQuery, categoryFilter, showFeaturedOnly]);
+    }, [products, searchQuery, categoryFilter, showFeaturedOnly]);
 
-    const handleToggleFeatured = (productId) => {
-        setFeaturedProducts(prev =>
-            prev.map(p =>
-                p.id === productId ? { ...p, isFeatured: !p.isFeatured } : p
-            )
-        );
+    const handleToggleFeatured = async (productId) => {
+        try {
+            const product = products.find(p => p.id === productId);
+            const response = await axios.put(`http://localhost:8080/api/products/${productId}/featured`);
+            
+            setProducts(prev =>
+                prev.map(p =>
+                    p.id === productId ? response.data : p
+                )
+            );
+            
+            showSnackbar(
+                `Product ${response.data.isFeatured ? 'added to' : 'removed from'} featured products`,
+                'success'
+            );
+        } catch (error) {
+            console.error('Error toggling featured status:', error);
+            showSnackbar('Error updating featured status', 'error');
+        }
     };
 
-    const handleSave = () => {
-        console.log('Featured products:', featuredProducts.filter(p => p.isFeatured));
+    const handleSave = async () => {
+        try {
+            const featuredProductIds = products
+                .filter(p => p.isFeatured)
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map(p => p.id);
+
+            await axios.put('http://localhost:8080/api/products/featured/reorder', featuredProductIds);
+            showSnackbar('Featured products updated successfully', 'success');
+        } catch (error) {
+            console.error('Error saving featured products:', error);
+            showSnackbar('Error saving changes', 'error');
+        }
+    };
+
+    const showSnackbar = (message, severity) => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
         setOpenSnackbar(true);
     };
 
-    const featuredCount = featuredProducts.filter(p => p.isFeatured).length;
+    const featuredCount = products.filter(p => p.isFeatured).length;
 
     return (
         <Box sx={{ mt: -10 }}>
@@ -111,7 +161,6 @@ const FeaturedProducts = () => {
                 </Box>
             </Paper>
 
-            {/* Filters Section */}
             {/* Filters Section */}
             <Paper
                 sx={{
@@ -244,7 +293,7 @@ const FeaturedProducts = () => {
                             <CardMedia
                                 component="img"
                                 height="200"
-                                image={product.image}
+                                image={product.images?.[0]?.url || 'https://via.placeholder.com/200'}
                                 alt={product.name}
                                 sx={{
                                     objectFit: 'cover',
@@ -257,7 +306,7 @@ const FeaturedProducts = () => {
                                     {product.name}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Category: {product.category}
+                                    Category: {product.categoryName}
                                 </Typography>
                                 <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
                                     ${Number(product.price).toFixed(2)}
@@ -303,12 +352,12 @@ const FeaturedProducts = () => {
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
                 <Alert
-                    severity="success"
+                    severity={snackbarSeverity}
                     onClose={() => setOpenSnackbar(false)}
                     variant="filled"
                     sx={{ width: '100%' }}
                 >
-                    Featured products updated successfully!
+                    {snackbarMessage}
                 </Alert>
             </Snackbar>
         </Box>

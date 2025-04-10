@@ -15,4 +15,6 @@ public class ProductDTO {
     private Product.Status status;
     private List<ProductImageDTO> images;
     private List<StockDTO> stocks;
+    private Boolean isFeatured;
+    private Integer displayOrder;
 } 

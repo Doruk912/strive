@@ -35,6 +35,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Stock> stocks = new ArrayList<>();
 
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private FeaturedProduct featuredProduct;
+
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;
 

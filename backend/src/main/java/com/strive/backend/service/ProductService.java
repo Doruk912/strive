@@ -3,6 +3,7 @@ package com.strive.backend.service;
 import com.strive.backend.dto.ProductDTO;
 import com.strive.backend.dto.ProductImageDTO;
 import com.strive.backend.dto.StockDTO;
+import com.strive.backend.model.FeaturedProduct;
 import com.strive.backend.model.Product;
 import com.strive.backend.model.ProductImage;
 import com.strive.backend.model.Stock;
@@ -144,6 +145,15 @@ public class ProductService {
             dto.setCategoryName(product.getCategory().getName());
         }
 
+        // Set featured product information
+        if (product.getFeaturedProduct() != null) {
+            dto.setIsFeatured(true);
+            dto.setDisplayOrder(product.getFeaturedProduct().getDisplayOrder());
+        } else {
+            dto.setIsFeatured(false);
+            dto.setDisplayOrder(null);
+        }
+
         // Convert images
         dto.setImages(product.getImages().stream()
                 .map(this::convertToImageDTO)
@@ -198,5 +208,56 @@ public class ProductService {
 
         Product updatedProduct = productRepository.save(product);
         return convertToDTO(updatedProduct);
+    }
+
+    public List<ProductDTO> getFeaturedProducts() {
+        return productRepository.findAllByFeaturedProductIsNotNullOrderByFeaturedProductDisplayOrderAsc()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ProductDTO toggleFeaturedProduct(Integer id, Integer displayOrder) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        if (product.getFeaturedProduct() != null) {
+            // Remove from featured
+            product.setFeaturedProduct(null);
+        } else {
+            // Add to featured
+            FeaturedProduct featuredProduct = new FeaturedProduct();
+            featuredProduct.setProduct(product);
+            featuredProduct.setDisplayOrder(displayOrder != null ? displayOrder : getNextDisplayOrder());
+            product.setFeaturedProduct(featuredProduct);
+        }
+
+        Product updatedProduct = productRepository.save(product);
+        return convertToDTO(updatedProduct);
+    }
+
+    @Transactional
+    public List<ProductDTO> reorderFeaturedProducts(List<Integer> productIds) {
+        List<Product> products = productRepository.findAllById(productIds);
+        
+        // Update display order for each featured product
+        for (int i = 0; i < products.size(); i++) {
+            Product product = products.get(i);
+            if (product.getFeaturedProduct() != null) {
+                product.getFeaturedProduct().setDisplayOrder(i + 1);
+            }
+        }
+
+        List<Product> updatedProducts = productRepository.saveAll(products);
+        return updatedProducts.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private Integer getNextDisplayOrder() {
+        return productRepository.findMaxFeaturedProductDisplayOrder()
+                .map(max -> max + 1)
+                .orElse(1);
     }
 }

@@ -89,4 +89,22 @@ public class ProductController {
             @RequestBody List<Integer> imageIds) {
         return ResponseEntity.ok(productService.reorderProductImages(productId, imageIds));
     }
+
+    @GetMapping("/featured")
+    public ResponseEntity<List<ProductDTO>> getFeaturedProducts() {
+        return ResponseEntity.ok(productService.getFeaturedProducts());
+    }
+
+    @PutMapping("/{id}/featured")
+    public ResponseEntity<ProductDTO> toggleFeaturedProduct(
+            @PathVariable Integer id,
+            @RequestParam(required = false) Integer displayOrder) {
+        return ResponseEntity.ok(productService.toggleFeaturedProduct(id, displayOrder));
+    }
+
+    @PutMapping("/featured/reorder")
+    public ResponseEntity<List<ProductDTO>> reorderFeaturedProducts(
+            @RequestBody List<Integer> productIds) {
+        return ResponseEntity.ok(productService.reorderFeaturedProducts(productIds));
+    }
 }
