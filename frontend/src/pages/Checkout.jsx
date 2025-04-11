@@ -82,6 +82,15 @@ const Checkout = () => {
     }, [user, navigate]);
 
     const handleNext = () => {
+        if (activeStep === 1) {
+            // Validate card details before proceeding to review
+            if (!validateCardDetails()) {
+                setError('Please check your card details');
+                return;
+            }
+            // Clear error if validation passes
+            setError(null);
+        }
         setActiveStep((prevStep) => prevStep + 1);
     };
 
@@ -408,7 +417,10 @@ const Checkout = () => {
                                     </Typography>
                                     <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
                                         <Typography variant="body2">
-                                            Credit Card
+                                            Credit Card ending in {cardDetails.cardNumber.slice(-4)}
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Expires: {cardDetails.expiryDate}
                                         </Typography>
                                     </Paper>
                                 </Box>
@@ -420,13 +432,38 @@ const Checkout = () => {
                                         Order Summary
                                     </Typography>
                                     {cartItems.map((item) => (
-                                        <Box key={`${item.id}-${item.selectedSize}`} sx={{ mb: 1 }}>
-                                            <Typography variant="body2">
-                                                {item.name} - Size: {item.selectedSize} x {item.quantity}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                ${(item.price * item.quantity).toFixed(2)}
-                                            </Typography>
+                                        <Box 
+                                            key={`${item.id}-${item.selectedSize}`} 
+                                            sx={{ 
+                                                mb: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 2
+                                            }}
+                                        >
+                                            <Box sx={{ width: 80, height: 80, position: 'relative' }}>
+                                                <img
+                                                    src={item.image || '/default-product-image.jpg'}
+                                                    alt={item.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '4px'
+                                                    }}
+                                                />
+                                            </Box>
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    {item.name}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Size: {item.selectedSize} x {item.quantity}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    ${(item.price * item.quantity).toFixed(2)}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     ))}
                                 </Box>
