@@ -9,255 +9,350 @@ import {
     ListItem,
     ListItemText,
     Chip,
+    CircularProgress,
+    Alert,
+    Grid,
+    Card,
+    CardMedia,
+    useTheme,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { LocalShipping, CheckCircle, Cancel, Pending, Inventory } from '@mui/icons-material';
 
 const Orders = () => {
     const { user } = useAuth();
     const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [productDetails, setProductDetails] = useState({});
+    const theme = useTheme();
 
     useEffect(() => {
-        const mockOrders = [
-            {
-                id: "ORD001",
-                date: "2024-01-15",
-                status: "Delivered",
-                items: [
-                    {
-                        id: 1,
-                        name: "Nike Air Max",
-                        quantity: 1,
-                        price: 129.99,
-                        image: "shoe1.jpg"
-                    },
-                    {
-                        id: 2,
-                        name: "Sports T-Shirt",
-                        quantity: 2,
-                        price: 29.99,
-                        image: "tshirt1.jpg"
-                    }
-                ],
-                total: 189.97,
-                shippingAddress: "123 Main St, City, Country",
-                paymentMethod: "Credit Card"
-            },
-            {
-                id: "ORD002",
-                date: "2024-01-10",
-                status: "Processing",
-                items: [
-                    {
-                        id: 3,
-                        name: "Basketball",
-                        quantity: 1,
-                        price: 24.99,
-                        image: "ball1.jpg"
-                    }
-                ],
-                total: 24.99,
-                shippingAddress: "456 Oak St, City, Country",
-                paymentMethod: "PayPal"
-            },
-            {
-                id: "ORD003",
-                date: "2024-01-05",
-                status: "Delivered",
-                items: [
-                    {
-                        id: 4,
-                        name: "Running Shorts",
-                        quantity: 2,
-                        price: 34.99,
-                        image: "shorts1.jpg"
-                    },
-                    {
-                        id: 5,
-                        name: "Sports Socks",
-                        quantity: 3,
-                        price: 9.99,
-                        image: "socks1.jpg"
-                    },
-                    {
-                        id: 6,
-                        name: "Water Bottle",
-                        quantity: 1,
-                        price: 14.99,
-                        image: "bottle1.jpg"
-                    }
-                ],
-                total: 104.94,
-                shippingAddress: "789 Pine St, City, Country",
-                paymentMethod: "Credit Card"
-            }
-        ];
-        // Simulate API call with mock data
         const fetchOrders = async () => {
+            if (!user) return;
+
             try {
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setOrders(mockOrders);
+                setLoading(true);
+                const response = await fetch(`http://localhost:8080/api/orders/user/${user.userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${user.token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+
+                const data = await response.json();
+                setOrders(data);
+
+                // Get unique product IDs from all orders
+                const productIds = new Set();
+                data.forEach(order => {
+                    order.items.forEach(item => {
+                        productIds.add(item.productId);
+                    });
+                });
+
+                // Fetch product details for all products
+                const productDetailsPromises = Array.from(productIds).map(productId =>
+                    fetch(`http://localhost:8080/api/products/${productId}`).then(res => res.json())
+                );
+
+                const products = await Promise.all(productDetailsPromises);
+                const productDetailsMap = {};
+                products.forEach(product => {
+                    productDetailsMap[product.id] = product;
+                });
+                setProductDetails(productDetailsMap);
             } catch (error) {
                 console.error('Error fetching orders:', error);
+                setError('Failed to load orders. Please try again later.');
+            } finally {
+                setLoading(false);
             }
         };
 
-        if (user) {
-            fetchOrders();
-        }
+        fetchOrders();
     }, [user]);
 
-    const getStatusColor = (status) => {
+    const getStatusInfo = (status) => {
         switch (status) {
-            case 'Delivered':
-                return 'success';
-            case 'Processing':
-                return 'warning';
-            case 'Cancelled':
-                return 'error';
+            case 'DELIVERED':
+                return {
+                    label: 'Delivered',
+                    color: theme.palette.success.main,
+                    icon: <CheckCircle />,
+                    textColor: theme.palette.success.contrastText,
+                    bgColor: theme.palette.success.light
+                };
+            case 'PROCESSING':
+                return {
+                    label: 'Processing',
+                    color: theme.palette.warning.main,
+                    icon: <Inventory />,
+                    textColor: theme.palette.warning.contrastText,
+                    bgColor: theme.palette.warning.light
+                };
+            case 'SHIPPED':
+                return {
+                    label: 'Shipped',
+                    color: theme.palette.info.main,
+                    icon: <LocalShipping />,
+                    textColor: theme.palette.info.contrastText,
+                    bgColor: theme.palette.info.light
+                };
+            case 'CANCELLED':
+                return {
+                    label: 'Cancelled',
+                    color: theme.palette.error.main,
+                    icon: <Cancel />,
+                    textColor: theme.palette.error.contrastText,
+                    bgColor: theme.palette.error.light
+                };
+            case 'PENDING':
+                return {
+                    label: 'Pending',
+                    color: theme.palette.grey[500],
+                    icon: <Pending />,
+                    textColor: theme.palette.grey[800],
+                    bgColor: theme.palette.grey[200]
+                };
             default:
-                return 'default';
+                return {
+                    label: status,
+                    color: theme.palette.grey[500],
+                    icon: null,
+                    textColor: theme.palette.grey[800],
+                    bgColor: theme.palette.grey[200]
+                };
         }
     };
 
+    const formatPaymentMethod = (method) => {
+        if (method === 'credit_card') {
+            return 'Card';
+        }
+        return method.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    };
+
+    if (loading) {
+        return (
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <CircularProgress />
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Container maxWidth="md" sx={{ mt: 4 }}>
+                <Alert severity="error">{error}</Alert>
+            </Container>
+        );
+    }
+
     return (
-        <Container maxWidth="md" sx={{mb: 4 }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
             <Typography
                 variant="h4"
                 component="h1"
                 gutterBottom
                 sx={{
-                    fontWeight: 600,
-                    color: 'primary.main'
+                    fontWeight: 700,
+                    color: theme.palette.text.primary,
+                    mb: 3
                 }}
             >
                 My Orders
             </Typography>
-            <Divider sx={{ mb: 3 }} />
 
             {orders.length > 0 ? (
-                <List>
-                    {orders.map((order) => (
-                        <Paper
-                            key={order.id}
-                            sx={{
-                                mb: 3,
-                                overflow: 'hidden',
-                                borderRadius: 2,
-                                border: '1px solid rgba(0, 0, 0, 0.12)'
-                            }}
-                            elevation={1}
-                        >
-                            <ListItem
-                                sx={{
-                                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                    borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                                    py: 2,
-                                }}
-                            >
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                        {`Order ${order.id}`}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {new Date(order.date).toLocaleDateString('en-US', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </Typography>
-                                </Box>
-                                <Chip
-                                    label={order.status}
-                                    color={getStatusColor(order.status)}
-                                    size="small"
-                                    sx={{ ml: 2 }}
-                                />
-                            </ListItem>
-
-                            {order.items.map((item) => (
-                                <ListItem
-                                    key={item.id}
+                <Grid container spacing={3}>
+                    {orders.map((order) => {
+                        const statusInfo = getStatusInfo(order.status);
+                        return (
+                            <Grid item xs={12} key={order.id}>
+                                <Paper
                                     sx={{
-                                        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-                                        py: 2,
+                                        overflow: 'hidden',
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        boxShadow: theme.shadows[2]
                                     }}
                                 >
-                                    <ListItemText
-                                        primary={
-                                            <Typography variant="subtitle2">
-                                                {item.name}
-                                            </Typography>
-                                        }
-                                        secondary={
-                                            <Typography variant="body2" color="text.secondary">
-                                                Quantity: {item.quantity}
-                                            </Typography>
-                                        }
-                                    />
-                                    <Typography
-                                        variant="subtitle2"
-                                        sx={{ fontWeight: 600 }}
-                                    >
-                                        ${(item.price * item.quantity).toFixed(2)}
-                                    </Typography>
-                                </ListItem>
-                            ))}
-
-                            <Box
-                                sx={{
-                                    p: 2,
-                                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Shipping Address:
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        {order.shippingAddress}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                        Payment Method:
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        {order.paymentMethod}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ textAlign: 'right' }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Order Total
-                                    </Typography>
-                                    <Typography
-                                        variant="h6"
+                                    <Box
                                         sx={{
-                                            color: 'primary.main',
-                                            fontWeight: 600
+                                            p: 3,
+                                            borderBottom: '1px solid',
+                                            borderColor: 'divider',
+                                            bgcolor: 'background.paper'
                                         }}
                                     >
-                                        ${order.total.toFixed(2)}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Paper>
-                    ))}
-                </List>
+                                        <Grid container alignItems="center" spacing={2}>
+                                            <Grid item xs={12} sm={6}>
+                                                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                                    Order #{order.id}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={12} sm={6} sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}>
+                                                <Box sx={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    bgcolor: statusInfo.bgColor,
+                                                    color: statusInfo.color,
+                                                    px: 2,
+                                                    py: 1,
+                                                    borderRadius: 2
+                                                }}>
+                                                    {statusInfo.icon}
+                                                    <Typography 
+                                                        variant="subtitle2" 
+                                                        sx={{ 
+                                                            ml: 1,
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        {statusInfo.label}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+
+                                    <Box sx={{ p: 3 }}>
+                                        {order.items.map((item) => {
+                                            const product = productDetails[item.productId];
+                                            return (
+                                                <Card
+                                                    key={item.id}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        mb: 2,
+                                                        boxShadow: 'none',
+                                                        bgcolor: 'background.default',
+                                                        '&:last-child': { mb: 0 }
+                                                    }}
+                                                >
+                                                    {product?.images?.[0] && (
+                                                        <CardMedia
+                                                            component="img"
+                                                            sx={{
+                                                                width: 120,
+                                                                height: 120,
+                                                                objectFit: 'cover',
+                                                                borderRadius: 1
+                                                            }}
+                                                            image={`data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`}
+                                                            alt={product.name}
+                                                        />
+                                                    )}
+                                                    <Box sx={{ 
+                                                        display: 'flex', 
+                                                        flexDirection: 'column', 
+                                                        flex: 1, 
+                                                        p: 2,
+                                                        justifyContent: 'space-between'
+                                                    }}>
+                                                        <Box>
+                                                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                                                                {product ? product.name : `Product #${item.productId}`}
+                                                            </Typography>
+                                                            {product && (
+                                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                                    {product.description}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={{ 
+                                                            display: 'flex', 
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'flex-end'
+                                                        }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Size: {item.size} | Quantity: {item.quantity}
+                                                            </Typography>
+                                                            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 600 }}>
+                                                                ${(item.price * item.quantity).toFixed(2)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Card>
+                                            );
+                                        })}
+                                    </Box>
+
+                                    <Box
+                                        sx={{
+                                            p: 3,
+                                            bgcolor: 'background.default',
+                                            borderTop: '1px solid',
+                                            borderColor: 'divider'
+                                        }}
+                                    >
+                                        <Grid container spacing={2} alignItems="flex-end">
+                                            <Grid item xs={12} sm={6}>
+                                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                    Payment Method
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {formatPaymentMethod(order.paymentMethod)} ending in {order.cardLastFour}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                                    Expires: {order.cardExpiry}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={12} sm={6}>
+                                                <Box sx={{ textAlign: { sm: 'right' } }}>
+                                                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                        Order Total
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="h4"
+                                                        sx={{
+                                                            color: 'primary.main',
+                                                            fontWeight: 700
+                                                        }}
+                                                    >
+                                                        ${order.totalAmount.toFixed(2)}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                        );
+                    })}
+                </Grid>
             ) : (
                 <Paper
                     sx={{
-                        p: 4,
+                        p: 6,
                         textAlign: 'center',
                         borderRadius: 2,
-                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                        bgcolor: 'background.default',
+                        border: '1px dashed',
+                        borderColor: 'divider'
                     }}
                 >
                     <Typography
                         variant="h6"
-                        color="text.secondary"
-                        sx={{ mb: 1 }}
+                        sx={{ 
+                            mb: 1,
+                            color: 'text.primary',
+                            fontWeight: 600
+                        }}
                     >
                         No Orders Yet
                     </Typography>
