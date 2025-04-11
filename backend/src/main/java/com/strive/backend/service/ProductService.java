@@ -164,6 +164,15 @@ public class ProductService {
                 .map(this::convertToStockDTO)
                 .collect(Collectors.toList()));
 
+        if (!product.getReviews().isEmpty()) {
+                double avgRating = product.getReviews().stream()
+                        .mapToInt(Review::getRating)
+                        .average()
+                        .orElse(0.0);
+                dto.setAverageRating(avgRating);
+                dto.setReviewCount(product.getReviews().size());
+            }
+
         return dto;
     }
 

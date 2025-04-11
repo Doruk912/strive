@@ -17,4 +17,6 @@ public class ProductDTO {
     private List<StockDTO> stocks;
     private Boolean isFeatured;
     private Integer displayOrder;
+    private Double averageRating;
+    private Integer reviewCount;
 } 
