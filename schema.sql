@@ -295,7 +295,7 @@ INSERT INTO stocks (product_id, size, quantity) VALUES
 (2, 'M', 50),
 (2, 'L', 45),
 (2, 'XL', 30),
-(2, 'XXL', 20);
+(2, 'XXL', 2);
 
 -- Stocks for Explorer 4-Person Tent
 INSERT INTO stocks (product_id, size, quantity) VALUES

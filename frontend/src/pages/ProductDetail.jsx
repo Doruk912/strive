@@ -502,16 +502,6 @@ const ProductDetail = () => {
                                 </Button>
                             </Box>
                         </Box>
-
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            size="large"
-                            onClick={() => navigate('/checkout')}
-                            disabled={cartItems.length === 0 || loading}
-                        >
-                            {loading ? <CircularProgress size={24} /> : 'Proceed to Checkout'}
-                        </Button>
                     </Box>
                 </Grid>
             </Grid>

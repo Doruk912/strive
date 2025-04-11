@@ -38,9 +38,9 @@ const Cart = () => {
         }
     };
 
-    const handleRemoveItem = async (productId) => {
+    const handleRemoveItem = async (productId, selectedSize) => {
         setRemovingItems(prev => new Set(prev).add(productId));
-        await removeFromCart(productId);
+        await removeFromCart(productId, selectedSize);
         setRemovingItems(prev => {
             const newSet = new Set(prev);
             newSet.delete(productId);
@@ -194,7 +194,7 @@ const Cart = () => {
 
                                                 <IconButton
                                                     color="error"
-                                                    onClick={() => handleRemoveItem(item.id)}
+                                                    onClick={() => handleRemoveItem(item.id, item.selectedSize)}
                                                     disabled={loading}
                                                     sx={{ ml: 'auto' }}
                                                     aria-label="remove item"
@@ -221,21 +221,10 @@ const Cart = () => {
                                 <Box sx={{ mb: 2 }}>
                                     <Grid container justifyContent="space-between">
                                         <Grid item>
-                                            <Typography>Subtotal (excl. tax)</Typography>
+                                            <Typography>Products</Typography>
                                         </Grid>
                                         <Grid item>
                                             <Typography>${cartTotals.subtotal.toFixed(2)}</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-
-                                <Box sx={{ mb: 2 }}>
-                                    <Grid container justifyContent="space-between">
-                                        <Grid item>
-                                            <Typography>Tax (20% included)</Typography>
-                                        </Grid>
-                                        <Grid item>
-                                            <Typography>${cartTotals.tax.toFixed(2)}</Typography>
                                         </Grid>
                                     </Grid>
                                 </Box>
@@ -256,11 +245,11 @@ const Cart = () => {
                                 <Box sx={{ mb: 3 }}>
                                     <Grid container justifyContent="space-between">
                                         <Grid item>
-                                            <Typography variant="h6">Total to be paid</Typography>
+                                            <Typography variant="h6">Total</Typography>
                                         </Grid>
                                         <Grid item>
                                             <Typography variant="h6">
-                                                ${cartTotals.total.toFixed(2)}
+                                                ${cartTotals.subtotal.toFixed(2)}
                                             </Typography>
                                         </Grid>
                                     </Grid>

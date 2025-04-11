@@ -88,10 +88,14 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const removeFromCart = async (productId) => {
+    const removeFromCart = async (productId, selectedSize) => {
         setLoading(true);
         try {
-            setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+            setCartItems(prevItems => 
+                prevItems.filter(item => 
+                    !(item.id === productId && item.selectedSize === selectedSize)
+                )
+            );
         } finally {
             setLoading(false);
         }
@@ -101,7 +105,7 @@ export const CartProvider = ({ children }) => {
         setLoading(true);
         try {
             if (quantity <= 0) {
-                await removeFromCart(productId);
+                await removeFromCart(productId, null);
                 return;
             }
 
@@ -136,14 +140,11 @@ export const CartProvider = ({ children }) => {
 
     const getCartTotal = () => {
         const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.18; // 18% tax
-        const shipping = subtotal > 50 ? 0 : 10; // Free shipping over $50
         
         return {
             subtotal,
-            tax,
-            shipping,
-            total: subtotal + tax + shipping
+            shipping: 0,
+            total: subtotal
         };
     };
 
