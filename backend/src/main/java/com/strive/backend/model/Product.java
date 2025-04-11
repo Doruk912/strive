@@ -38,6 +38,9 @@ public class Product {
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private FeaturedProduct featuredProduct;
 
+    @OneToMany(mappedBy = "productId", fetch = FetchType.LAZY)
+    private List<Review> reviews = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;
 

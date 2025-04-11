@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container,
@@ -28,6 +28,72 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import CartNotification from '../components/CartNotification';
 import {Helmet} from "react-helmet";
+
+// Create a separate component for category tree items
+const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories }) => {
+    const [expanded, setExpanded] = useState(false);
+    const hasChildren = category.children && category.children.length > 0;
+    const count = countProductsInSubcategories(category);
+
+    return (
+        <div>
+            <ListItem
+                sx={{
+                    pl: level * 2,
+                    '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                }}
+            >
+                {hasChildren && (
+                    <IconButton
+                        size="small"
+                        onClick={() => setExpanded(!expanded)}
+                        sx={{ mr: 1 }}
+                    >
+                        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                )}
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={filters.category.includes(category.name)}
+                            onChange={(e) => handleFilterChange('category', category.name)}
+                            size="small"
+                        />
+                    }
+                    label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                            <Typography variant="body2">{category.name}</Typography>
+                            <Typography
+                                variant="caption"
+                                sx={{ ml: 1, color: 'text.secondary' }}
+                            >
+                                ({count})
+                            </Typography>
+                        </Box>
+                    }
+                />
+            </ListItem>
+            {hasChildren && (
+                <Collapse in={expanded} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        {category.children.map((child) => (
+                            <CategoryTreeItem 
+                                key={child.id}
+                                category={child} 
+                                level={level + 1} 
+                                filters={filters}
+                                handleFilterChange={handleFilterChange}
+                                countProductsInSubcategories={countProductsInSubcategories}
+                            />
+                        ))}
+                    </List>
+                </Collapse>
+            )}
+        </div>
+    );
+};
 
 const Products = () => {
     const navigate = useNavigate();
@@ -164,41 +230,57 @@ const Products = () => {
     };
 
     // Filter products based on selected filters
-    const filteredProducts = products.filter(product => {
-        // Category filter
-        if (filters.category.length > 0) {
-            const productCategory = categories.find(cat => cat.id === product.categoryId);
-            if (!productCategory) return false;
-            
-            // Check if product is in any of the selected categories or their subcategories
-            const isInSelectedCategory = filters.category.some(categoryName => {
-                const selectedCategory = categories.find(cat => cat.name === categoryName);
-                if (!selectedCategory) return false;
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            // Category filter
+            if (filters.category.length > 0) {
+                const productCategory = categories.find(cat => cat.id === product.categoryId);
+                if (!productCategory) return false;
                 
-                // Check if product category is the selected category or a subcategory of it
-                return productCategory.id === selectedCategory.id || 
-                       isSubcategoryOf(productCategory, selectedCategory);
-            });
-            
-            if (!isInSelectedCategory) return false;
-        }
-        
-        // Sport group filter
-        if (filters.sportGroup.length > 0) {
-            const productName = product.name.toUpperCase();
-            const matchesSportGroup = filters.sportGroup.some(sport => 
-                productName.includes(sport)
-            );
-            if (!matchesSportGroup) return false;
-        }
-        
-        // Gender filter
-        if (filters.gender.length > 0) {
-            if (!filters.gender.includes(product.gender)) return false;
-        }
-        
-        return true;
-    });
+                const isInSelectedCategory = filters.category.some(selectedCategoryName => {
+                    const selectedCategory = categories.find(cat => cat.name === selectedCategoryName);
+                    if (!selectedCategory) return false;
+                    
+                    // Check if product's category is the selected category or any of its subcategories
+                    return productCategory.id === selectedCategory.id || isSubcategoryOf(productCategory, selectedCategory);
+                });
+                
+                if (!isInSelectedCategory) return false;
+            }
+
+            // Sport group filter
+            if (filters.sportGroup.length > 0) {
+                const productCategory = categories.find(cat => cat.id === product.categoryId);
+                if (!productCategory) return false;
+                
+                const isInSelectedSportGroup = filters.sportGroup.some(sport => {
+                    const sportCategory = categories.find(cat => cat.name === sport);
+                    if (!sportCategory) return false;
+                    
+                    return productCategory.id === sportCategory.id || isSubcategoryOf(productCategory, sportCategory);
+                });
+                
+                if (!isInSelectedSportGroup) return false;
+            }
+
+            // Gender filter
+            if (filters.gender.length > 0) {
+                const productCategory = categories.find(cat => cat.id === product.categoryId);
+                if (!productCategory) return false;
+                
+                const isInSelectedGender = filters.gender.some(gender => {
+                    const genderCategory = categories.find(cat => cat.name === gender);
+                    if (!genderCategory) return false;
+                    
+                    return productCategory.id === genderCategory.id || isSubcategoryOf(productCategory, genderCategory);
+                });
+                
+                if (!isInSelectedGender) return false;
+            }
+
+            return true;
+        });
+    }, [products, filters, categories]);
 
     // Helper function to check if a category is a subcategory of another
     const isSubcategoryOf = (category, parentCategory) => {
@@ -216,95 +298,89 @@ const Products = () => {
         return false;
     };
 
-    // Render category tree recursively
-    const renderCategoryTree = (category, level = 0) => {
-        const isExpanded = expandedCategories[category.id];
-        const hasChildren = category.children && category.children.length > 0;
+    // Helper function to count products in subcategories
+    const countProductsInSubcategories = (category) => {
+        if (!category.children || category.children.length === 0) {
+            return 0;
+        }
         
-        return (
-            <React.Fragment key={category.id}>
-                <ListItem
-                    button
-                    onClick={() => toggleCategoryExpand(category.id)}
-                    sx={{
-                        pl: level * 2,
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                    }}
-                >
-                    {hasChildren && (
-                        <IconButton size="small" sx={{ mr: 1 }}>
-                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                    )}
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={filters.category.includes(category.name)}
-                                onChange={() => handleFilterChange('category', category.name)}
-                                sx={{
-                                    color: '#2B2B2B',
-                                    '&.Mui-checked': {
-                                        color: '#2E7D32',
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(46, 125, 50, 0.08)',
-                                    },
-                                    padding: '4px',
-                                }}
-                            />
-                        }
-                        label={
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                alignItems: 'center',
-                            }}>
-                                <Typography
-                                    sx={{
-                                        color: '#2B2B2B',
-                                        fontSize: '0.9rem',
-                                        fontWeight: filters.category.includes(category.name) ? 600 : 400,
-                                    }}
-                                >
-                                    {category.name}
-                                </Typography>
-                                <Typography
-                                    sx={{
-                                        color: '#888',
-                                        fontSize: '0.8rem',
-                                        backgroundColor: 'rgba(0,0,0,0.05)',
-                                        padding: '2px 8px',
-                                        borderRadius: '10px',
-                                    }}
-                                >
-                                    {products.filter((p) => p.categoryId === category.id).length}
-                                </Typography>
-                            </Box>
-                        }
-                        sx={{
-                            mb: 1.5,
-                            color: '#2B2B2B',
-                            width: '100%',
-                            margin: 0,
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                backgroundColor: 'rgba(46, 125, 50, 0.05)',
-                            },
-                        }}
-                    />
-                </ListItem>
+        return category.children.reduce((count, child) => {
+            // Count products directly in this child category
+            const directCount = products.filter(p => p.categoryId === child.id).length;
+            
+            // Recursively count products in subcategories of this child
+            const subcategoryCount = countProductsInSubcategories(child);
+            
+            return count + directCount + subcategoryCount;
+        }, 0);
+    };
+
+    // Calculate filter counts based on current filter state
+    const getFilterCounts = useMemo(() => {
+        return {
+            // Category counts - include products in subcategories
+            categoryCounts: categories.reduce((counts, category) => {
+                // Count products directly in this category
+                const directCount = products.filter(p => p.categoryId === category.id).length;
                 
-                {hasChildren && (
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding>
-                            {category.children.map(child => renderCategoryTree(child, level + 1))}
-                        </List>
-                    </Collapse>
-                )}
-            </React.Fragment>
+                // Count products in subcategories
+                const subcategoryCount = countProductsInSubcategories(category);
+                
+                counts[category.name] = directCount + subcategoryCount;
+                return counts;
+            }, {}),
+            
+            // Sport group counts - based on the schema categories
+            sportGroupCounts: ['Basketball', 'Soccer', 'Tennis', 'Golf', 'Running', 'Yoga'].reduce((counts, sport) => {
+                // Find the sport category ID
+                const sportCategory = categories.find(cat => cat.name === sport);
+                if (sportCategory) {
+                    // Count products directly in this sport category
+                    const directCount = products.filter(p => p.categoryId === sportCategory.id).length;
+                    
+                    // Count products in subcategories of this sport
+                    const subcategoryCount = countProductsInSubcategories(sportCategory);
+                    
+                    counts[sport] = directCount + subcategoryCount;
+                } else {
+                    // Fallback to name-based filtering if category not found
+                    counts[sport] = products.filter(p => p.name.toUpperCase().includes(sport)).length;
+                }
+                return counts;
+            }, {}),
+            
+            // Gender counts - based on the schema categories
+            genderCounts: ['Men', 'Women'].reduce((counts, gender) => {
+                // Find the gender category ID
+                const genderCategory = categories.find(cat => cat.name === gender);
+                if (genderCategory) {
+                    // Count products directly in this gender category
+                    const directCount = products.filter(p => p.categoryId === genderCategory.id).length;
+                    
+                    // Count products in subcategories of this gender
+                    const subcategoryCount = countProductsInSubcategories(genderCategory);
+                    
+                    counts[gender] = directCount + subcategoryCount;
+                } else {
+                    // Fallback to product gender field if category not found
+                    counts[gender] = products.filter(p => p.gender === gender).length;
+                }
+                return counts;
+            }, {})
+        };
+    }, [products, categories]);
+
+    // Update the renderCategoryTree function to use the new component
+    const renderCategoryTree = (category, level = 0) => {
+        return (
+            <CategoryTreeItem 
+                key={category.id}
+                category={category} 
+                level={level} 
+                filters={filters}
+                handleFilterChange={handleFilterChange}
+                countProductsInSubcategories={countProductsInSubcategories}
+            />
         );
     };
 
@@ -348,7 +424,7 @@ const Products = () => {
                         mb: 4,
                     }}
                 >
-                    Our Products
+                    STRIVE | Products
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
@@ -423,7 +499,7 @@ const Products = () => {
                                 Sport Group
                             </Typography>
                             <Box sx={{ pl: 2 }}>
-                                {['Basketball', 'Soccer', 'Tennis', 'Baseball', 'Running', 'Yoga'].map((sport) => (
+                                {['Basketball', 'Soccer', 'Tennis', 'Golf', 'Running', 'Yoga'].map((sport) => (
                                     <FormControlLabel
                                         key={sport}
                                         control={
@@ -467,7 +543,7 @@ const Products = () => {
                                                         borderRadius: '10px',
                                                     }}
                                                 >
-                                                    {products.filter((p) => p.name.includes(sport)).length}
+                                                    {getFilterCounts.sportGroupCounts[sport] || 0}
                                                 </Typography>
                                             </Box>
                                         }
@@ -514,7 +590,7 @@ const Products = () => {
                                 Gender
                             </Typography>
                             <Box sx={{ pl: 2 }}>
-                                {['Men', 'Women', 'Unisex'].map((gender) => (
+                                {['Men', 'Women'].map((gender) => (
                                     <FormControlLabel
                                         key={gender}
                                         control={
@@ -558,7 +634,7 @@ const Products = () => {
                                                         borderRadius: '10px',
                                                     }}
                                                 >
-                                                    {products.filter((p) => p.gender === gender).length}
+                                                    {getFilterCounts.genderCounts[gender] || 0}
                                                 </Typography>
                                             </Box>
                                         }
