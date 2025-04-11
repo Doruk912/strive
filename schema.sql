@@ -98,11 +98,14 @@ CREATE TABLE addresses (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     name VARCHAR(25) NOT NULL,
+    recipient_name VARCHAR(100) NOT NULL,
+    recipient_phone VARCHAR(20) NOT NULL,
     street_address VARCHAR(255) NOT NULL,
     city VARCHAR(25) NOT NULL,
     state VARCHAR(25),
     postal_code VARCHAR(25),
     country VARCHAR(25) NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -277,9 +280,9 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Mountain Bike Helmet', 'Ventilated mountain bike helmet with adjustable fit', 89.99, 38),
 ('Bike Repair Kit', 'Complete tool kit for mountain bike maintenance', 49.99, 38);
 
-INSERT INTO addresses (user_id, name, street_address, city, state, postal_code, country) VALUES
-(4, 'Home', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey'),
-(4, 'Work', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey');
+INSERT INTO addresses (user_id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country, is_default) VALUES
+(4, 'Home', 'John Doe', '555 111 22 33', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey', true),
+(4, 'Work', 'Jane Smith', '555 444 55 66', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey', false);
 
 INSERT INTO featured_products (product_id, display_order) VALUES
 (2, 1),

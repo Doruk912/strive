@@ -28,11 +28,14 @@ public class AddressService {
         Address address = Address.builder()
                 .userId(addressDTO.getUserId())
                 .name(addressDTO.getName())
+                .recipientName(addressDTO.getRecipientName())
+                .recipientPhone(addressDTO.getRecipientPhone())
                 .streetAddress(addressDTO.getStreetAddress())
                 .city(addressDTO.getCity())
                 .state(addressDTO.getState())
                 .postalCode(addressDTO.getPostalCode())
                 .country(addressDTO.getCountry())
+                .isDefault(addressDTO.isDefault())
                 .build();
 
         return convertToDTO(addressRepository.save(address));
@@ -43,11 +46,14 @@ public class AddressService {
                 .orElseThrow(() -> new Error("Address not found"));
 
         address.setName(addressDTO.getName());
+        address.setRecipientName(addressDTO.getRecipientName());
+        address.setRecipientPhone(addressDTO.getRecipientPhone());
         address.setStreetAddress(addressDTO.getStreetAddress());
         address.setCity(addressDTO.getCity());
         address.setState(addressDTO.getState());
         address.setPostalCode(addressDTO.getPostalCode());
         address.setCountry(addressDTO.getCountry());
+        address.setDefault(addressDTO.isDefault());
 
         return convertToDTO(addressRepository.save(address));
     }
@@ -63,11 +69,14 @@ public class AddressService {
                 .id(address.getId())
                 .userId(address.getUserId())
                 .name(address.getName())
+                .recipientName(address.getRecipientName())
+                .recipientPhone(address.getRecipientPhone())
                 .streetAddress(address.getStreetAddress())
                 .city(address.getCity())
                 .state(address.getState())
                 .postalCode(address.getPostalCode())
                 .country(address.getCountry())
+                .isDefault(address.isDefault())
                 .build();
     }
 

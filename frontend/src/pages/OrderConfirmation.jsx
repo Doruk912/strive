@@ -1,41 +1,59 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Container,
-    Paper,
     Typography,
+    Box,
     Button,
+    Card,
+    CardContent,
 } from '@mui/material';
-import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {Helmet} from "react-helmet";
 
 const OrderConfirmation = () => {
     const navigate = useNavigate();
 
     return (
-        <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-                <Typography variant="h4" gutterBottom>
-                    Order Confirmed!
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 4 }}>
-                    Thank you for your purchase. Your order has been received and will be processed shortly.
-                </Typography>
-                <Button
-                    variant="contained"
-                    onClick={() => navigate('/')}
-                    sx={{ mr: 2 }}
-                >
-                    Continue Shopping
-                </Button>
-                <Button
-                    variant="outlined"
-                    onClick={() => navigate('/profile')}
-                >
-                    View Orders
-                </Button>
-            </Paper>
-        </Container>
+        <>
+            <Helmet>
+                <title>Strive - Order Confirmation</title>
+            </Helmet>
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Card>
+                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                        <CheckCircleIcon 
+                            sx={{ 
+                                fontSize: 60, 
+                                color: '#4CAF50',
+                                mb: 2 
+                            }} 
+                        />
+                        <Typography variant="h4" gutterBottom>
+                            Thank You for Your Order!
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" paragraph>
+                            Your order has been successfully placed. You will receive a confirmation email shortly.
+                        </Typography>
+                        <Box sx={{ mt: 3 }}>
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate('/products')}
+                                sx={{ mr: 2 }}
+                            >
+                                Continue Shopping
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => navigate('/orders')}
+                            >
+                                View Orders
+                            </Button>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Container>
+        </>
     );
 };
 

@@ -22,6 +22,7 @@ import {
     DialogContent,
     DialogActions,
     ListItemIcon, IconButton,
+    FormControlLabel,
 } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -55,11 +56,14 @@ const Profile = () => {
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [addressFormData, setAddressFormData] = useState({
         name: '',
+        recipientName: '',
+        recipientPhone: '',
         streetAddress: '',
         city: '',
         state: '',
         postalCode: '',
         country: '',
+        isDefault: false
     });
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState(null);
@@ -253,11 +257,14 @@ const Profile = () => {
         setSelectedAddress(address);
         setAddressFormData({
             name: address.name,
+            recipientName: address.recipientName,
+            recipientPhone: address.recipientPhone,
             streetAddress: address.streetAddress,
             city: address.city,
             state: address.state,
             postalCode: address.postalCode,
-            country: address.country
+            country: address.country,
+            isDefault: address.isDefault
         });
         setOpenEditDialog(true);
     };
@@ -289,11 +296,14 @@ const Profile = () => {
     const AddressDialog = ({ open, onClose, address }) => {
         const [formData, setFormData] = useState({
             name: '',
+            recipientName: '',
+            recipientPhone: '',
             streetAddress: '',
             city: '',
             state: '',
             postalCode: '',
-            country: ''
+            country: '',
+            isDefault: false
         });
 
         const [errors, setErrors] = useState({});
@@ -302,20 +312,26 @@ const Profile = () => {
             if (address) {
                 setFormData({
                     name: address.name,
+                    recipientName: address.recipientName,
+                    recipientPhone: address.recipientPhone,
                     streetAddress: address.streetAddress,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
-                    country: address.country
+                    country: address.country,
+                    isDefault: address.isDefault
                 });
             } else {
                 setFormData({
                     name: '',
+                    recipientName: '',
+                    recipientPhone: '',
                     streetAddress: '',
                     city: '',
                     state: '',
                     postalCode: '',
-                    country: ''
+                    country: '',
+                    isDefault: false
                 });
             }
             setErrors({});
@@ -324,6 +340,8 @@ const Profile = () => {
         const validateForm = () => {
             const newErrors = {};
             if (!formData.name.trim()) newErrors.name = 'Address name is required';
+            if (!formData.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
+            if (!formData.recipientPhone.trim()) newErrors.recipientPhone = 'Recipient phone is required';
             if (!formData.streetAddress.trim()) newErrors.streetAddress = 'Street address is required';
             if (!formData.city.trim()) newErrors.city = 'City is required';
             if (!formData.country.trim()) newErrors.country = 'Country is required';
@@ -331,12 +349,11 @@ const Profile = () => {
         };
 
         const handleFormChange = (e) => {
-            const { name, value } = e.target;
+            const { name, value, type, checked } = e.target;
             setFormData(prev => ({
                 ...prev,
-                [name]: value
+                [name]: type === 'checkbox' ? checked : value
             }));
-            // Clear error when user starts typing
             if (errors[name]) {
                 setErrors(prev => ({
                     ...prev,
@@ -356,11 +373,14 @@ const Profile = () => {
                 const addressData = {
                     userId: user.userId,
                     name: formData.name,
+                    recipientName: formData.recipientName,
+                    recipientPhone: formData.recipientPhone,
                     streetAddress: formData.streetAddress,
                     city: formData.city,
                     state: formData.state,
                     postalCode: formData.postalCode,
-                    country: formData.country
+                    country: formData.country,
+                    isDefault: formData.isDefault
                 };
 
                 if (address) {
@@ -415,6 +435,36 @@ const Profile = () => {
                             error={!!errors.name}
                             helperText={errors.name}
                             placeholder="e.g., Home, Office, Summer House"
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Recipient Name"
+                            name="recipientName"
+                            value={formData.recipientName}
+                            onChange={handleFormChange}
+                            error={!!errors.recipientName}
+                            helperText={errors.recipientName}
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Recipient Phone"
+                            name="recipientPhone"
+                            value={formData.recipientPhone}
+                            onChange={handleFormChange}
+                            error={!!errors.recipientPhone}
+                            helperText={errors.recipientPhone}
                             sx={{
                                 mb: 3,
                                 '& .MuiOutlinedInput-root': {
@@ -504,6 +554,16 @@ const Profile = () => {
                                 />
                             </Grid>
                         </Grid>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={formData.isDefault}
+                                    onChange={handleFormChange}
+                                    name="isDefault"
+                                />
+                            }
+                            label="Set as default address"
+                        />
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{

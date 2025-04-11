@@ -27,6 +27,12 @@ public class Address {
     @Column(nullable = false, length = 25)
     private String name;
 
+    @Column(name = "recipient_name", nullable = false, length = 100)
+    private String recipientName;
+
+    @Column(name = "recipient_phone", nullable = false, length = 20)
+    private String recipientPhone;
+
     @Column(name = "street_address", nullable = false)
     private String streetAddress;
 
@@ -41,6 +47,9 @@ public class Address {
 
     @Column(nullable = false, length = 25)
     private String country;
+
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
 
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp

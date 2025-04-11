@@ -24,7 +24,12 @@ export const addressService = {
 
     createAddress: async (addressData, token) => {
         try {
-            const response = await axios.post(`${API_URL}/addresses`, addressData, {
+            const response = await axios.post(`${API_URL}/addresses`, {
+                ...addressData,
+                recipientName: addressData.recipientName || addressData.name,
+                recipientPhone: addressData.recipientPhone || '',
+                isDefault: addressData.isDefault || false
+            }, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -43,7 +48,12 @@ export const addressService = {
 
     updateAddress: async (id, addressData, token) => {
         try {
-            const response = await axios.put(`${API_URL}/addresses/${id}`, addressData, {
+            const response = await axios.put(`${API_URL}/addresses/${id}`, {
+                ...addressData,
+                recipientName: addressData.recipientName || addressData.name,
+                recipientPhone: addressData.recipientPhone || '',
+                isDefault: addressData.isDefault || false
+            }, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

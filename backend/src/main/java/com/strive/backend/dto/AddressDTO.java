@@ -19,6 +19,14 @@ public class AddressDTO {
     @Size(max = 25, message = "Name must not exceed 25 characters")
     private String name;
 
+    @NotBlank(message = "Recipient name is required")
+    @Size(max = 25, message = "Recipient name must not exceed 25 characters")
+    private String recipientName;
+
+    @NotBlank(message = "Recipient phone is required")
+    @Size(max = 25, message = "Recipient phone must not exceed 25 characters")
+    private String recipientPhone;
+
     @NotBlank(message = "Street address is required")
     @Size(max = 255, message = "Street address must not exceed 255 characters")
     private String streetAddress;
@@ -36,4 +44,6 @@ public class AddressDTO {
     @NotBlank(message = "Country is required")
     @Size(max = 25, message = "Country must not exceed 25 characters")
     private String country;
+
+    private boolean isDefault;
 }
