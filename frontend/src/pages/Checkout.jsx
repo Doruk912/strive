@@ -177,33 +177,44 @@ const Checkout = () => {
 
         try {
             setLoading(true);
-            const userId = localStorage.getItem('userId');
-            if (!userId) {
+            if (!user || !user.userId) {
                 throw new Error('User not logged in');
             }
 
             const orderData = {
-                userId: parseInt(userId),
+                userId: user.userId,
                 addressId: selectedAddress.id,
+                totalAmount: getCartTotal().total,
+                paymentMethod: 'credit_card',
+                cardLastFour: cardDetails.cardNumber.slice(-4),
+                cardExpiry: cardDetails.expiryDate,
                 items: cartItems.map(item => ({
                     productId: item.id,
                     quantity: item.quantity,
                     size: item.selectedSize,
                     price: item.price
-                })),
-                paymentMethod: 'credit_card',
-                cardDetails: {
-                    lastFourDigits: cardDetails.cardNumber.slice(-4),
-                    expiryDate: cardDetails.expiryDate
-                },
-                total: getCartTotal().total
+                }))
             };
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await fetch('http://localhost:8080/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify(orderData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create order');
+            }
+
+            await response.json();
             clearCart();
             navigate('/order-confirmation');
         } catch (err) {
-            setError('Failed to process order');
+            setError('Failed to process order: ' + err.message);
             console.error('Error processing order:', err);
         } finally {
             setLoading(false);
