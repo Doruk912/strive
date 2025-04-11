@@ -991,6 +991,21 @@ const Profile = () => {
                                                                                 }}
                                                                             />
                                                                             {address.name}
+                                                                            {address.isDefault && (
+                                                                                <Typography
+                                                                                    variant="caption"
+                                                                                    sx={{
+                                                                                        ml: 1,
+                                                                                        px: 1,
+                                                                                        py: 0.5,
+                                                                                        bgcolor: 'primary.light',
+                                                                                        color: 'primary.main',
+                                                                                        borderRadius: 1,
+                                                                                    }}
+                                                                                >
+                                                                                    Default
+                                                                                </Typography>
+                                                                            )}
                                                                         </Typography>
                                                                     </Box>
 
@@ -1002,6 +1017,25 @@ const Profile = () => {
                                                                             mb: 2,
                                                                         }}
                                                                     >
+                                                                        <Typography
+                                                                            variant="subtitle1"
+                                                                            sx={{
+                                                                                fontWeight: 500,
+                                                                                mb: 1,
+                                                                                color: 'text.primary',
+                                                                            }}
+                                                                        >
+                                                                            {address.recipientName}
+                                                                        </Typography>
+                                                                        <Typography
+                                                                            variant="body2"
+                                                                            sx={{
+                                                                                color: 'text.secondary',
+                                                                                mb: 1,
+                                                                            }}
+                                                                        >
+                                                                            {address.recipientPhone}
+                                                                        </Typography>
                                                                         <Typography
                                                                             variant="body1"
                                                                             sx={{
