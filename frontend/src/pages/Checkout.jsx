@@ -30,6 +30,9 @@ import {
     CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import {Helmet} from "react-helmet";
+import CheckoutAddressForm from '../components/CheckoutAddressForm';
+import CheckoutAddressDialog from '../components/CheckoutAddressDialog';
+import CheckoutCardForm from '../components/CheckoutCardForm';
 
 const steps = ['Shipping Address', 'Payment Method', 'Review Order'];
 
@@ -38,11 +41,19 @@ const Checkout = () => {
     const { user } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const [activeStep, setActiveStep] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [addresses, setAddresses] = useState([]);
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('credit_card');
+    const [showNewAddressDialog, setShowNewAddressDialog] = useState(false);
+    const [cardDetails, setCardDetails] = useState({
+        cardNumber: '',
+        cardholderName: '',
+        expiryDate: '',
+        cvv: ''
+    });
+    const [cardErrors, setCardErrors] = useState({});
 
     useEffect(() => {
         if (!user) {
@@ -57,11 +68,11 @@ const Checkout = () => {
                 setAddresses(userAddresses);
                 const defaultAddress = userAddresses.find(addr => addr.isDefault);
                 if (defaultAddress) {
-                    setSelectedAddress(defaultAddress.id);
+                    setSelectedAddress(defaultAddress);
                 }
-            } catch (err) {
+            } catch (error) {
                 setError('Failed to load addresses');
-                console.error('Error fetching addresses:', err);
+                console.error('Error fetching addresses:', error);
             } finally {
                 setLoading(false);
             }
@@ -78,14 +89,80 @@ const Checkout = () => {
         setActiveStep((prevStep) => prevStep - 1);
     };
 
-    const handleAddressChange = (event) => {
-        setSelectedAddress(parseInt(event.target.value));
+    const handleAddressSelect = (address) => {
+        setSelectedAddress(address);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleNewAddressSelect = (address) => {
+        if (address.id) {
+            setAddresses(prevAddresses => [...prevAddresses, address]);
+        }
+        setSelectedAddress(address);
+        setShowNewAddressDialog(false);
+    };
+
+    const handleCardDetailsChange = (field, value) => {
+        setCardDetails(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        // Clear error when user starts typing
+        if (cardErrors[field]) {
+            setCardErrors(prev => ({
+                ...prev,
+                [field]: false
+            }));
+        }
+    };
+
+    const validateExpiryDate = (date) => {
+        if (!date) return false;
+        
+        // Check format (MM/YY)
+        const regex = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
+        if (!regex.test(date)) return false;
+        
+        // Parse the date
+        const [month, year] = date.split('/');
+        const expiryDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
+        const currentDate = new Date();
+        
+        // Set both dates to the first of the month for comparison
+        currentDate.setDate(1);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        return expiryDate >= currentDate;
+    };
+
+    const validateCardDetails = () => {
+        const errors = {};
+        const cleanCardNumber = cardDetails.cardNumber.replace(/\s/g, '');
+        
+        if (!cleanCardNumber || cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
+            errors.cardNumber = true;
+        }
+        if (!cardDetails.cardholderName.trim()) {
+            errors.cardholderName = true;
+        }
+        if (!cardDetails.expiryDate || !validateExpiryDate(cardDetails.expiryDate)) {
+            errors.expiryDate = true;
+        }
+        if (!cardDetails.cvv || cardDetails.cvv.length < 3 || cardDetails.cvv.length > 4) {
+            errors.cvv = true;
+        }
+
+        setCardErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleProceedToPayment = async () => {
         if (!selectedAddress) {
-            setError('Please select a shipping address');
+            setError('Please select or enter a shipping address');
+            return;
+        }
+
+        if (!validateCardDetails()) {
+            setError('Please check your card details');
             return;
         }
 
@@ -96,21 +173,20 @@ const Checkout = () => {
                 throw new Error('User not logged in');
             }
 
-            const selectedAddressData = addresses.find(addr => addr.id === selectedAddress);
-            if (!selectedAddressData) {
-                throw new Error('Please select a valid address');
-            }
-
             const orderData = {
                 userId: parseInt(userId),
-                addressId: selectedAddressData.id,
+                addressId: selectedAddress.id,
                 items: cartItems.map(item => ({
                     productId: item.id,
                     quantity: item.quantity,
                     size: item.selectedSize,
                     price: item.price
                 })),
-                paymentMethod,
+                paymentMethod: 'credit_card',
+                cardDetails: {
+                    lastFourDigits: cardDetails.cardNumber.slice(-4),
+                    expiryDate: cardDetails.expiryDate
+                },
                 total: getCartTotal().total
             };
 
@@ -125,247 +201,14 @@ const Checkout = () => {
         }
     };
 
-    const renderAddressStep = () => (
-        <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Select Shipping Address
-            </Typography>
-            <Button
-                variant="outlined"
-                onClick={() => navigate('/profile')}
-                sx={{ mb: 3 }}
-            >
-                Manage Addresses
-            </Button>
+    const cartTotals = getCartTotal();
 
-            <RadioGroup
-                value={selectedAddress}
-                onChange={handleAddressChange}
-                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-            >
-                {addresses.map((address) => (
-                    <Paper
-                        key={address.id}
-                        elevation={selectedAddress === address.id ? 3 : 1}
-                        sx={{
-                            p: 2,
-                            cursor: 'pointer',
-                            border: selectedAddress === address.id ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                borderColor: '#1976d2',
-                            },
-                        }}
-                    >
-                        <FormControlLabel
-                            value={address.id}
-                            control={<Radio />}
-                            label={
-                                <Box sx={{ ml: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                                            {address.name}
-                                        </Typography>
-                                        {address.isDefault && (
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    ml: 1,
-                                                    px: 1,
-                                                    py: 0.5,
-                                                    bgcolor: 'primary.light',
-                                                    color: 'primary.main',
-                                                    borderRadius: 1,
-                                                }}
-                                            >
-                                                Default
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {address.recipientName}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {address.recipientPhone}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {address.streetAddress}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {address.city}, {address.state} {address.postalCode}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {address.country}
-                                    </Typography>
-                                </Box>
-                            }
-                            sx={{ width: '100%', m: 0 }}
-                        />
-                    </Paper>
-                ))}
-            </RadioGroup>
-        </Card>
-    );
-
-    const renderPaymentStep = () => (
-        <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Payment Method
-            </Typography>
-            <FormControl component="fieldset" sx={{ width: '100%' }}>
-                <RadioGroup
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-                >
-                    <Paper
-                        elevation={paymentMethod === 'credit_card' ? 3 : 1}
-                        sx={{
-                            p: 2,
-                            cursor: 'pointer',
-                            border: paymentMethod === 'credit_card' ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                borderColor: '#1976d2',
-                            },
-                        }}
-                    >
-                        <FormControlLabel
-                            value="credit_card"
-                            control={<Radio />}
-                            label={
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <CreditCardIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                    <Typography>Credit Card</Typography>
-                                </Box>
-                            }
-                            sx={{ width: '100%', m: 0 }}
-                        />
-                    </Paper>
-                    <Paper
-                        elevation={paymentMethod === 'paypal' ? 3 : 1}
-                        sx={{
-                            p: 2,
-                            cursor: 'pointer',
-                            border: paymentMethod === 'paypal' ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                borderColor: '#1976d2',
-                            },
-                        }}
-                    >
-                        <FormControlLabel
-                            value="paypal"
-                            control={<Radio />}
-                            label={
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <CreditCardIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                    <Typography>PayPal</Typography>
-                                </Box>
-                            }
-                            sx={{ width: '100%', m: 0 }}
-                        />
-                    </Paper>
-                </RadioGroup>
-            </FormControl>
-        </Card>
-    );
-
-    const renderReviewStep = () => (
-        <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Review Your Order
-            </Typography>
-
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                    Shipping Address
-                </Typography>
-                {selectedAddress && (
-                    <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
-                        <Typography variant="body2">
-                            {addresses.find(addr => addr.id === selectedAddress)?.recipientName}
-                        </Typography>
-                        <Typography variant="body2">
-                            {addresses.find(addr => addr.id === selectedAddress)?.recipientPhone}
-                        </Typography>
-                        <Typography variant="body2">
-                            {addresses.find(addr => addr.id === selectedAddress)?.streetAddress}
-                        </Typography>
-                        <Typography variant="body2">
-                            {addresses.find(addr => addr.id === selectedAddress)?.city}, {addresses.find(addr => addr.id === selectedAddress)?.state} {addresses.find(addr => addr.id === selectedAddress)?.postalCode}
-                        </Typography>
-                        <Typography variant="body2">
-                            {addresses.find(addr => addr.id === selectedAddress)?.country}
-                        </Typography>
-                    </Paper>
-                )}
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                    Payment Method
-                </Typography>
-                <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
-                    <Typography variant="body2">
-                        {paymentMethod === 'credit_card' ? 'Credit Card' : 'PayPal'}
-                    </Typography>
-                </Paper>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                    Order Summary
-                </Typography>
-                {cartItems.map((item) => (
-                    <Box key={`${item.id}-${item.selectedSize}`} sx={{ mb: 1 }}>
-                        <Typography variant="body2">
-                            {item.name} - Size: {item.selectedSize} x {item.quantity}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            ${(item.price * item.quantity).toFixed(2)}
-                        </Typography>
-                    </Box>
-                ))}
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography>Subtotal</Typography>
-                <Typography>${getCartTotal().subtotal.toFixed(2)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography>Shipping</Typography>
-                <Typography>Free</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="h6">Total</Typography>
-                <Typography variant="h6">${getCartTotal().total.toFixed(2)}</Typography>
-            </Box>
-        </Card>
-    );
-
-    if (cartItems.length === 0) {
+    if (loading) {
         return (
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Card>
-                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                        <Typography variant="h5" gutterBottom>
-                            Your cart is empty
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            onClick={() => navigate('/products')}
-                            sx={{ mt: 2 }}
-                        >
-                            Continue Shopping
-                        </Button>
-                    </CardContent>
-                </Card>
+            <Container>
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                </Box>
             </Container>
         );
     }
@@ -392,9 +235,218 @@ const Checkout = () => {
 
                 <Grid container spacing={4}>
                     <Grid item xs={12} md={8}>
-                        {activeStep === 0 && renderAddressStep()}
-                        {activeStep === 1 && renderPaymentStep()}
-                        {activeStep === 2 && renderReviewStep()}
+                        {activeStep === 0 && (
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Shipping Address
+                                    </Typography>
+
+                                    {addresses.length > 0 && (
+                                        <FormControl component="fieldset" sx={{ width: '100%', mb: 2 }}>
+                                            <FormLabel component="legend">Select Address</FormLabel>
+                                            <RadioGroup>
+                                                {addresses.map((address) => (
+                                                    <Card
+                                                        key={address.id}
+                                                        sx={{
+                                                            mb: 2,
+                                                            cursor: 'pointer',
+                                                            border: selectedAddress?.id === address.id ? '2px solid' : '1px solid',
+                                                            borderColor: selectedAddress?.id === address.id ? 'primary.main' : 'divider',
+                                                            '&:hover': {
+                                                                borderColor: 'primary.main',
+                                                            },
+                                                        }}
+                                                        onClick={() => handleAddressSelect(address)}
+                                                    >
+                                                        <CardContent>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                                <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                                                <FormControlLabel
+                                                                    value={address.id.toString()}
+                                                                    control={
+                                                                        <Radio
+                                                                            checked={selectedAddress?.id === address.id}
+                                                                            onChange={() => handleAddressSelect(address)}
+                                                                        />
+                                                                    }
+                                                                    label={
+                                                                        <Typography variant="subtitle1">
+                                                                            {address.name}
+                                                                            {address.isDefault && (
+                                                                                <Typography
+                                                                                    component="span"
+                                                                                    variant="caption"
+                                                                                    sx={{
+                                                                                        ml: 1,
+                                                                                        px: 1,
+                                                                                        py: 0.5,
+                                                                                        bgcolor: 'primary.light',
+                                                                                        color: 'primary.main',
+                                                                                        borderRadius: 1,
+                                                                                    }}
+                                                                                >
+                                                                                    Default
+                                                                                </Typography>
+                                                                            )}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </Box>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {address.recipientName}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {address.recipientPhone}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {address.streetAddress}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {address.city}, {address.state} {address.postalCode}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {address.country}
+                                                            </Typography>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </RadioGroup>
+                                        </FormControl>
+                                    )}
+
+                                    {selectedAddress && !addresses.some(addr => addr.id === selectedAddress.id) && (
+                                        <Card
+                                            sx={{
+                                                mb: 2,
+                                                border: '2px solid',
+                                                borderColor: 'primary.main',
+                                            }}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                    <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                                    <Typography variant="subtitle1">
+                                                        New Address
+                                                    </Typography>
+                                                </Box>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {selectedAddress.recipientName}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {selectedAddress.recipientPhone}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {selectedAddress.streetAddress}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {selectedAddress.city}, {selectedAddress.state} {selectedAddress.postalCode}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {selectedAddress.country}
+                                                </Typography>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => setShowNewAddressDialog(true)}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        Enter New Address
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                        {activeStep === 1 && (
+                            <Card sx={{ p: 3 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Payment Method
+                                </Typography>
+                                <CheckoutCardForm
+                                    onCardDetailsChange={handleCardDetailsChange}
+                                    errors={cardErrors}
+                                />
+                            </Card>
+                        )}
+                        {activeStep === 2 && (
+                            <Card sx={{ p: 3 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Review Your Order
+                                </Typography>
+
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Shipping Address
+                                    </Typography>
+                                    {selectedAddress && (
+                                        <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                                            <Typography variant="body2">
+                                                {selectedAddress.recipientName}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {selectedAddress.recipientPhone}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {selectedAddress.streetAddress}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {selectedAddress.city}, {selectedAddress.state} {selectedAddress.postalCode}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {selectedAddress.country}
+                                            </Typography>
+                                        </Paper>
+                                    )}
+                                </Box>
+
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Payment Method
+                                    </Typography>
+                                    <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                                        <Typography variant="body2">
+                                            Credit Card
+                                        </Typography>
+                                    </Paper>
+                                </Box>
+
+                                <Divider sx={{ my: 2 }} />
+
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Order Summary
+                                    </Typography>
+                                    {cartItems.map((item) => (
+                                        <Box key={`${item.id}-${item.selectedSize}`} sx={{ mb: 1 }}>
+                                            <Typography variant="body2">
+                                                {item.name} - Size: {item.selectedSize} x {item.quantity}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                ${(item.price * item.quantity).toFixed(2)}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
+
+                                <Divider sx={{ my: 2 }} />
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                    <Typography>Subtotal</Typography>
+                                    <Typography>${cartTotals.subtotal.toFixed(2)}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                    <Typography>Shipping</Typography>
+                                    <Typography>Free</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="h6">Total</Typography>
+                                    <Typography variant="h6">${cartTotals.total.toFixed(2)}</Typography>
+                                </Box>
+                            </Card>
+                        )}
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
                             <Button
@@ -405,7 +457,7 @@ const Checkout = () => {
                             </Button>
                             <Button
                                 variant="contained"
-                                onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+                                onClick={activeStep === steps.length - 1 ? handleProceedToPayment : handleNext}
                                 disabled={loading || (activeStep === 0 && !selectedAddress)}
                             >
                                 {loading ? <CircularProgress size={24} /> : 
@@ -436,7 +488,7 @@ const Checkout = () => {
 
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                 <Typography>Subtotal</Typography>
-                                <Typography>${getCartTotal().subtotal.toFixed(2)}</Typography>
+                                <Typography>${cartTotals.subtotal.toFixed(2)}</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                 <Typography>Shipping</Typography>
@@ -445,11 +497,18 @@ const Checkout = () => {
                             <Divider sx={{ my: 2 }} />
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="h6">Total</Typography>
-                                <Typography variant="h6">${getCartTotal().total.toFixed(2)}</Typography>
+                                <Typography variant="h6">${cartTotals.total.toFixed(2)}</Typography>
                             </Box>
                         </Card>
                     </Grid>
                 </Grid>
+
+                <CheckoutAddressDialog
+                    open={showNewAddressDialog}
+                    onClose={() => setShowNewAddressDialog(false)}
+                    onAddressSelect={handleNewAddressSelect}
+                    user={user}
+                />
             </Container>
         </>
     );

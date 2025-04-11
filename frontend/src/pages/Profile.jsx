@@ -23,6 +23,7 @@ import {
     DialogActions,
     ListItemIcon, IconButton,
     FormControlLabel,
+    CircularProgress,
 } from '@mui/material';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -949,11 +950,64 @@ const Profile = () => {
                                         <Grid container spacing={3}>
                                             {isLoading ? (
                                                 <Grid item xs={12}>
-                                                    <Typography>Loading addresses...</Typography>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                                                        <CircularProgress />
+                                                    </Box>
                                                 </Grid>
                                             ) : addressError ? (
                                                 <Grid item xs={12}>
                                                     <Alert severity="error">{addressError}</Alert>
+                                                </Grid>
+                                            ) : addresses.length === 0 ? (
+                                                <Grid item xs={12}>
+                                                    <Card
+                                                        sx={{
+                                                            p: 4,
+                                                            textAlign: 'center',
+                                                            bgcolor: 'grey.50',
+                                                            border: '2px dashed',
+                                                            borderColor: 'grey.300',
+                                                            '&:hover': {
+                                                                borderColor: 'primary.main',
+                                                                bgcolor: 'primary.50',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 64,
+                                                                height: 64,
+                                                                borderRadius: '50%',
+                                                                bgcolor: 'primary.main',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                mx: 'auto',
+                                                                mb: 2,
+                                                            }}
+                                                        >
+                                                            <LocationIcon sx={{ fontSize: 32, color: 'white' }} />
+                                                        </Box>
+                                                        <Typography variant="h6" sx={{ mb: 1, color: 'text.primary' }}>
+                                                            No Saved Addresses
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                                                            You haven't saved any addresses yet. Add your first address to make checkout easier!
+                                                        </Typography>
+                                                        <Button
+                                                            variant="contained"
+                                                            startIcon={<AddIcon />}
+                                                            onClick={() => setOpenAddressDialog(true)}
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                textTransform: 'none',
+                                                                px: 3,
+                                                                py: 1,
+                                                            }}
+                                                        >
+                                                            Add New Address
+                                                        </Button>
+                                                    </Card>
                                                 </Grid>
                                             ) : (
                                                 <>
@@ -1098,10 +1152,7 @@ const Profile = () => {
                                                     {/* Add New Address Card */}
                                                     <Grid item xs={12} sm={6}>
                                                         <Card
-                                                            onClick={() => {
-                                                                setSelectedAddress(null);
-                                                                setOpenAddressDialog(true);
-                                                            }}
+                                                            onClick={() => setOpenAddressDialog(true)}
                                                             sx={{
                                                                 height: '100%',
                                                                 borderRadius: 2,
