@@ -20,15 +20,11 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Transactional(readOnly = true)
     public List<CategoryDTO> getAllCategories() {
-        // Get all categories
-        List<Category> allCategories = categoryRepository.findAll();
+        // Get all root categories with their children in a single query
+        List<Category> rootCategories = categoryRepository.findAllRootCategoriesWithChildren();
         
-        // Filter to get only root categories
-        List<Category> rootCategories = allCategories.stream()
-                .filter(category -> category.getParent() == null)
-                .collect(Collectors.toList());
-
         // Convert root categories to DTOs (this will include their children recursively)
         return rootCategories.stream()
                 .map(this::convertToDTO)

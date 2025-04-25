@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container,
@@ -79,10 +79,10 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                 <Collapse in={expanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                         {category.children.map((child) => (
-                            <CategoryTreeItem 
+                            <CategoryTreeItem
                                 key={child.id}
-                                category={child} 
-                                level={level + 1} 
+                                category={child}
+                                level={level + 1}
                                 filters={filters}
                                 handleFilterChange={handleFilterChange}
                                 countProductsInSubcategories={countProductsInSubcategories}
@@ -117,7 +117,7 @@ const Products = () => {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
-        
+
         if (categoryParam) {
             const category = categories.find(cat => cat.name === categoryParam);
             if (category) {
@@ -138,24 +138,24 @@ const Products = () => {
                     axios.get('http://localhost:8080/api/products'),
                     axios.get('http://localhost:8080/api/categories')
                 ]);
-                
+
                 setProducts(productsRes.data);
                 setCategories(categoriesRes.data);
-                
+
                 // Fetch ratings for each product
-                const ratingPromises = productsRes.data.map(product => 
+                const ratingPromises = productsRes.data.map(product =>
                     axios.get(`http://localhost:8080/api/reviews/product/${product.id}/rating`)
                         .then(res => ({ id: product.id, rating: res.data }))
                         .catch(() => ({ id: product.id, rating: 0 }))
                 );
-                
+
                 const ratings = await Promise.all(ratingPromises);
                 const ratingsMap = {};
                 ratings.forEach(({ id, rating }) => {
                     ratingsMap[id] = rating;
                 });
                 setProductRatings(ratingsMap);
-                
+
                 setError(null);
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -164,20 +164,55 @@ const Products = () => {
                 setLoading(false);
             }
         };
-        
+
         fetchData();
     }, []);
 
     const handleFilterChange = (filterType, value) => {
+        if (filterType !== 'category') {
+            setFilters(prev => ({
+                ...prev,
+                [filterType]: prev[filterType].includes(value)
+                    ? prev[filterType].filter(item => item !== value)
+                    : [...prev[filterType], value]
+            }));
+            return;
+        }
+
         setFilters(prev => {
-            const currentFilters = prev[filterType];
-            const newFilters = currentFilters.includes(value)
-                ? currentFilters.filter(item => item !== value)
-                : [...currentFilters, value];
-            
+            const category = findCategoryById(value);
+            if (!category) return prev;
+
+            const currentFilters = prev.category;
+
+            // If the category is already selected, deselect it
+            if (currentFilters.includes(value)) {
+                return {
+                    ...prev,
+                    category: currentFilters.filter(id => id !== value)
+                };
+            }
+
+            // If the category is not selected, select it and deselect any descendants/ancestors as needed
+            const newFilters = [...currentFilters, value];
+
+            // Remove any descendants that are already selected
+            const categoryWithDescendants = getAllSubcategoryIds(category);
+            const filtered = newFilters.filter(id => !categoryWithDescendants.includes(id) || id === value);
+
+            // Remove any ancestors that are already selected
+            let current = category;
+            while (current && current.parent) {
+                const parent = findCategoryById(current.parent);
+                if (parent && filtered.includes(parent.id)) {
+                    filtered.splice(filtered.indexOf(parent.id), 1);
+                }
+                current = parent;
+            }
+
             return {
                 ...prev,
-                [filterType]: newFilters
+                category: filtered
             };
         });
     };
@@ -191,40 +226,60 @@ const Products = () => {
 
     const handleAddToCart = async (e, product) => {
         e.stopPropagation(); // Prevent card click event
-        
+
         // For now, we'll add with a default size since we don't have size selection in the product card
         // In a real implementation, you might want to show a size selection dialog
         const defaultSize = product.stocks && product.stocks.length > 0 ? product.stocks[0].size : null;
-        
+
         if (!defaultSize) {
             alert('This product is out of stock');
             return;
         }
-        
+
         const productWithImage = {
             ...product,
             image: product.images && product.images.length > 0
                 ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
                 : '/default-product-image.jpg'
         };
-        
+
         const success = await addToCart(productWithImage, 1, defaultSize);
-        
+
         if (success) {
             setNotification({
                 open: true,
                 product: productWithImage,
                 quantity: 1
             });
-            
+
             setTimeout(() => {
                 setNotification(prev => ({ ...prev, open: false }));
             }, 3000);
         }
     };
 
-    // Get all subcategory IDs for a given category
-    const getAllSubcategoryIds = (category) => {
+    // Find a category by ID in the entire category tree (recursive)
+    const findCategoryById = useCallback((categoryId) => {
+        // Helper function to search through category tree
+        const searchInCategories = (categories, id) => {
+            for (const category of categories) {
+                if (category.id === id) {
+                    return category;
+                }
+
+                if (category.children && category.children.length > 0) {
+                    const found = searchInCategories(category.children, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        return searchInCategories(categories, categoryId);
+    }, [categories]);
+
+    // Get all subcategory IDs for a given category (including itself)
+    const getAllSubcategoryIds = useCallback((category) => {
         const ids = [category.id];
         if (category.children && category.children.length > 0) {
             category.children.forEach(child => {
@@ -232,55 +287,158 @@ const Products = () => {
             });
         }
         return ids;
-    };
-
-    // Filter products based on selected filters
-    const filteredProducts = useMemo(() => {
-        return products.filter(product => {
-            // Category filter
-            if (filters.category.length > 0) {
-                const matchesCategory = filters.category.some(categoryId => {
-                    const selectedCategory = categories.find(cat => cat.id === categoryId);
-                    if (!selectedCategory) return false;
-
-                    // Get all subcategory IDs for the selected category
-                    const validCategoryIds = getAllSubcategoryIds(selectedCategory);
-                    return validCategoryIds.includes(product.categoryId);
-                });
-                if (!matchesCategory) return false;
-            }
-
-            return true;
-        });
-    }, [products, filters, categories]);
+    }, []);
 
     // Count products in a category and its subcategories
-    const countProductsInCategory = (category) => {
+    const countProductsInSubcategories = useCallback((category) => {
         const categoryIds = getAllSubcategoryIds(category);
         return products.filter(product => categoryIds.includes(product.categoryId)).length;
-    };
+    }, [products, getAllSubcategoryIds]);
 
-    // Calculate filter counts
-    const getFilterCounts = useMemo(() => {
-        return {
-            categoryCounts: categories.reduce((counts, category) => {
-                counts[category.name] = countProductsInCategory(category);
-                return counts;
-            }, {})
+    const filteredProducts = useMemo(() => {
+        // If no categories are selected, return all products
+        if (filters.category.length === 0) {
+            return products;
+        }
+
+        // Get all selected categories
+        const selectedCategories = filters.category
+            .map(id => findCategoryById(id))
+            .filter(Boolean);
+
+        // If no valid categories found, return empty array
+        if (selectedCategories.length === 0) {
+            return [];
+        }
+
+        // Create a Set to store all category IDs to include
+        const includedCategoryIds = new Set();
+
+        // Function to check if a category is a parent of another
+        const isParentOf = (parent, child) => {
+            let current = child;
+            while (current && current.parent) {
+                if (current.parent === parent.id) return true;
+                current = findCategoryById(current.parent);
+            }
+            return false;
         };
-    }, [products, categories]);
 
-    // Update the renderCategoryTree function to use the new component
+        // First, find all "leaf" categories (most specific selections)
+        const leafCategories = selectedCategories.filter(category => {
+            return !selectedCategories.some(otherCategory => {
+                return otherCategory.id !== category.id &&
+                    isParentOf(otherCategory, category);
+            });
+        });
+
+        // Add all leaf categories and their descendants
+        leafCategories.forEach(category => {
+            const allSubcategoryIds = getAllSubcategoryIds(category);
+            allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
+        });
+
+        // If no leaf categories found (only parents selected), include all selected parents and their descendants
+        if (leafCategories.length === 0) {
+            selectedCategories.forEach(category => {
+                const allSubcategoryIds = getAllSubcategoryIds(category);
+                allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
+            });
+        }
+
+        // Filter products based on included categories
+        return products.filter(product => includedCategoryIds.has(product.categoryId));
+    }, [products, filters.category, findCategoryById, getAllSubcategoryIds]);
+
+    // Render category tree recursively
     const renderCategoryTree = (category, level = 0) => {
+        const isExpanded = expandedCategories[category.id];
+        const hasChildren = category.children && category.children.length > 0;
+
         return (
-            <CategoryTreeItem 
-                key={category.id}
-                category={category} 
-                level={level} 
-                filters={filters}
-                handleFilterChange={handleFilterChange}
-                countProductsInSubcategories={countProductsInCategory}
-            />
+            <React.Fragment key={category.id}>
+                <ListItem
+                    button
+                    onClick={() => toggleCategoryExpand(category.id)}
+                    sx={{
+                        pl: level * 2,
+                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                    }}
+                >
+                    {hasChildren && (
+                        <IconButton size="small" sx={{ mr: 1 }}>
+                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                    )}
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={filters.category.includes(category.id)}
+                                onChange={() => handleFilterChange('category', category.id)}
+                                sx={{
+                                    color: '#2B2B2B',
+                                    '&.Mui-checked': {
+                                        color: '#2E7D32',
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(46, 125, 50, 0.08)',
+                                    },
+                                    padding: '4px',
+                                }}
+                            />
+                        }
+                        label={
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                alignItems: 'center',
+                            }}>
+                                <Typography
+                                    sx={{
+                                        color: '#2B2B2B',
+                                        fontSize: '0.9rem',
+                                        fontWeight: filters.category.includes(category.id) ? 600 : 400,
+                                    }}
+                                >
+                                    {category.name}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        color: '#888',
+                                        fontSize: '0.8rem',
+                                        backgroundColor: 'rgba(0,0,0,0.05)',
+                                        padding: '2px 8px',
+                                        borderRadius: '10px',
+                                    }}
+                                >
+                                    {countProductsInSubcategories(category)}
+                                </Typography>
+                            </Box>
+                        }
+                        sx={{
+                            mb: 1.5,
+                            color: '#2B2B2B',
+                            width: '100%',
+                            margin: 0,
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                            },
+                        }}
+                    />
+                </ListItem>
+
+                {hasChildren && (
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            {category.children.map(child => renderCategoryTree(child, level + 1))}
+                        </List>
+                    </Collapse>
+                )}
+            </React.Fragment>
         );
     };
 
@@ -308,10 +466,10 @@ const Products = () => {
             <Helmet>
                 <title>Strive - Products</title>
             </Helmet>
-            <CartNotification 
-                open={notification.open} 
-                product={notification.product} 
-                quantity={notification.quantity} 
+            <CartNotification
+                open={notification.open}
+                product={notification.product}
+                quantity={notification.quantity}
             />
             <Box sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
                 <Typography
@@ -429,7 +587,7 @@ const Products = () => {
                                                 component="img"
                                                 height="100%"
                                                 width="100%"
-                                                image={product.images && product.images.length > 0 
+                                                image={product.images && product.images.length > 0
                                                     ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
                                                     : '/placeholder-image.jpg'}
                                                 alt={product.name}
