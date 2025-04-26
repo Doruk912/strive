@@ -12,12 +12,14 @@ import {
     useMediaQuery,
     InputAdornment,
     IconButton,
+    Divider,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet';
 import axios from 'axios';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const Login = () => {
     const getErrorMessage = (errorType) => {
@@ -315,6 +317,16 @@ const Login = () => {
                         >
                             {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                         </Button>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
+                            <Divider sx={{ flexGrow: 1 }} />
+                            <Typography variant="body2" sx={{ padding: '0 10px', color: '#666' }}>
+                                OR
+                            </Typography>
+                            <Divider sx={{ flexGrow: 1 }} />
+                        </Box>
+                        
+                        <GoogleLoginButton />
 
                         <Box sx={styles.signUpLink}>
                             <Link href="/register">

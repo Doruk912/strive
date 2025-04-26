@@ -3,6 +3,7 @@ package com.strive.backend.service;
 import com.strive.backend.dto.LoginRequest;
 import com.strive.backend.dto.LoginResponse;
 import com.strive.backend.dto.RegisterRequest;
+import com.strive.backend.dto.GoogleLoginRequest;
 import com.strive.backend.model.User;
 import com.strive.backend.model.NotificationPreferences;
 import com.strive.backend.security.JwtUtil;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -85,4 +87,48 @@ public class AuthService {
         
         return savedUser;
     }
-} 
+    
+    @Transactional
+    public LoginResponse googleLogin(GoogleLoginRequest googleLoginRequest) {
+        User user = userRepository.findByEmail(googleLoginRequest.getEmail());
+        
+        // If user doesn't exist, register a new user
+        if (user == null) {
+            user = new User();
+            user.setEmail(googleLoginRequest.getEmail());
+            // Generate a random password as user won't need it for Google login
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setFirstName(googleLoginRequest.getFirstName());
+            user.setLastName(googleLoginRequest.getLastName());
+            // Role is automatically set to CUSTOMER because of the default value in the User entity
+            
+            user = userRepository.save(user);
+            
+            // Create default notification preferences for the new user
+            NotificationPreferences defaultPreferences = new NotificationPreferences();
+            defaultPreferences.setUserId(user.getId());
+            defaultPreferences.setEmailNotifications(true);
+            defaultPreferences.setOrderUpdates(true);
+            defaultPreferences.setPromotions(false);
+            defaultPreferences.setNewsletter(true);
+            
+            notificationPreferencesRepository.save(defaultPreferences);
+        }
+        
+        // Generate JWT token
+        String token = jwtUtil.generateToken(user);
+        
+        // Create and return login response
+        LoginResponse response = new LoginResponse();
+        response.setUserId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setPhone(user.getPhone());
+        response.setCountryCode(user.getCountryCode());
+        response.setRole(user.getRole().name());
+        response.setToken(token);
+        
+        return response;
+    }
+}

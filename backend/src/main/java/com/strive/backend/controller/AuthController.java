@@ -3,6 +3,7 @@ package com.strive.backend.controller;
 import com.strive.backend.dto.LoginRequest;
 import com.strive.backend.dto.LoginResponse;
 import com.strive.backend.dto.RegisterRequest;
+import com.strive.backend.dto.GoogleLoginRequest;
 import com.strive.backend.dto.UserDTO;
 import com.strive.backend.model.User;
 import com.strive.backend.service.AuthService;
@@ -62,6 +63,28 @@ public class AuthController {
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@Valid @RequestBody GoogleLoginRequest googleLoginRequest) {
+        try {
+            LoginResponse loginResponse = authService.googleLogin(googleLoginRequest);
+            
+            // Convert to UserDTO to include all necessary user information
+            UserDTO userDTO = new UserDTO();
+            userDTO.setUserId(loginResponse.getUserId());
+            userDTO.setEmail(loginResponse.getEmail());
+            userDTO.setFirstName(loginResponse.getFirstName());
+            userDTO.setLastName(loginResponse.getLastName());
+            userDTO.setPhone(loginResponse.getPhone());
+            userDTO.setCountryCode(loginResponse.getCountryCode());
+            userDTO.setRole(loginResponse.getRole());
+            userDTO.setToken(loginResponse.getToken());
+            
+            return ResponseEntity.ok(userDTO);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }

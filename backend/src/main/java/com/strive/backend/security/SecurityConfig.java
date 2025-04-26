@@ -34,6 +34,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/oauth2/**").permitAll()
+                .requestMatchers("/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/featured-categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
@@ -58,6 +60,10 @@ public class SecurityConfig {
                 
                 // Any other request needs authentication
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("http://localhost:3000/oauth2/success", true)
+                .failureUrl("http://localhost:3000/login?error=oauth2")
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -90,4 +96,4 @@ public class SecurityConfig {
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-} 
+}
