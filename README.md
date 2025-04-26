@@ -2,7 +2,6 @@
 * Add images to all products
 * Fix categories of some products
 * Send emails
-* Display password strength when registering
 * Implement search bar functionality
 * Improve header categories ui
 * Fix header responsiveness on smaller screens

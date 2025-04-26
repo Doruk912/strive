@@ -50,8 +50,12 @@ const Register = () => {
 
     const navigate = useNavigate();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const { login } = useAuth();
+
+    // Determine the popper placement based on screen size
+    const popperPlacement = isMobile ? 'bottom' : 'right-start';
 
     // Check if all password criteria are met
     const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
@@ -167,6 +171,36 @@ const Register = () => {
         }
     };
 
+    // Calculate the position for the arrow based on placement
+    const getArrowStyles = () => {
+        if (isMobile) {
+            return {
+                position: 'absolute',
+                width: '12px',
+                height: '12px',
+                backgroundColor: 'white',
+                transform: 'rotate(45deg)',
+                top: '-6px',
+                left: '50%',
+                marginLeft: '-6px',
+                boxShadow: '0px -1px 2px rgba(0, 0, 0, 0.1)',
+                zIndex: 0,
+            };
+        } else {
+            return {
+                position: 'absolute',
+                width: '12px',
+                height: '12px',
+                backgroundColor: 'white',
+                transform: 'rotate(45deg)',
+                left: '-6px',
+                top: '20px',
+                boxShadow: '-1px 1px 2px rgba(0, 0, 0, 0.1)',
+                zIndex: 0,
+            };
+        }
+    };
+
     const styles = {
         wrapper: {
             minHeight: '100vh',
@@ -232,15 +266,18 @@ const Register = () => {
             },
         },
         criteriaPopper: {
-            zIndex: 1000,
-            width: 280,
+            zIndex: 1300,
+            width: isMobile ? '100%' : 280,
+            maxWidth: isMobile ? 'calc(100vw - 40px)' : 280,
         },
         criteriaPaper: {
             padding: '8px 0',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
             borderRadius: '8px',
             border: '1px solid #e0e0e0',
+            position: 'relative',
+            overflow: 'hidden',
         },
         criteriaList: {
             padding: '0 8px',
@@ -255,15 +292,6 @@ const Register = () => {
         criteriaText: {
             fontSize: '0.775rem',
             margin: 0,
-        },
-        criteriaArrow: {
-            position: 'absolute',
-            width: '10px',
-            height: '10px',
-            backgroundColor: 'white',
-            transform: 'rotate(45deg)',
-            left: '-5px',
-            boxShadow: '-1px 1px 2px rgba(0, 0, 0, 0.1)',
         },
     };
 
@@ -314,124 +342,143 @@ const Register = () => {
                                 sx={styles.textField}
                             />
 
-                            <TextField
-                                fullWidth
-                                label="Password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'}
-                                value={formData.password}
-                                onChange={handleChange}
-                                error={!!errors.password}
-                                helperText={errors.password}
-                                sx={styles.textField}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                edge="end"
-                                            >
-                                                {showPassword ? <Visibility /> : <VisibilityOff />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                ref={passwordFieldRef}
-                            />
+                            <Box position="relative">
+                                <TextField
+                                    fullWidth
+                                    label="Password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    error={!!errors.password}
+                                    helperText={errors.password}
+                                    sx={styles.textField}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    inputRef={passwordFieldRef}
+                                />
 
-                            {/* Password Criteria Popper */}
-                            <Popper
-                                open={showCriteria && !!formData.password}
-                                anchorEl={passwordFieldRef.current}
-                                placement="right"
-                                transition
-                                sx={styles.criteriaPopper}
-                                modifiers={[
-                                    {
-                                        name: 'offset',
-                                        options: {
-                                            offset: [0, 10],
+                                {/* Password Criteria Popper */}
+                                <Popper
+                                    open={showCriteria && !!formData.password}
+                                    anchorEl={passwordFieldRef.current}
+                                    placement={popperPlacement}
+                                    transition
+                                    sx={styles.criteriaPopper}
+                                    modifiers={[
+                                        {
+                                            name: 'offset',
+                                            options: {
+                                                offset: isMobile ? [0, 10] : [5, 0],
+                                            },
                                         },
-                                    },
-                                ]}
-                            >
-                                {({ TransitionProps }) => (
-                                    <Fade {...TransitionProps} timeout={300}>
-                                        <Paper sx={styles.criteriaPaper} elevation={3}>
-                                            <Box sx={styles.criteriaArrow} className="arrow" />
-                                            <Typography variant="subtitle2" sx={{ p: 1, fontWeight: 600 }}>
-                                                Password requirements:
-                                            </Typography>
-                                            <List dense sx={styles.criteriaList}>
-                                                <ListItem sx={styles.criteriaItem}>
-                                                    <ListItemIcon sx={styles.criteriaIcon}>
-                                                        {passwordCriteria.hasUpperCase ?
-                                                            <Check fontSize="small" color="success" /> :
-                                                            <Close fontSize="small" color="error" />}
-                                                    </ListItemIcon>
-                                                    <ListItemText
-                                                        primary="Contains uppercase letter"
-                                                        primaryTypographyProps={{
-                                                            sx: {
-                                                                ...styles.criteriaText,
-                                                                color: passwordCriteria.hasUpperCase ? 'green' : 'red'
-                                                            }
-                                                        }}
-                                                    />
-                                                </ListItem>
-                                                <ListItem sx={styles.criteriaItem}>
-                                                    <ListItemIcon sx={styles.criteriaIcon}>
-                                                        {passwordCriteria.hasLowerCase ?
-                                                            <Check fontSize="small" color="success" /> :
-                                                            <Close fontSize="small" color="error" />}
-                                                    </ListItemIcon>
-                                                    <ListItemText
-                                                        primary="Contains lowercase letter"
-                                                        primaryTypographyProps={{
-                                                            sx: {
-                                                                ...styles.criteriaText,
-                                                                color: passwordCriteria.hasLowerCase ? 'green' : 'red'
-                                                            }
-                                                        }}
-                                                    />
-                                                </ListItem>
-                                                <ListItem sx={styles.criteriaItem}>
-                                                    <ListItemIcon sx={styles.criteriaIcon}>
-                                                        {passwordCriteria.hasNumber ?
-                                                            <Check fontSize="small" color="success" /> :
-                                                            <Close fontSize="small" color="error" />}
-                                                    </ListItemIcon>
-                                                    <ListItemText
-                                                        primary="Contains number"
-                                                        primaryTypographyProps={{
-                                                            sx: {
-                                                                ...styles.criteriaText,
-                                                                color: passwordCriteria.hasNumber ? 'green' : 'red'
-                                                            }
-                                                        }}
-                                                    />
-                                                </ListItem>
-                                                <ListItem sx={styles.criteriaItem}>
-                                                    <ListItemIcon sx={styles.criteriaIcon}>
-                                                        {passwordCriteria.hasMinLength ?
-                                                            <Check fontSize="small" color="success" /> :
-                                                            <Close fontSize="small" color="error" />}
-                                                    </ListItemIcon>
-                                                    <ListItemText
-                                                        primary="At least 6 characters long"
-                                                        primaryTypographyProps={{
-                                                            sx: {
-                                                                ...styles.criteriaText,
-                                                                color: passwordCriteria.hasMinLength ? 'green' : 'red'
-                                                            }
-                                                        }}
-                                                    />
-                                                </ListItem>
-                                            </List>
-                                        </Paper>
-                                    </Fade>
-                                )}
-                            </Popper>
+                                        {
+                                            name: 'preventOverflow',
+                                            options: {
+                                                boundary: document.body,
+                                                padding: 16,
+                                            },
+                                        },
+                                        {
+                                            name: 'flip',
+                                            enabled: true,
+                                            options: {
+                                                altBoundary: true,
+                                                fallbackPlacements: isMobile ? ['top'] : ['left', 'bottom-end'],
+                                            },
+                                        },
+                                    ]}
+                                >
+                                    {({ TransitionProps }) => (
+                                        <Fade {...TransitionProps} timeout={300}>
+                                            <Paper sx={styles.criteriaPaper} elevation={4}>
+                                                <Box sx={getArrowStyles()} />
+                                                <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                                    <Typography variant="subtitle2" sx={{ p: 1, fontWeight: 600 }}>
+                                                        Password requirements:
+                                                    </Typography>
+                                                    <List dense sx={styles.criteriaList}>
+                                                        <ListItem sx={styles.criteriaItem}>
+                                                            <ListItemIcon sx={styles.criteriaIcon}>
+                                                                {passwordCriteria.hasUpperCase ?
+                                                                    <Check fontSize="small" color="success" /> :
+                                                                    <Close fontSize="small" color="error" />}
+                                                            </ListItemIcon>
+                                                            <ListItemText
+                                                                primary="Contains uppercase letter"
+                                                                primaryTypographyProps={{
+                                                                    sx: {
+                                                                        ...styles.criteriaText,
+                                                                        color: passwordCriteria.hasUpperCase ? 'green' : 'red'
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </ListItem>
+                                                        <ListItem sx={styles.criteriaItem}>
+                                                            <ListItemIcon sx={styles.criteriaIcon}>
+                                                                {passwordCriteria.hasLowerCase ?
+                                                                    <Check fontSize="small" color="success" /> :
+                                                                    <Close fontSize="small" color="error" />}
+                                                            </ListItemIcon>
+                                                            <ListItemText
+                                                                primary="Contains lowercase letter"
+                                                                primaryTypographyProps={{
+                                                                    sx: {
+                                                                        ...styles.criteriaText,
+                                                                        color: passwordCriteria.hasLowerCase ? 'green' : 'red'
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </ListItem>
+                                                        <ListItem sx={styles.criteriaItem}>
+                                                            <ListItemIcon sx={styles.criteriaIcon}>
+                                                                {passwordCriteria.hasNumber ?
+                                                                    <Check fontSize="small" color="success" /> :
+                                                                    <Close fontSize="small" color="error" />}
+                                                            </ListItemIcon>
+                                                            <ListItemText
+                                                                primary="Contains number"
+                                                                primaryTypographyProps={{
+                                                                    sx: {
+                                                                        ...styles.criteriaText,
+                                                                        color: passwordCriteria.hasNumber ? 'green' : 'red'
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </ListItem>
+                                                        <ListItem sx={styles.criteriaItem}>
+                                                            <ListItemIcon sx={styles.criteriaIcon}>
+                                                                {passwordCriteria.hasMinLength ?
+                                                                    <Check fontSize="small" color="success" /> :
+                                                                    <Close fontSize="small" color="error" />}
+                                                            </ListItemIcon>
+                                                            <ListItemText
+                                                                primary="At least 6 characters long"
+                                                                primaryTypographyProps={{
+                                                                    sx: {
+                                                                        ...styles.criteriaText,
+                                                                        color: passwordCriteria.hasMinLength ? 'green' : 'red'
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </ListItem>
+                                                    </List>
+                                                </Box>
+                                            </Paper>
+                                        </Fade>
+                                    )}
+                                </Popper>
+                            </Box>
 
                             <TextField
                                 fullWidth
