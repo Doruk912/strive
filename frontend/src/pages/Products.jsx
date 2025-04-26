@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Container,
     Typography,
     Box,
     Grid,
@@ -11,16 +10,12 @@ import {
     Button,
     FormControlLabel,
     Checkbox,
-    Tooltip,
     CircularProgress,
     Collapse,
     List,
     ListItem,
-    ListItemText,
-    Divider,
 } from '@mui/material';
 import {
-    ShoppingCart as ShoppingCartIcon,
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
