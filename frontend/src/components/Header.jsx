@@ -146,7 +146,7 @@ const Header = () => {
                     ...prev.filter(item => item !== searchValue.trim())
                 ]);
             }
-            navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+            navigate(`/products?name=${encodeURIComponent(searchValue.trim())}`);
             handleSearchClose();
         }
     }, [searchValue, searchHistory, navigate]);
@@ -164,7 +164,7 @@ const Header = () => {
                     ...prev.filter(item => item !== trimmedTerm)
                 ]);
             }
-            navigate(`/search?q=${encodeURIComponent(trimmedTerm)}`);
+            navigate(`/products?name=${encodeURIComponent(trimmedTerm)}`);
             handleSearchClose();
         }
     };
@@ -176,7 +176,7 @@ const Header = () => {
                 trimmedTerm,
                 ...prev.filter(item => item !== trimmedTerm)
             ]);
-            navigate(`/search?q=${encodeURIComponent(trimmedTerm)}`);
+            navigate(`/products?name=${encodeURIComponent(trimmedTerm)}`);
             handleSearchClose();
         }
     };

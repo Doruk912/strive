@@ -118,15 +118,26 @@ const Products = () => {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
-
+        const nameParam = params.get('name');
+        
+        let updates = {};
+        
         if (categoryParam) {
             const category = categories.find(cat => cat.name === categoryParam);
             if (category) {
-                setFilters(prev => ({
-                    ...prev,
-                    category: [category.id]
-                }));
+                updates.category = [category.id];
             }
+        }
+        
+        if (nameParam) {
+            updates.name = nameParam;
+        }
+        
+        if (Object.keys(updates).length > 0) {
+            setFilters(prev => ({
+                ...prev,
+                ...updates
+            }));
         }
     }, [location, categories]);
 
@@ -734,13 +745,59 @@ const Products = () => {
                                         },
                                     }}
                                 />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ${filters.priceRange[0]}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ${filters.priceRange[1]}
-                                    </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, gap: 2 }}>
+                                    <TextField
+                                        size="small"
+                                        label="Min"
+                                        type="number"
+                                        InputProps={{
+                                            startAdornment: <Box component="span" sx={{ mr: 0.5 }}>$</Box>,
+                                        }}
+                                        value={filters.priceRange[0]}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= 0 && value <= filters.priceRange[1]) {
+                                                setFilters(prev => ({
+                                                    ...prev,
+                                                    priceRange: [value, prev.priceRange[1]]
+                                                }));
+                                            }
+                                        }}
+                                        sx={{
+                                            width: '50%',
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
+                                                '&:hover fieldset': { borderColor: '#2E7D32' },
+                                                '&.Mui-focused fieldset': { borderColor: '#2E7D32' },
+                                            },
+                                        }}
+                                    />
+                                    <TextField
+                                        size="small"
+                                        label="Max"
+                                        type="number"
+                                        InputProps={{
+                                            startAdornment: <Box component="span" sx={{ mr: 0.5 }}>$</Box>,
+                                        }}
+                                        value={filters.priceRange[1]}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= filters.priceRange[0] && value <= maxPrice) {
+                                                setFilters(prev => ({
+                                                    ...prev,
+                                                    priceRange: [prev.priceRange[0], value]
+                                                }));
+                                            }
+                                        }}
+                                        sx={{
+                                            width: '50%',
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
+                                                '&:hover fieldset': { borderColor: '#2E7D32' },
+                                                '&.Mui-focused fieldset': { borderColor: '#2E7D32' },
+                                            },
+                                        }}
+                                    />
                                 </Box>
                             </Box>
                         </Box>
