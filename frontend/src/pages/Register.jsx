@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     TextField,
     Button,
@@ -10,8 +10,15 @@ import {
     useMediaQuery,
     InputAdornment,
     IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Paper,
+    Fade,
+    Popper,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Check, Close } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {Helmet} from "react-helmet";
 import { useAuth } from '../context/AuthContext';
@@ -28,11 +35,44 @@ const Register = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [showCriteria, setShowCriteria] = useState(false);
+
+    // Password strength criteria states
+    const [passwordCriteria, setPasswordCriteria] = useState({
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumber: false,
+        hasMinLength: false,
+    });
+
+    // Ref for password input field
+    const passwordFieldRef = useRef(null);
 
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { login } = useAuth();
+
+    // Check if all password criteria are met
+    const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
+
+    // Check password strength whenever password changes
+    useEffect(() => {
+        const password = formData.password;
+        setPasswordCriteria({
+            hasUpperCase: /[A-Z]/.test(password),
+            hasLowerCase: /[a-z]/.test(password),
+            hasNumber: /[0-9]/.test(password),
+            hasMinLength: password.length >= 6,
+        });
+
+        // Show criteria popup when user starts typing password
+        if (password && !showCriteria) {
+            setShowCriteria(true);
+        } else if (!password) {
+            setShowCriteria(false);
+        }
+    }, [formData.password]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -58,12 +98,16 @@ const Register = () => {
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Invalid email format';
         }
-        if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+
+        // Enforce all password criteria
+        if (!allCriteriaMet) {
+            newErrors.password = 'Password must meet all criteria';
         }
+
         if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -87,7 +131,7 @@ const Register = () => {
                     lastName: formData.lastName,
                 }),
             });
-            
+
             if (!registerResponse.ok) {
                 const data = await registerResponse.text();
                 throw new Error(data || 'Registration failed');
@@ -110,7 +154,7 @@ const Register = () => {
             }
 
             const loginData = await loginResponse.json();
-            
+
             // Use AuthContext login function instead of directly manipulating localStorage
             login(loginData);
 
@@ -187,6 +231,40 @@ const Register = () => {
                 },
             },
         },
+        criteriaPopper: {
+            zIndex: 1000,
+            width: 280,
+        },
+        criteriaPaper: {
+            padding: '8px 0',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+            borderRadius: '8px',
+            border: '1px solid #e0e0e0',
+        },
+        criteriaList: {
+            padding: '0 8px',
+        },
+        criteriaItem: {
+            padding: '4px 8px',
+            minHeight: '32px',
+        },
+        criteriaIcon: {
+            minWidth: '28px',
+        },
+        criteriaText: {
+            fontSize: '0.775rem',
+            margin: 0,
+        },
+        criteriaArrow: {
+            position: 'absolute',
+            width: '10px',
+            height: '10px',
+            backgroundColor: 'white',
+            transform: 'rotate(45deg)',
+            left: '-5px',
+            boxShadow: '-1px 1px 2px rgba(0, 0, 0, 0.1)',
+        },
     };
 
     return (
@@ -258,7 +336,102 @@ const Register = () => {
                                         </InputAdornment>
                                     ),
                                 }}
+                                ref={passwordFieldRef}
                             />
+
+                            {/* Password Criteria Popper */}
+                            <Popper
+                                open={showCriteria && !!formData.password}
+                                anchorEl={passwordFieldRef.current}
+                                placement="right"
+                                transition
+                                sx={styles.criteriaPopper}
+                                modifiers={[
+                                    {
+                                        name: 'offset',
+                                        options: {
+                                            offset: [0, 10],
+                                        },
+                                    },
+                                ]}
+                            >
+                                {({ TransitionProps }) => (
+                                    <Fade {...TransitionProps} timeout={300}>
+                                        <Paper sx={styles.criteriaPaper} elevation={3}>
+                                            <Box sx={styles.criteriaArrow} className="arrow" />
+                                            <Typography variant="subtitle2" sx={{ p: 1, fontWeight: 600 }}>
+                                                Password requirements:
+                                            </Typography>
+                                            <List dense sx={styles.criteriaList}>
+                                                <ListItem sx={styles.criteriaItem}>
+                                                    <ListItemIcon sx={styles.criteriaIcon}>
+                                                        {passwordCriteria.hasUpperCase ?
+                                                            <Check fontSize="small" color="success" /> :
+                                                            <Close fontSize="small" color="error" />}
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary="Contains uppercase letter"
+                                                        primaryTypographyProps={{
+                                                            sx: {
+                                                                ...styles.criteriaText,
+                                                                color: passwordCriteria.hasUpperCase ? 'green' : 'red'
+                                                            }
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                                <ListItem sx={styles.criteriaItem}>
+                                                    <ListItemIcon sx={styles.criteriaIcon}>
+                                                        {passwordCriteria.hasLowerCase ?
+                                                            <Check fontSize="small" color="success" /> :
+                                                            <Close fontSize="small" color="error" />}
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary="Contains lowercase letter"
+                                                        primaryTypographyProps={{
+                                                            sx: {
+                                                                ...styles.criteriaText,
+                                                                color: passwordCriteria.hasLowerCase ? 'green' : 'red'
+                                                            }
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                                <ListItem sx={styles.criteriaItem}>
+                                                    <ListItemIcon sx={styles.criteriaIcon}>
+                                                        {passwordCriteria.hasNumber ?
+                                                            <Check fontSize="small" color="success" /> :
+                                                            <Close fontSize="small" color="error" />}
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary="Contains number"
+                                                        primaryTypographyProps={{
+                                                            sx: {
+                                                                ...styles.criteriaText,
+                                                                color: passwordCriteria.hasNumber ? 'green' : 'red'
+                                                            }
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                                <ListItem sx={styles.criteriaItem}>
+                                                    <ListItemIcon sx={styles.criteriaIcon}>
+                                                        {passwordCriteria.hasMinLength ?
+                                                            <Check fontSize="small" color="success" /> :
+                                                            <Close fontSize="small" color="error" />}
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary="At least 6 characters long"
+                                                        primaryTypographyProps={{
+                                                            sx: {
+                                                                ...styles.criteriaText,
+                                                                color: passwordCriteria.hasMinLength ? 'green' : 'red'
+                                                            }
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                            </List>
+                                        </Paper>
+                                    </Fade>
+                                )}
+                            </Popper>
 
                             <TextField
                                 fullWidth
@@ -294,7 +467,8 @@ const Register = () => {
                                 type="submit"
                                 variant="contained"
                                 fullWidth
-                                disabled={isLoading}
+                                disabled={isLoading ||
+                                    (formData.password && !allCriteriaMet)}
                                 sx={styles.signUpButton}
                             >
                                 {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
