@@ -14,6 +14,8 @@ import {
     Collapse,
     List,
     ListItem,
+    TextField,
+    Slider,
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -105,7 +107,11 @@ const Products = () => {
 
     // Filter state
     const [filters, setFilters] = useState({
-        category: []
+        category: [],
+        name: '',
+        priceRange: [0, 1000],
+        minRating: 0,
+        sizes: []
     });
 
     // Parse URL parameters for initial filters
@@ -291,59 +297,93 @@ const Products = () => {
     }, [products, getAllSubcategoryIds]);
 
     const filteredProducts = useMemo(() => {
-        // If no categories are selected, return all products
-        if (filters.category.length === 0) {
-            return products;
-        }
+        let filtered = products;
+        
+        // Category filtering (existing logic)
+        if (filters.category.length > 0) {
+            // Get all selected categories
+            const selectedCategories = filters.category
+                .map(id => findCategoryById(id))
+                .filter(Boolean);
 
-        // Get all selected categories
-        const selectedCategories = filters.category
-            .map(id => findCategoryById(id))
-            .filter(Boolean);
-
-        // If no valid categories found, return empty array
-        if (selectedCategories.length === 0) {
-            return [];
-        }
-
-        // Create a Set to store all category IDs to include
-        const includedCategoryIds = new Set();
-
-        // Function to check if a category is a parent of another
-        const isParentOf = (parent, child) => {
-            let current = child;
-            while (current && current.parent) {
-                if (current.parent === parent.id) return true;
-                current = findCategoryById(current.parent);
+            // If no valid categories found, return empty array
+            if (selectedCategories.length === 0) {
+                return [];
             }
-            return false;
-        };
 
-        // First, find all "leaf" categories (most specific selections)
-        const leafCategories = selectedCategories.filter(category => {
-            return !selectedCategories.some(otherCategory => {
-                return otherCategory.id !== category.id &&
-                    isParentOf(otherCategory, category);
+            // Create a Set to store all category IDs to include
+            const includedCategoryIds = new Set();
+
+            // Function to check if a category is a parent of another
+            const isParentOf = (parent, child) => {
+                let current = child;
+                while (current && current.parent) {
+                    if (current.parent === parent.id) return true;
+                    current = findCategoryById(current.parent);
+                }
+                return false;
+            };
+
+            // First, find all "leaf" categories (most specific selections)
+            const leafCategories = selectedCategories.filter(category => {
+                return !selectedCategories.some(otherCategory => {
+                    return otherCategory.id !== category.id &&
+                        isParentOf(otherCategory, category);
+                });
             });
-        });
 
-        // Add all leaf categories and their descendants
-        leafCategories.forEach(category => {
-            const allSubcategoryIds = getAllSubcategoryIds(category);
-            allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
-        });
-
-        // If no leaf categories found (only parents selected), include all selected parents and their descendants
-        if (leafCategories.length === 0) {
-            selectedCategories.forEach(category => {
+            // Add all leaf categories and their descendants
+            leafCategories.forEach(category => {
                 const allSubcategoryIds = getAllSubcategoryIds(category);
                 allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
             });
-        }
 
-        // Filter products based on included categories
-        return products.filter(product => includedCategoryIds.has(product.categoryId));
-    }, [products, filters.category, findCategoryById, getAllSubcategoryIds]);
+            // If no leaf categories found (only parents selected), include all selected parents and their descendants
+            if (leafCategories.length === 0) {
+                selectedCategories.forEach(category => {
+                    const allSubcategoryIds = getAllSubcategoryIds(category);
+                    allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
+                });
+            }
+
+            // Filter products based on included categories
+            filtered = filtered.filter(product => includedCategoryIds.has(product.categoryId));
+        }
+        
+        // Name search filtering
+        if (filters.name.trim() !== '') {
+            const searchTerm = filters.name.toLowerCase().trim();
+            filtered = filtered.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) || 
+                (product.description && product.description.toLowerCase().includes(searchTerm))
+            );
+        }
+        
+        // Price range filtering
+        filtered = filtered.filter(product => 
+            product.price >= filters.priceRange[0] && 
+            product.price <= filters.priceRange[1]
+        );
+        
+        // Rating filtering
+        if (filters.minRating > 0) {
+            filtered = filtered.filter(product => 
+                (productRatings[product.id] || 0) >= filters.minRating
+            );
+        }
+        
+        // Size filtering
+        if (filters.sizes.length > 0) {
+            filtered = filtered.filter(product => {
+                if (!product.stocks || product.stocks.length === 0) return false;
+                return product.stocks.some(stock => 
+                    filters.sizes.includes(stock.size) && stock.stock > 0
+                );
+            });
+        }
+        
+        return filtered;
+    }, [products, filters, findCategoryById, getAllSubcategoryIds, productRatings]);
 
     // Render category tree recursively
     const renderCategoryTree = (category, level = 0) => {
@@ -437,6 +477,69 @@ const Products = () => {
         );
     };
 
+    // Add these functions for price range handling
+    const handlePriceChange = (event, newValue) => {
+        setFilters(prev => ({
+            ...prev,
+            priceRange: newValue
+        }));
+    };
+
+    const handleNameFilterChange = (event) => {
+        setFilters(prev => ({
+            ...prev,
+            name: event.target.value
+        }));
+    };
+
+    const handleRatingChange = (value) => {
+        setFilters(prev => ({
+            ...prev,
+            minRating: value
+        }));
+    };
+
+    const handleSizeFilterChange = (size) => {
+        setFilters(prev => ({
+            ...prev,
+            sizes: prev.sizes.includes(size)
+                ? prev.sizes.filter(s => s !== size)
+                : [...prev.sizes, size]
+        }));
+    };
+
+    // Get all available sizes from products
+    const availableSizes = useMemo(() => {
+        const sizesSet = new Set();
+        products.forEach(product => {
+            if (product.stocks && product.stocks.length > 0) {
+                product.stocks.forEach(stock => {
+                    if (stock.stock > 0) {
+                        sizesSet.add(stock.size);
+                    }
+                });
+            }
+        });
+        return Array.from(sizesSet).sort();
+    }, [products]);
+
+    // Get the max price for the price range slider
+    const maxPrice = useMemo(() => {
+        if (products.length === 0) return 1000;
+        const max = Math.max(...products.map(product => product.price));
+        return Math.ceil(max / 100) * 100; // Round up to nearest 100
+    }, [products]);
+
+    // Update the initial state of the price range when products load
+    useEffect(() => {
+        if (products.length > 0) {
+            setFilters(prev => ({
+                ...prev,
+                priceRange: [0, maxPrice]
+            }));
+        }
+    }, [maxPrice, products.length]);
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -496,6 +599,67 @@ const Products = () => {
                             Filters
                         </Typography>
 
+                        {/* Search Filter */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                sx={{
+                                    fontFamily: "'Montserrat', sans-serif",
+                                    fontWeight: 600,
+                                    fontSize: '1rem',
+                                    color: '#2B2B2B',
+                                    mb: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    '&::before': {
+                                        content: '""',
+                                        display: 'inline-block',
+                                        width: '4px',
+                                        height: '16px',
+                                        backgroundColor: '#2E7D32',
+                                        marginRight: '8px',
+                                        borderRadius: '2px',
+                                    }
+                                }}
+                            >
+                                Search
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Search products..."
+                                variant="outlined"
+                                value={filters.name}
+                                onChange={handleNameFilterChange}
+                                size="small"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: 'rgba(0, 0, 0, 0.12)',
+                                            borderRadius: '8px',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#2E7D32',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#2E7D32',
+                                        },
+                                    },
+                                }}
+                                InputProps={{
+                                    endAdornment: filters.name ? (
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setFilters(prev => ({ ...prev, name: '' }))}
+                                        >
+                                            <Box sx={{ fontSize: '1rem' }}>×</Box>
+                                        </IconButton>
+                                    ) : null,
+                                }}
+                            />
+                        </Box>
+
+                        {/* Categories Filter */}
                         <Box sx={{ mb: 4 }}>
                             <Typography
                                 variant="subtitle1"
@@ -528,11 +692,215 @@ const Products = () => {
                             </List>
                         </Box>
 
+                        {/* Price Range Filter */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                sx={{
+                                    fontFamily: "'Montserrat', sans-serif",
+                                    fontWeight: 600,
+                                    fontSize: '1rem',
+                                    color: '#2B2B2B',
+                                    mb: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    '&::before': {
+                                        content: '""',
+                                        display: 'inline-block',
+                                        width: '4px',
+                                        height: '16px',
+                                        backgroundColor: '#2E7D32',
+                                        marginRight: '8px',
+                                        borderRadius: '2px',
+                                    }
+                                }}
+                            >
+                                Price Range
+                            </Typography>
+                            <Box sx={{ px: 2, pt: 1 }}>
+                                <Slider
+                                    value={filters.priceRange}
+                                    onChange={handlePriceChange}
+                                    valueLabelDisplay="auto"
+                                    min={0}
+                                    max={maxPrice}
+                                    sx={{
+                                        color: '#2E7D32',
+                                        '& .MuiSlider-thumb': {
+                                            '&:hover, &.Mui-focusVisible': {
+                                                boxShadow: '0px 0px 0px 8px rgba(46, 125, 50, 0.16)',
+                                            },
+                                        },
+                                    }}
+                                />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ${filters.priceRange[0]}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ${filters.priceRange[1]}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+
+                        {/* Rating Filter */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                sx={{
+                                    fontFamily: "'Montserrat', sans-serif",
+                                    fontWeight: 600,
+                                    fontSize: '1rem',
+                                    color: '#2B2B2B',
+                                    mb: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    '&::before': {
+                                        content: '""',
+                                        display: 'inline-block',
+                                        width: '4px',
+                                        height: '16px',
+                                        backgroundColor: '#2E7D32',
+                                        marginRight: '8px',
+                                        borderRadius: '2px',
+                                    }
+                                }}
+                            >
+                                Rating
+                            </Typography>
+                            <Box sx={{ px: 1 }}>
+                                {[5, 4, 3, 2, 1].map((rating) => (
+                                    <Box
+                                        key={rating}
+                                        onClick={() => handleRatingChange(rating)}
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '6px 12px',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            mb: 1,
+                                            backgroundColor: filters.minRating === rating ? 'rgba(46, 125, 50, 0.08)' : 'transparent',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                                            },
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                                            {[...Array(5)].map((_, index) => (
+                                                <Box
+                                                    key={index}
+                                                    sx={{
+                                                        color: index < rating ? '#FFC107' : '#E0E0E0',
+                                                        fontSize: '0.9rem',
+                                                    }}
+                                                >
+                                                    ★
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: '#555' }}>
+                                            & Up
+                                        </Typography>
+                                    </Box>
+                                ))}
+                                {filters.minRating > 0 && (
+                                    <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={() => handleRatingChange(0)}
+                                        sx={{
+                                            color: '#555',
+                                            textTransform: 'none',
+                                            fontSize: '0.8rem',
+                                            mt: 1,
+                                        }}
+                                    >
+                                        Clear Rating Filter
+                                    </Button>
+                                )}
+                            </Box>
+                        </Box>
+
+                        {/* Size Filter */}
+                        {availableSizes.length > 0 && (
+                            <Box sx={{ mb: 4 }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    gutterBottom
+                                    sx={{
+                                        fontFamily: "'Montserrat', sans-serif",
+                                        fontWeight: 600,
+                                        fontSize: '1rem',
+                                        color: '#2B2B2B',
+                                        mb: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        '&::before': {
+                                            content: '""',
+                                            display: 'inline-block',
+                                            width: '4px',
+                                            height: '16px',
+                                            backgroundColor: '#2E7D32',
+                                            marginRight: '8px',
+                                            borderRadius: '2px',
+                                        }
+                                    }}
+                                >
+                                    Size
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 1 }}>
+                                    {availableSizes.map((size) => (
+                                        <Box
+                                            key={size}
+                                            onClick={() => handleSizeFilterChange(size)}
+                                            sx={{
+                                                padding: '5px 10px',
+                                                border: '1px solid',
+                                                borderColor: filters.sizes.includes(size) ? '#2E7D32' : 'rgba(0, 0, 0, 0.12)',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                backgroundColor: filters.sizes.includes(size) ? 'rgba(46, 125, 50, 0.08)' : 'transparent',
+                                                color: filters.sizes.includes(size) ? '#2E7D32' : '#555',
+                                                fontWeight: filters.sizes.includes(size) ? 600 : 400,
+                                                fontSize: '0.8rem',
+                                                textAlign: 'center',
+                                                '&:hover': {
+                                                    borderColor: '#2E7D32',
+                                                    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                                                },
+                                            }}
+                                        >
+                                            {size}
+                                        </Box>
+                                    ))}
+                                </Box>
+                                {filters.sizes.length > 0 && (
+                                    <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={() => setFilters(prev => ({ ...prev, sizes: [] }))}
+                                        sx={{
+                                            color: '#555',
+                                            textTransform: 'none',
+                                            fontSize: '0.8rem',
+                                            mt: 2,
+                                        }}
+                                    >
+                                        Clear Size Filters
+                                    </Button>
+                                )}
+                            </Box>
+                        )}
+
                         <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                onClick={() => setFilters({ category: [] })}
+                                onClick={() => setFilters({ category: [], name: '', priceRange: [0, maxPrice], minRating: 0, sizes: [] })}
                                 sx={{
                                     color: '#2E7D32',
                                     borderColor: '#2E7D32',
@@ -553,129 +921,145 @@ const Products = () => {
                     </Box>
 
                     <Box sx={{ flex: 1 }}>
-                        <Grid container spacing={3}>
-                            {filteredProducts.map((product) => (
-                                <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                                    <Card
-                                        onClick={() => navigate(`/product/${product.id}`)}
-                                        onMouseEnter={() => setHoveredProduct(product.id)}
-                                        onMouseLeave={() => setHoveredProduct(null)}
-                                        sx={{
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            borderRadius: '12px',
-                                            border: '1px solid rgba(0,0,0,0.08)',
-                                            transition: 'all 0.3s ease',
-                                            cursor: 'pointer',
-                                            width: '100%',
-                                            aspectRatio: '1/1.4',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                borderColor: 'rgba(0,0,0,0.12)'
-                                            }
-                                        }}
-                                    >
-                                        <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
-                                            <CardMedia
-                                                component="img"
-                                                height="100%"
-                                                width="100%"
-                                                image={product.images && product.images.length > 0
-                                                    ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
-                                                    : '/placeholder-image.jpg'}
-                                                alt={product.name}
-                                                sx={{
-                                                    objectFit: 'cover',
-                                                    backgroundColor: '#f5f5f5',
-                                                    transition: 'transform 0.3s ease',
-                                                    height: '100%',
-                                                    '&:hover': {
-                                                        transform: 'scale(1.05)'
-                                                    }
-                                                }}
-                                            />
-                                            {/* Category Tag */}
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 12,
-                                                    left: 12,
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                    color: '#2B2B2B',
-                                                    padding: '4px 10px',
-                                                    borderRadius: '16px',
-                                                    fontSize: '0.7rem',
-                                                    fontWeight: 600,
-                                                    letterSpacing: '0.5px',
-                                                    textTransform: 'uppercase',
-                                                    backdropFilter: 'blur(4px)',
-                                                }}
-                                            >
-                                                {product.categoryName}
-                                            </Box>
-                                        </Box>
-
-                                        {/* Product Info */}
-                                        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '35%' }}>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    fontSize: '0.9rem',
-                                                    fontWeight: 600,
-                                                    mb: 0.5,
-                                                    color: '#2B2B2B',
-                                                    fontFamily: "'Montserrat', sans-serif",
-                                                    lineHeight: 1.3,
-                                                }}
-                                            >
-                                                {product.name}
-                                            </Typography>
-
-                                            {/* Rating */}
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                                                {[...Array(5)].map((_, index) => (
-                                                    <Box
-                                                        key={index}
-                                                        sx={{
-                                                            color: index < Math.floor(productRatings[product.id] || 0) ? '#FFC107' : '#E0E0E0',
-                                                            fontSize: '0.8rem',
-                                                        }}
-                                                    >
-                                                        ★
-                                                    </Box>
-                                                ))}
-                                                <Typography
-                                                    variant="body2"
+                        {filteredProducts.length > 0 ? (
+                            <Grid container spacing={3}>
+                                {filteredProducts.map((product) => (
+                                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                                        <Card
+                                            onClick={() => navigate(`/product/${product.id}`)}
+                                            onMouseEnter={() => setHoveredProduct(product.id)}
+                                            onMouseLeave={() => setHoveredProduct(null)}
+                                            sx={{
+                                                height: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(0,0,0,0.08)',
+                                                transition: 'all 0.3s ease',
+                                                cursor: 'pointer',
+                                                width: '100%',
+                                                aspectRatio: '1/1.4',
+                                                '&:hover': {
+                                                    transform: 'translateY(-4px)',
+                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                    borderColor: 'rgba(0,0,0,0.12)'
+                                                }
+                                            }}
+                                        >
+                                            <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
+                                                <CardMedia
+                                                    component="img"
+                                                    height="100%"
+                                                    width="100%"
+                                                    image={product.images && product.images.length > 0
+                                                        ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                                                        : '/placeholder-image.jpg'}
+                                                    alt={product.name}
                                                     sx={{
-                                                        ml: 0.5,
-                                                        color: '#666',
+                                                        objectFit: 'cover',
+                                                        backgroundColor: '#f5f5f5',
+                                                        transition: 'transform 0.3s ease',
+                                                        height: '100%',
+                                                        '&:hover': {
+                                                            transform: 'scale(1.05)'
+                                                        }
+                                                    }}
+                                                />
+                                                {/* Category Tag */}
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 12,
+                                                        left: 12,
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                        color: '#2B2B2B',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '16px',
                                                         fontSize: '0.7rem',
+                                                        fontWeight: 600,
+                                                        letterSpacing: '0.5px',
+                                                        textTransform: 'uppercase',
+                                                        backdropFilter: 'blur(4px)',
                                                     }}
                                                 >
-                                                    ({productRatings[product.id] || 0})
-                                                </Typography>
+                                                    {product.categoryName}
+                                                </Box>
                                             </Box>
 
-                                            {/* Price */}
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    mt: 'auto',
-                                                    color: '#2E7D32',
-                                                    fontWeight: 700,
-                                                    fontSize: '1.1rem',
-                                                    fontFamily: "'Playfair Display', serif",
-                                                }}
-                                            >
-                                                ${product.price}
-                                            </Typography>
-                                        </Box>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
+                                            {/* Product Info */}
+                                            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '35%' }}>
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{
+                                                        fontSize: '0.9rem',
+                                                        fontWeight: 600,
+                                                        mb: 0.5,
+                                                        color: '#2B2B2B',
+                                                        fontFamily: "'Montserrat', sans-serif",
+                                                        lineHeight: 1.3,
+                                                    }}
+                                                >
+                                                    {product.name}
+                                                </Typography>
+
+                                                {/* Rating */}
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                                    {[...Array(5)].map((_, index) => (
+                                                        <Box
+                                                            key={index}
+                                                            sx={{
+                                                                color: index < Math.floor(productRatings[product.id] || 0) ? '#FFC107' : '#E0E0E0',
+                                                                fontSize: '0.8rem',
+                                                            }}
+                                                        >
+                                                            ★
+                                                        </Box>
+                                                    ))}
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            ml: 0.5,
+                                                            color: '#666',
+                                                            fontSize: '0.7rem',
+                                                        }}
+                                                    >
+                                                        ({productRatings[product.id] || 0})
+                                                    </Typography>
+                                                </Box>
+
+                                                {/* Price */}
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{
+                                                        mt: 'auto',
+                                                        color: '#2E7D32',
+                                                        fontWeight: 700,
+                                                        fontSize: '1.1rem',
+                                                        fontFamily: "'Playfair Display', serif",
+                                                    }}
+                                                >
+                                                    ${product.price}
+                                                </Typography>
+                                            </Box>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        ) : (
+                            <Box sx={{ 
+                                textAlign: 'center', 
+                                py: 8, 
+                                backgroundColor: 'rgba(0,0,0,0.02)',
+                                borderRadius: '12px'
+                            }}>
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    No products found matching your filters
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Try adjusting your filters to find what you're looking for
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
                 </Box>
             </Box>
