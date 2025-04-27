@@ -16,6 +16,8 @@ import {
     ListItem,
     TextField,
     Slider,
+    Pagination,
+    Stack,
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -25,6 +27,11 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import CartNotification from '../components/CartNotification';
 import {Helmet} from "react-helmet";
+
+// Update color constants to match the brand color from Header.jsx
+const primaryColor = '#1976d2'; // Primary blue color
+const primaryLightColor = '#2196f3'; // Lighter blue color
+const primaryDarkColor = '#1565c0'; // Darker blue color
 
 // Create a separate component for category tree items
 const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories }) => {
@@ -104,6 +111,16 @@ const Products = () => {
     const [productRatings, setProductRatings] = useState({});
     const [notification, setNotification] = useState({ open: false, product: null, quantity: 1 });
     const [hoveredProduct, setHoveredProduct] = useState(null);
+    
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const productsPerPage = 12;
+    
+    // Price range input fields
+    const [priceInputs, setPriceInputs] = useState({
+        min: '0',
+        max: '1000',
+    });
 
     // Filter state
     const [filters, setFilters] = useState({
@@ -488,11 +505,145 @@ const Products = () => {
         );
     };
 
-    // Add these functions for price range handling
+    // Get the max price for the price range slider
+    const maxPrice = useMemo(() => {
+        if (products.length === 0) return 1000;
+        const max = Math.max(...products.map(product => product.price));
+        return Math.ceil(max / 100) * 100; // Round up to nearest 100
+    }, [products]);
+
+    // Update the initial state of the price range when products load
+    useEffect(() => {
+        if (products.length > 0) {
+            // Only update the inputs, not the filters on initial load
+            setPriceInputs({
+                min: '0',
+                max: maxPrice.toString()
+            });
+            // Initialize the filters with the full range - will only change when "Apply" is clicked
+            setFilters(prev => ({
+                ...prev,
+                priceRange: [0, maxPrice]
+            }));
+        }
+    }, [maxPrice, products.length]);
+    
+    // Handle page change
+    const handlePageChange = (event, value) => {
+        setPage(value);
+        // Scroll to top when changing page
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+    
+    // Get current products for pagination
+    const currentProducts = useMemo(() => {
+        const indexOfLastProduct = page * productsPerPage;
+        const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+        return filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+    }, [filteredProducts, page, productsPerPage]);
+    
+    // Calculate total pages
+    const totalPages = useMemo(() => {
+        return Math.ceil(filteredProducts.length / productsPerPage);
+    }, [filteredProducts, productsPerPage]);
+    
+    // Reset to first page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
+
+    // Get all available sizes from products
+    const availableSizes = useMemo(() => {
+        const sizesSet = new Set();
+        products.forEach(product => {
+            if (product.stocks && product.stocks.length > 0) {
+                product.stocks.forEach(stock => {
+                    if (stock.stock > 0) {
+                        sizesSet.add(stock.size);
+                    }
+                });
+            }
+        });
+        return Array.from(sizesSet).sort();
+    }, [products]);
+
     const handlePriceChange = (event, newValue) => {
+        // Only update the input fields, not the actual filter
+        setPriceInputs({
+            min: newValue[0].toString(),
+            max: newValue[1].toString()
+        });
+    };
+    
+    const handlePriceInputChange = (type, rawValue) => {
+        // Allow empty string for better editing experience
+        if (rawValue === '') {
+            setPriceInputs(prev => ({
+                ...prev,
+                [type]: ''
+            }));
+            return;
+        }
+        
+        // Convert to number and check if it's a valid number
+        const value = Number(rawValue);
+        if (isNaN(value)) {
+            return; // Don't update if not a valid number
+        }
+        
+        // Only allow non-negative integers
+        if (value < 0 || !Number.isInteger(value)) {
+            return;
+        }
+        
+        // Apply max constraints
+        if (type === 'max' && value > maxPrice) {
+            setPriceInputs(prev => ({
+                ...prev,
+                max: maxPrice.toString()
+            }));
+            return;
+        }
+        
+        // Store as string to allow for empty input during editing
+        setPriceInputs(prev => ({
+            ...prev,
+            [type]: rawValue
+        }));
+    };
+    
+    const resetPriceFilter = () => {
+        // Reset to default values (0 to maxPrice)
+        setPriceInputs({
+            min: '0',
+            max: maxPrice.toString()
+        });
+        // Don't apply to filters yet - user needs to press Apply button
+    };
+
+    const applyPriceFilter = () => {
+        // Parse inputs as numbers
+        let min = priceInputs.min === '' ? 0 : Number(priceInputs.min);
+        let max = priceInputs.max === '' ? maxPrice : Number(priceInputs.max);
+        
+        // Ensure min doesn't exceed max
+        if (min > max) {
+            min = max;
+        }
+        
+        // Update UI state to reflect validated values
+        setPriceInputs({
+            min: min.toString(),
+            max: max.toString()
+        });
+        
+        // Apply to filters
         setFilters(prev => ({
             ...prev,
-            priceRange: newValue
+            priceRange: [min, max]
         }));
     };
 
@@ -518,38 +669,6 @@ const Products = () => {
                 : [...prev.sizes, size]
         }));
     };
-
-    // Get all available sizes from products
-    const availableSizes = useMemo(() => {
-        const sizesSet = new Set();
-        products.forEach(product => {
-            if (product.stocks && product.stocks.length > 0) {
-                product.stocks.forEach(stock => {
-                    if (stock.stock > 0) {
-                        sizesSet.add(stock.size);
-                    }
-                });
-            }
-        });
-        return Array.from(sizesSet).sort();
-    }, [products]);
-
-    // Get the max price for the price range slider
-    const maxPrice = useMemo(() => {
-        if (products.length === 0) return 1000;
-        const max = Math.max(...products.map(product => product.price));
-        return Math.ceil(max / 100) * 100; // Round up to nearest 100
-    }, [products]);
-
-    // Update the initial state of the price range when products load
-    useEffect(() => {
-        if (products.length > 0) {
-            setFilters(prev => ({
-                ...prev,
-                priceRange: [0, maxPrice]
-            }));
-        }
-    }, [maxPrice, products.length]);
 
     if (loading) {
         return (
@@ -628,7 +747,7 @@ const Products = () => {
                                         display: 'inline-block',
                                         width: '4px',
                                         height: '16px',
-                                        backgroundColor: '#2E7D32',
+                                        backgroundColor: primaryColor,
                                         marginRight: '8px',
                                         borderRadius: '2px',
                                     }
@@ -650,10 +769,10 @@ const Products = () => {
                                             borderRadius: '8px',
                                         },
                                         '&:hover fieldset': {
-                                            borderColor: '#2E7D32',
+                                            borderColor: primaryColor,
                                         },
                                         '&.Mui-focused fieldset': {
-                                            borderColor: '#2E7D32',
+                                            borderColor: primaryColor,
                                         },
                                     },
                                 }}
@@ -688,7 +807,7 @@ const Products = () => {
                                         display: 'inline-block',
                                         width: '4px',
                                         height: '16px',
-                                        backgroundColor: '#2E7D32',
+                                        backgroundColor: primaryColor,
                                         marginRight: '8px',
                                         borderRadius: '2px',
                                     }
@@ -703,7 +822,7 @@ const Products = () => {
                             </List>
                         </Box>
 
-                        {/* Price Range Filter */}
+                        {/* Price Range Filter - Updated */}
                         <Box sx={{ mb: 4 }}>
                             <Typography
                                 variant="subtitle1"
@@ -721,7 +840,7 @@ const Products = () => {
                                         display: 'inline-block',
                                         width: '4px',
                                         height: '16px',
-                                        backgroundColor: '#2E7D32',
+                                        backgroundColor: primaryColor,
                                         marginRight: '8px',
                                         borderRadius: '2px',
                                     }
@@ -731,16 +850,19 @@ const Products = () => {
                             </Typography>
                             <Box sx={{ px: 2, pt: 1 }}>
                                 <Slider
-                                    value={filters.priceRange}
+                                    value={[
+                                        priceInputs.min === '' ? 0 : Number(priceInputs.min),
+                                        priceInputs.max === '' ? maxPrice : Number(priceInputs.max)
+                                    ]}
                                     onChange={handlePriceChange}
                                     valueLabelDisplay="auto"
                                     min={0}
                                     max={maxPrice}
                                     sx={{
-                                        color: '#2E7D32',
+                                        color: primaryColor,
                                         '& .MuiSlider-thumb': {
                                             '&:hover, &.Mui-focusVisible': {
-                                                boxShadow: '0px 0px 0px 8px rgba(46, 125, 50, 0.16)',
+                                                boxShadow: `0px 0px 0px 8px ${primaryColor}30`,
                                             },
                                         },
                                     }}
@@ -748,61 +870,87 @@ const Products = () => {
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, gap: 2 }}>
                                     <TextField
                                         size="small"
-                                        label="Min"
+                                        label="Min $"
                                         type="number"
                                         InputProps={{
-                                            startAdornment: <Box component="span" sx={{ mr: 0.5 }}>$</Box>,
-                                        }}
-                                        value={filters.priceRange[0]}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= 0 && value <= filters.priceRange[1]) {
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    priceRange: [value, prev.priceRange[1]]
-                                                }));
+                                            inputProps: { 
+                                                min: 0
                                             }
                                         }}
+                                        value={priceInputs.min}
+                                        onChange={(e) => handlePriceInputChange('min', e.target.value)}
                                         sx={{
                                             width: '50%',
                                             '& .MuiOutlinedInput-root': {
                                                 '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
-                                                '&:hover fieldset': { borderColor: '#2E7D32' },
-                                                '&.Mui-focused fieldset': { borderColor: '#2E7D32' },
+                                                '&:hover fieldset': { borderColor: primaryColor },
+                                                '&.Mui-focused fieldset': { borderColor: primaryColor },
                                             },
                                         }}
                                     />
                                     <TextField
                                         size="small"
-                                        label="Max"
+                                        label="Max $"
                                         type="number"
                                         InputProps={{
-                                            startAdornment: <Box component="span" sx={{ mr: 0.5 }}>$</Box>,
-                                        }}
-                                        value={filters.priceRange[1]}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= filters.priceRange[0] && value <= maxPrice) {
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    priceRange: [prev.priceRange[0], value]
-                                                }));
+                                            inputProps: { 
+                                                min: 0
                                             }
                                         }}
+                                        value={priceInputs.max}
+                                        onChange={(e) => handlePriceInputChange('max', e.target.value)}
                                         sx={{
                                             width: '50%',
                                             '& .MuiOutlinedInput-root': {
                                                 '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
-                                                '&:hover fieldset': { borderColor: '#2E7D32' },
-                                                '&.Mui-focused fieldset': { borderColor: '#2E7D32' },
+                                                '&:hover fieldset': { borderColor: primaryColor },
+                                                '&.Mui-focused fieldset': { borderColor: primaryColor },
                                             },
                                         }}
                                     />
                                 </Box>
+                                <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={resetPriceFilter}
+                                        sx={{
+                                            flex: 1,
+                                            color: primaryColor,
+                                            borderColor: primaryColor,
+                                            '&:hover': {
+                                                borderColor: primaryColor,
+                                                backgroundColor: `${primaryColor}10`,
+                                            },
+                                            textTransform: 'none',
+                                            fontWeight: 600,
+                                            fontSize: '0.8rem',
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={applyPriceFilter}
+                                        sx={{
+                                            flex: 1,
+                                            backgroundColor: primaryColor,
+                                            '&:hover': {
+                                                backgroundColor: primaryDarkColor,
+                                            },
+                                            textTransform: 'none',
+                                            fontWeight: 600,
+                                            fontSize: '0.8rem',
+                                        }}
+                                    >
+                                        Apply
+                                    </Button>
+                                </Box>
                             </Box>
                         </Box>
 
-                        {/* Rating Filter */}
+                        {/* Rating Filter - Updated */}
                         <Box sx={{ mb: 4 }}>
                             <Typography
                                 variant="subtitle1"
@@ -820,7 +968,7 @@ const Products = () => {
                                         display: 'inline-block',
                                         width: '4px',
                                         height: '16px',
-                                        backgroundColor: '#2E7D32',
+                                        backgroundColor: primaryColor,
                                         marginRight: '8px',
                                         borderRadius: '2px',
                                     }
@@ -829,7 +977,28 @@ const Products = () => {
                                 Rating
                             </Typography>
                             <Box sx={{ px: 1 }}>
-                                {[5, 4, 3, 2, 1].map((rating) => (
+                                {/* Add All option */}
+                                <Box
+                                    onClick={() => handleRatingChange(0)}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '6px 12px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        mb: 1,
+                                        backgroundColor: filters.minRating === 0 ? `${primaryColor}10` : 'transparent',
+                                        '&:hover': {
+                                            backgroundColor: `${primaryColor}08`,
+                                        },
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ color: '#555', fontWeight: filters.minRating === 0 ? 600 : 400 }}>
+                                        All Ratings
+                                    </Typography>
+                                </Box>
+                                {/* 4 to 1 stars */}
+                                {[4, 3, 2, 1].map((rating) => (
                                     <Box
                                         key={rating}
                                         onClick={() => handleRatingChange(rating)}
@@ -840,9 +1009,9 @@ const Products = () => {
                                             borderRadius: '4px',
                                             cursor: 'pointer',
                                             mb: 1,
-                                            backgroundColor: filters.minRating === rating ? 'rgba(46, 125, 50, 0.08)' : 'transparent',
+                                            backgroundColor: filters.minRating === rating ? `${primaryColor}10` : 'transparent',
                                             '&:hover': {
-                                                backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                                                backgroundColor: `${primaryColor}08`,
                                             },
                                         }}
                                     >
@@ -864,21 +1033,6 @@ const Products = () => {
                                         </Typography>
                                     </Box>
                                 ))}
-                                {filters.minRating > 0 && (
-                                    <Button
-                                        variant="text"
-                                        size="small"
-                                        onClick={() => handleRatingChange(0)}
-                                        sx={{
-                                            color: '#555',
-                                            textTransform: 'none',
-                                            fontSize: '0.8rem',
-                                            mt: 1,
-                                        }}
-                                    >
-                                        Clear Rating Filter
-                                    </Button>
-                                )}
                             </Box>
                         </Box>
 
@@ -901,7 +1055,7 @@ const Products = () => {
                                             display: 'inline-block',
                                             width: '4px',
                                             height: '16px',
-                                            backgroundColor: '#2E7D32',
+                                            backgroundColor: primaryColor,
                                             marginRight: '8px',
                                             borderRadius: '2px',
                                         }
@@ -917,17 +1071,17 @@ const Products = () => {
                                             sx={{
                                                 padding: '5px 10px',
                                                 border: '1px solid',
-                                                borderColor: filters.sizes.includes(size) ? '#2E7D32' : 'rgba(0, 0, 0, 0.12)',
+                                                borderColor: filters.sizes.includes(size) ? primaryColor : 'rgba(0, 0, 0, 0.12)',
                                                 borderRadius: '4px',
                                                 cursor: 'pointer',
-                                                backgroundColor: filters.sizes.includes(size) ? 'rgba(46, 125, 50, 0.08)' : 'transparent',
-                                                color: filters.sizes.includes(size) ? '#2E7D32' : '#555',
+                                                backgroundColor: filters.sizes.includes(size) ? `${primaryColor}10` : 'transparent',
+                                                color: filters.sizes.includes(size) ? primaryColor : '#555',
                                                 fontWeight: filters.sizes.includes(size) ? 600 : 400,
                                                 fontSize: '0.8rem',
                                                 textAlign: 'center',
                                                 '&:hover': {
-                                                    borderColor: '#2E7D32',
-                                                    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                                                    borderColor: primaryColor,
+                                                    backgroundColor: `${primaryColor}08`,
                                                 },
                                             }}
                                         >
@@ -957,18 +1111,32 @@ const Products = () => {
                             <Button
                                 variant="outlined"
                                 fullWidth
-                                onClick={() => setFilters({ category: [], name: '', priceRange: [0, maxPrice], minRating: 0, sizes: [] })}
+                                onClick={() => {
+                                    // Reset all filters
+                                    setFilters({ 
+                                        category: [], 
+                                        name: '', 
+                                        priceRange: [0, maxPrice], 
+                                        minRating: 0, 
+                                        sizes: [] 
+                                    });
+                                    // Also reset price inputs to match
+                                    setPriceInputs({ 
+                                        min: '0', 
+                                        max: maxPrice.toString() 
+                                    });
+                                }}
                                 sx={{
-                                    color: '#2E7D32',
-                                    borderColor: '#2E7D32',
+                                    color: primaryColor,
+                                    borderColor: primaryColor,
                                     fontWeight: 600,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px',
                                     fontSize: '0.8rem',
                                     padding: '8px 16px',
                                     '&:hover': {
-                                        borderColor: '#2E7D32',
-                                        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                                        borderColor: primaryColor,
+                                        backgroundColor: `${primaryColor}08`,
                                     },
                                 }}
                             >
@@ -979,129 +1147,189 @@ const Products = () => {
 
                     <Box sx={{ flex: 1 }}>
                         {filteredProducts.length > 0 ? (
-                            <Grid container spacing={3}>
-                                {filteredProducts.map((product) => (
-                                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                                        <Card
-                                            onClick={() => navigate(`/product/${product.id}`)}
-                                            onMouseEnter={() => setHoveredProduct(product.id)}
-                                            onMouseLeave={() => setHoveredProduct(null)}
-                                            sx={{
-                                                height: '100%',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                borderRadius: '12px',
-                                                border: '1px solid rgba(0,0,0,0.08)',
-                                                transition: 'all 0.3s ease',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                aspectRatio: '1/1.4',
-                                                '&:hover': {
-                                                    transform: 'translateY(-4px)',
-                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                    borderColor: 'rgba(0,0,0,0.12)'
-                                                }
-                                            }}
-                                        >
-                                            <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
-                                                <CardMedia
-                                                    component="img"
-                                                    height="100%"
-                                                    width="100%"
-                                                    image={product.images && product.images.length > 0
-                                                        ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
-                                                        : '/placeholder-image.jpg'}
-                                                    alt={product.name}
-                                                    sx={{
-                                                        objectFit: 'cover',
-                                                        backgroundColor: '#f5f5f5',
-                                                        transition: 'transform 0.3s ease',
-                                                        height: '100%',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.05)'
-                                                        }
-                                                    }}
-                                                />
-                                                {/* Category Tag */}
-                                                <Box
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 12,
-                                                        left: 12,
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2B2B2B',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '16px',
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: 600,
-                                                        letterSpacing: '0.5px',
-                                                        textTransform: 'uppercase',
-                                                        backdropFilter: 'blur(4px)',
-                                                    }}
-                                                >
-                                                    {product.categoryName}
-                                                </Box>
-                                            </Box>
-
-                                            {/* Product Info */}
-                                            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '35%' }}>
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontSize: '0.9rem',
-                                                        fontWeight: 600,
-                                                        mb: 0.5,
-                                                        color: '#2B2B2B',
-                                                        fontFamily: "'Montserrat', sans-serif",
-                                                        lineHeight: 1.3,
-                                                    }}
-                                                >
-                                                    {product.name}
-                                                </Typography>
-
-                                                {/* Rating */}
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                                                    {[...Array(5)].map((_, index) => (
-                                                        <Box
-                                                            key={index}
-                                                            sx={{
-                                                                color: index < Math.floor(productRatings[product.id] || 0) ? '#FFC107' : '#E0E0E0',
-                                                                fontSize: '0.8rem',
-                                                            }}
-                                                        >
-                                                            ★
-                                                        </Box>
-                                                    ))}
-                                                    <Typography
-                                                        variant="body2"
+                            <>
+                                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Showing {Math.min(filteredProducts.length, (page - 1) * productsPerPage + 1)}-
+                                        {Math.min(page * productsPerPage, filteredProducts.length)} of {filteredProducts.length} products
+                                    </Typography>
+                                </Box>
+                                <Grid container spacing={3}>
+                                    {currentProducts.map((product) => (
+                                        <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                                            <Card
+                                                onClick={() => navigate(`/product/${product.id}`)}
+                                                onMouseEnter={() => setHoveredProduct(product.id)}
+                                                onMouseLeave={() => setHoveredProduct(null)}
+                                                sx={{
+                                                    height: '100%',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid rgba(0,0,0,0.08)',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer',
+                                                    width: '100%',
+                                                    aspectRatio: '1/1.4',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-4px)',
+                                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                        borderColor: 'rgba(0,0,0,0.12)'
+                                                    }
+                                                }}
+                                            >
+                                                <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
+                                                    <CardMedia
+                                                        component="img"
+                                                        height="100%"
+                                                        width="100%"
+                                                        image={product.images && product.images.length > 0
+                                                            ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                                                            : '/placeholder-image.jpg'}
+                                                        alt={product.name}
                                                         sx={{
-                                                            ml: 0.5,
-                                                            color: '#666',
+                                                            objectFit: 'cover',
+                                                            backgroundColor: '#f5f5f5',
+                                                            transition: 'transform 0.3s ease',
+                                                            height: '100%',
+                                                            '&:hover': {
+                                                                transform: 'scale(1.05)'
+                                                            }
+                                                        }}
+                                                    />
+                                                    {/* Category Tag */}
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: 12,
+                                                            left: 12,
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2B2B2B',
+                                                            padding: '4px 10px',
+                                                            borderRadius: '16px',
                                                             fontSize: '0.7rem',
+                                                            fontWeight: 600,
+                                                            letterSpacing: '0.5px',
+                                                            textTransform: 'uppercase',
+                                                            backdropFilter: 'blur(4px)',
                                                         }}
                                                     >
-                                                        ({productRatings[product.id] || 0})
-                                                    </Typography>
+                                                        {product.categoryName}
+                                                    </Box>
                                                 </Box>
 
-                                                {/* Price */}
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        mt: 'auto',
-                                                        color: '#2E7D32',
-                                                        fontWeight: 700,
-                                                        fontSize: '1.1rem',
-                                                        fontFamily: "'Playfair Display', serif",
-                                                    }}
-                                                >
-                                                    ${product.price}
-                                                </Typography>
-                                            </Box>
-                                        </Card>
-                                    </Grid>
-                                ))}
-                            </Grid>
+                                                {/* Product Info */}
+                                                <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '35%' }}>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            fontSize: '0.9rem',
+                                                            fontWeight: 600,
+                                                            mb: 0.5,
+                                                            color: '#2B2B2B',
+                                                            fontFamily: "'Montserrat', sans-serif",
+                                                            lineHeight: 1.3,
+                                                        }}
+                                                    >
+                                                        {product.name}
+                                                    </Typography>
+
+                                                    {/* Rating - Updated with half stars and bigger size */}
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.8 }}>
+                                                        {[...Array(5)].map((_, index) => {
+                                                            const rating = productRatings[product.id] || 0;
+                                                            const isHalfStar = index < rating && index >= Math.floor(rating);
+                                                            
+                                                            return (
+                                                                <Box
+                                                                    key={index}
+                                                                    sx={{
+                                                                        position: 'relative',
+                                                                        display: 'inline-block',
+                                                                        color: '#E0E0E0',
+                                                                        fontSize: '1rem',
+                                                                        mr: 0.1,
+                                                                    }}
+                                                                >
+                                                                    {/* Background star (always shown) */}
+                                                                    <span>★</span>
+                                                                    
+                                                                    {/* Foreground star (full or half) */}
+                                                                    {(index < Math.floor(rating) || isHalfStar) && (
+                                                                        <Box
+                                                                            sx={{
+                                                                                position: 'absolute',
+                                                                                top: 0,
+                                                                                left: 0,
+                                                                                color: '#FFC107',
+                                                                                overflow: 'hidden',
+                                                                                width: isHalfStar ? '50%' : '100%',
+                                                                            }}
+                                                                        >
+                                                                            ★
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                            );
+                                                        })}
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                ml: 0.6,
+                                                                color: '#666',
+                                                                fontSize: '0.8rem',
+                                                                fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            ({(productRatings[product.id] || 0).toFixed(1)})
+                                                        </Typography>
+                                                    </Box>
+
+                                                    {/* Price */}
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            mt: 'auto',
+                                                            color: primaryColor,
+                                                            fontWeight: 700,
+                                                            fontSize: '1.1rem',
+                                                            fontFamily: "'Playfair Display', serif",
+                                                        }}
+                                                    >
+                                                        ${product.price}
+                                                    </Typography>
+                                                </Box>
+                                            </Card>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                                
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <Stack spacing={2} sx={{ mt: 4, display: 'flex', alignItems: 'center' }}>
+                                        <Pagination 
+                                            count={totalPages} 
+                                            page={page} 
+                                            onChange={handlePageChange}
+                                            color="primary"
+                                            size="large"
+                                            sx={{
+                                                '& .MuiPaginationItem-root': {
+                                                    color: '#555',
+                                                    fontWeight: 500,
+                                                },
+                                                '& .MuiPaginationItem-page.Mui-selected': {
+                                                    backgroundColor: primaryColor,
+                                                    color: '#fff',
+                                                    '&:hover': {
+                                                        backgroundColor: primaryDarkColor,
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </Stack>
+                                )}
+                            </>
                         ) : (
                             <Box sx={{ 
                                 textAlign: 'center', 
