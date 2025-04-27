@@ -35,6 +35,7 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import CartNotification from '../components/CartNotification';
 import {Helmet} from "react-helmet";
+import { useMediaQuery } from '@mui/material';
 
 // Update color constants to match the brand color from Header.jsx
 const primaryColor = '#1976d2'; // Primary blue color
@@ -119,6 +120,10 @@ const Products = () => {
     const [productRatings, setProductRatings] = useState({});
     const [notification, setNotification] = useState({ open: false, product: null, quantity: 1 });
     const [hoveredProduct, setHoveredProduct] = useState(null);
+    
+    // Mobile responsive states
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+    const isMobile = useMediaQuery('(max-width:900px)');
     
     // Sorting state
     const [sortOption, setSortOption] = useState('default');
@@ -740,14 +745,15 @@ const Products = () => {
                 product={notification.product}
                 quantity={notification.quantity}
             />
-            <Box sx={{ pt: 0, pb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+            <Box sx={{ pt: 0, pb: 4, px: { xs: 1.5, sm: 3, md: 4 } }}>
                 <Box sx={{ 
                     display: 'flex', 
                     flexDirection: { xs: 'column', sm: 'row' },
                     justifyContent: 'space-between',
                     alignItems: { xs: 'flex-start', sm: 'center' },
-                    mb: 2,
+                    mb: { xs: 2, sm: 2 },
                     mt: 1,
+                    gap: { xs: 1, sm: 0 },
                 }}>
                     <Typography
                         variant="h5"
@@ -755,12 +761,13 @@ const Products = () => {
                             fontFamily: "'Playfair Display', serif",
                             fontWeight: 700,
                             color: '#2B2B2B',
-                            mb: { xs: 1, sm: 0 },
+                            mb: { xs: 0.5, sm: 0 },
+                            fontSize: { xs: '1.4rem', sm: '1.5rem' },
                         }}
                     >
                         STRIVE | Products
                     </Typography>
-
+                    
                     {/* Improved sorting component with entire field clickable */}
                     {sortedFilteredProducts.length > 0 && (
                         <Box sx={{ 
@@ -772,6 +779,7 @@ const Products = () => {
                             padding: '4px 12px',
                             border: '1px solid #eaeaea',
                             cursor: 'pointer', // Add cursor pointer to entire box
+                            width: { xs: '100%', sm: 'auto' }, // Full width on mobile
                         }}>
                             <SortIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
                             <FormControl variant="standard" sx={{ minWidth: 140, border: 'none', width: '100%' }}>
@@ -821,13 +829,32 @@ const Products = () => {
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                    <Box sx={{ width: { xs: '100%', md: '280px' }, flexShrink: 0 }}>
-                        <Box sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center',
-                            mb: 2,
-                        }}>
+                    {/* Filters sidebar - collapsible on mobile */}
+                    <Box
+                        component="aside"
+                        sx={{
+                            width: { xs: '100%', md: '280px' },
+                            flexShrink: 0,
+                            mb: { xs: 2, md: 0 },
+                            border: { xs: '1px solid #eaeaea', md: 'none' },
+                            borderRadius: { xs: '8px', md: 0 },
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {/* Filters header - clickable on mobile to expand/collapse */}
+                        <Box
+                            onClick={() => setMobileFiltersOpen(prev => !prev)}
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                p: { xs: 2, md: 0 },
+                                pb: { xs: 1.5, md: 0 },
+                                mb: 2,
+                                cursor: { xs: 'pointer', md: 'default' },
+                                backgroundColor: { xs: '#f9f9f9', md: 'transparent' },
+                            }}
+                        >
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <FilterListIcon sx={{ color: primaryColor, mr: 1, fontSize: '1.2rem' }} />
                                 <Typography
@@ -843,443 +870,496 @@ const Products = () => {
                                 </Typography>
                             </Box>
                             
-                            {/* Add an active filters count */}
-                            {(filters.category.length > 0 || 
-                              filters.sizes.length > 0 || 
-                              filters.name !== '' || 
-                              filters.minRating > 0 || 
-                              filters.priceRange[0] > 0 || 
-                              filters.priceRange[1] < maxPrice) && (
-                                <Chip 
-                                    label={`Active filters`} 
-                                    size="small" 
-                                    color="primary"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.7rem' }}
-                                />
-                            )}
-                        </Box>
-
-                        {/* Search Filter */}
-                        <Box sx={{ mb: 4 }}>
-                            <Typography
-                                variant="subtitle1"
-                                gutterBottom
-                                sx={{
-                                    fontFamily: "'Montserrat', sans-serif",
-                                    fontWeight: 600,
-                                    fontSize: '1rem',
-                                    color: '#2B2B2B',
-                                    mb: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&::before': {
-                                        content: '""',
-                                        display: 'inline-block',
-                                        width: '4px',
-                                        height: '16px',
-                                        backgroundColor: primaryColor,
-                                        marginRight: '8px',
-                                        borderRadius: '2px',
-                                    }
-                                }}
-                            >
-                                Search
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Search products..."
-                                variant="outlined"
-                                value={filters.name}
-                                onChange={handleNameFilterChange}
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: 'rgba(0, 0, 0, 0.12)',
-                                            borderRadius: '8px',
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: primaryColor,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: primaryColor,
-                                        },
-                                    },
-                                }}
-                                InputProps={{
-                                    endAdornment: filters.name ? (
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => setFilters(prev => ({ ...prev, name: '' }))}
-                                        >
-                                            <Box sx={{ fontSize: '1rem' }}>×</Box>
-                                        </IconButton>
-                                    ) : null,
-                                }}
-                            />
-                        </Box>
-
-                        {/* Categories Filter */}
-                        <Box sx={{ mb: 4 }}>
-                            <Typography
-                                variant="subtitle1"
-                                gutterBottom
-                                sx={{
-                                    fontFamily: "'Montserrat', sans-serif",
-                                    fontWeight: 600,
-                                    fontSize: '1rem',
-                                    color: '#2B2B2B',
-                                    mb: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&::before': {
-                                        content: '""',
-                                        display: 'inline-block',
-                                        width: '4px',
-                                        height: '16px',
-                                        backgroundColor: primaryColor,
-                                        marginRight: '8px',
-                                        borderRadius: '2px',
-                                    }
-                                }}
-                            >
-                                Categories
-                            </Typography>
-                            <List>
-                                {categories
-                                    .filter(category => !category.parent) // Only show root categories initially
-                                    .map(category => renderCategoryTree(category))}
-                            </List>
-                        </Box>
-
-                        {/* Price Range Filter - Updated */}
-                        <Box sx={{ mb: 4 }}>
-                            <Typography
-                                variant="subtitle1"
-                                gutterBottom
-                                sx={{
-                                    fontFamily: "'Montserrat', sans-serif",
-                                    fontWeight: 600,
-                                    fontSize: '1rem',
-                                    color: '#2B2B2B',
-                                    mb: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&::before': {
-                                        content: '""',
-                                        display: 'inline-block',
-                                        width: '4px',
-                                        height: '16px',
-                                        backgroundColor: primaryColor,
-                                        marginRight: '8px',
-                                        borderRadius: '2px',
-                                    }
-                                }}
-                            >
-                                Price Range
-                            </Typography>
-                            <Box sx={{ px: 2, pt: 1 }}>
-                                <Slider
-                                    value={[
-                                        priceInputs.min === '' ? 0 : Number(priceInputs.min),
-                                        priceInputs.max === '' ? maxPrice : Number(priceInputs.max)
-                                    ]}
-                                    onChange={handlePriceChange}
-                                    valueLabelDisplay="auto"
-                                    min={0}
-                                    max={maxPrice}
-                                    sx={{
-                                        color: primaryColor,
-                                        '& .MuiSlider-thumb': {
-                                            '&:hover, &.Mui-focusVisible': {
-                                                boxShadow: `0px 0px 0px 8px ${primaryColor}30`,
-                                            },
-                                        },
-                                    }}
-                                />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, gap: 2 }}>
-                                    <TextField
-                                        size="small"
-                                        label="Min $"
-                                        type="number"
-                                        InputProps={{
-                                            inputProps: { 
-                                                min: 0
-                                            }
-                                        }}
-                                        value={priceInputs.min}
-                                        onChange={(e) => handlePriceInputChange('min', e.target.value)}
-                                        sx={{
-                                            width: '50%',
-                                            '& .MuiOutlinedInput-root': {
-                                                '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
-                                                '&:hover fieldset': { borderColor: primaryColor },
-                                                '&.Mui-focused fieldset': { borderColor: primaryColor },
-                                            },
-                                        }}
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {/* Active filters indicator */}
+                                {(filters.category.length > 0 || 
+                                filters.sizes.length > 0 || 
+                                filters.name !== '' || 
+                                filters.minRating > 0 || 
+                                filters.priceRange[0] > 0 || 
+                                filters.priceRange[1] < maxPrice) && (
+                                    <Chip 
+                                        label={`Active filters`} 
+                                        size="small" 
+                                        color="primary"
+                                        variant="outlined"
+                                        sx={{ fontSize: '0.7rem', mr: { xs: 1, md: 0 } }}
                                     />
-                                    <TextField
-                                        size="small"
-                                        label="Max $"
-                                        type="number"
-                                        InputProps={{
-                                            inputProps: { 
-                                                min: 0
+                                )}
+                                
+                                {/* Mobile toggle icon */}
+                                <IconButton 
+                                    size="small" 
+                                    sx={{ 
+                                        display: { xs: 'flex', md: 'none' },
+                                        p: 0.5
+                                    }}
+                                >
+                                    {mobileFiltersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                </IconButton>
+                            </Box>
+                        </Box>
+                        
+                        {/* Filters content - collapsible on mobile */}
+                        <Collapse in={mobileFiltersOpen || !isMobile} timeout="auto">
+                            <Box sx={{ p: { xs: 2, md: 0 }, pt: { xs: 0, md: 0 } }}>
+                                {/* Search Filter */}
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        gutterBottom
+                                        sx={{
+                                            fontFamily: "'Montserrat', sans-serif",
+                                            fontWeight: 600,
+                                            fontSize: '1rem',
+                                            color: '#2B2B2B',
+                                            mb: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '&::before': {
+                                                content: '""',
+                                                display: 'inline-block',
+                                                width: '4px',
+                                                height: '16px',
+                                                backgroundColor: primaryColor,
+                                                marginRight: '8px',
+                                                borderRadius: '2px',
                                             }
                                         }}
-                                        value={priceInputs.max}
-                                        onChange={(e) => handlePriceInputChange('max', e.target.value)}
+                                    >
+                                        Search
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        placeholder="Search products..."
+                                        variant="outlined"
+                                        value={filters.name}
+                                        onChange={handleNameFilterChange}
+                                        size="small"
                                         sx={{
-                                            width: '50%',
                                             '& .MuiOutlinedInput-root': {
-                                                '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
-                                                '&:hover fieldset': { borderColor: primaryColor },
-                                                '&.Mui-focused fieldset': { borderColor: primaryColor },
+                                                '& fieldset': {
+                                                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                                                    borderRadius: '8px',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: primaryColor,
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: primaryColor,
+                                                },
                                             },
+                                        }}
+                                        InputProps={{
+                                            endAdornment: filters.name ? (
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => setFilters(prev => ({ ...prev, name: '' }))}
+                                                >
+                                                    <Box sx={{ fontSize: '1rem' }}>×</Box>
+                                                </IconButton>
+                                            ) : null,
                                         }}
                                     />
                                 </Box>
-                                <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        onClick={resetPriceFilter}
+
+                                {/* Categories Filter */}
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        gutterBottom
                                         sx={{
-                                            flex: 1,
-                                            color: primaryColor,
-                                            borderColor: primaryColor,
-                                            '&:hover': {
-                                                borderColor: primaryColor,
-                                                backgroundColor: `${primaryColor}10`,
-                                            },
-                                            textTransform: 'none',
+                                            fontFamily: "'Montserrat', sans-serif",
                                             fontWeight: 600,
-                                            fontSize: '0.8rem',
+                                            fontSize: '1rem',
+                                            color: '#2B2B2B',
+                                            mb: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '&::before': {
+                                                content: '""',
+                                                display: 'inline-block',
+                                                width: '4px',
+                                                height: '16px',
+                                                backgroundColor: primaryColor,
+                                                marginRight: '8px',
+                                                borderRadius: '2px',
+                                            }
                                         }}
                                     >
-                                        Reset
-                                    </Button>
+                                        Categories
+                                    </Typography>
+                                    <List>
+                                        {categories
+                                            .filter(category => !category.parent) // Only show root categories initially
+                                            .map(category => renderCategoryTree(category))}
+                                    </List>
+                                </Box>
+
+                                {/* Price Range Filter - Updated */}
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        gutterBottom
+                                        sx={{
+                                            fontFamily: "'Montserrat', sans-serif",
+                                            fontWeight: 600,
+                                            fontSize: '1rem',
+                                            color: '#2B2B2B',
+                                            mb: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '&::before': {
+                                                content: '""',
+                                                display: 'inline-block',
+                                                width: '4px',
+                                                height: '16px',
+                                                backgroundColor: primaryColor,
+                                                marginRight: '8px',
+                                                borderRadius: '2px',
+                                            }
+                                        }}
+                                    >
+                                        Price Range
+                                    </Typography>
+                                    <Box sx={{ px: 2, pt: 1 }}>
+                                        <Slider
+                                            value={[
+                                                priceInputs.min === '' ? 0 : Number(priceInputs.min),
+                                                priceInputs.max === '' ? maxPrice : Number(priceInputs.max)
+                                            ]}
+                                            onChange={handlePriceChange}
+                                            valueLabelDisplay="auto"
+                                            min={0}
+                                            max={maxPrice}
+                                            sx={{
+                                                color: primaryColor,
+                                                '& .MuiSlider-thumb': {
+                                                    '&:hover, &.Mui-focusVisible': {
+                                                        boxShadow: `0px 0px 0px 8px ${primaryColor}30`,
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, gap: 2 }}>
+                                            <TextField
+                                                size="small"
+                                                label="Min $"
+                                                type="number"
+                                                InputProps={{
+                                                    inputProps: { 
+                                                        min: 0
+                                                    }
+                                                }}
+                                                value={priceInputs.min}
+                                                onChange={(e) => handlePriceInputChange('min', e.target.value)}
+                                                sx={{
+                                                    width: '50%',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
+                                                        '&:hover fieldset': { borderColor: primaryColor },
+                                                        '&.Mui-focused fieldset': { borderColor: primaryColor },
+                                                    },
+                                                }}
+                                            />
+                                            <TextField
+                                                size="small"
+                                                label="Max $"
+                                                type="number"
+                                                InputProps={{
+                                                    inputProps: { 
+                                                        min: 0
+                                                    }
+                                                }}
+                                                value={priceInputs.max}
+                                                onChange={(e) => handlePriceInputChange('max', e.target.value)}
+                                                sx={{
+                                                    width: '50%',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': { borderColor: 'rgba(0, 0, 0, 0.12)' },
+                                                        '&:hover fieldset': { borderColor: primaryColor },
+                                                        '&.Mui-focused fieldset': { borderColor: primaryColor },
+                                                    },
+                                                }}
+                                            />
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={resetPriceFilter}
+                                                sx={{
+                                                    flex: 1,
+                                                    color: primaryColor,
+                                                    borderColor: primaryColor,
+                                                    '&:hover': {
+                                                        borderColor: primaryColor,
+                                                        backgroundColor: `${primaryColor}10`,
+                                                    },
+                                                    textTransform: 'none',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.8rem',
+                                                }}
+                                            >
+                                                Reset
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                onClick={applyPriceFilter}
+                                                sx={{
+                                                    flex: 1,
+                                                    backgroundColor: primaryColor,
+                                                    '&:hover': {
+                                                        backgroundColor: primaryDarkColor,
+                                                    },
+                                                    textTransform: 'none',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.8rem',
+                                                }}
+                                            >
+                                                Apply
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                </Box>
+
+                                {/* Rating Filter - Updated */}
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        gutterBottom
+                                        sx={{
+                                            fontFamily: "'Montserrat', sans-serif",
+                                            fontWeight: 600,
+                                            fontSize: '1rem',
+                                            color: '#2B2B2B',
+                                            mb: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            '&::before': {
+                                                content: '""',
+                                                display: 'inline-block',
+                                                width: '4px',
+                                                height: '16px',
+                                                backgroundColor: primaryColor,
+                                                marginRight: '8px',
+                                                borderRadius: '2px',
+                                            }
+                                        }}
+                                    >
+                                        Rating
+                                    </Typography>
+                                    <Box sx={{ px: 1 }}>
+                                        {/* Add All option */}
+                                        <Box
+                                            onClick={() => handleRatingChange(0)}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                padding: '6px 12px',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                mb: 1,
+                                                backgroundColor: filters.minRating === 0 ? `${primaryColor}10` : 'transparent',
+                                                '&:hover': {
+                                                    backgroundColor: `${primaryColor}08`,
+                                                },
+                                            }}
+                                        >
+                                            <Typography variant="body2" sx={{ color: '#555', fontWeight: filters.minRating === 0 ? 600 : 400 }}>
+                                                All Ratings
+                                            </Typography>
+                                        </Box>
+                                        {/* 4 to 1 stars */}
+                                        {[4, 3, 2, 1].map((rating) => (
+                                            <Box
+                                                key={rating}
+                                                onClick={() => handleRatingChange(rating)}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    padding: '6px 12px',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    mb: 1,
+                                                    backgroundColor: filters.minRating === rating ? `${primaryColor}10` : 'transparent',
+                                                    '&:hover': {
+                                                        backgroundColor: `${primaryColor}08`,
+                                                    },
+                                                }}
+                                            >
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                                                    {[...Array(5)].map((_, index) => (
+                                                        <Box
+                                                            key={index}
+                                                            sx={{
+                                                                color: index < rating ? '#FFC107' : '#E0E0E0',
+                                                                fontSize: '0.9rem',
+                                                            }}
+                                                        >
+                                                            ★
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                                <Typography variant="body2" sx={{ color: '#555' }}>
+                                                    & Up
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+
+                                {/* Size Filter */}
+                                {availableSizes.length > 0 && (
+                                    <Box sx={{ mb: 4 }}>
+                                        <Typography
+                                            variant="subtitle1"
+                                            gutterBottom
+                                            sx={{
+                                                fontFamily: "'Montserrat', sans-serif",
+                                                fontWeight: 600,
+                                                fontSize: '1rem',
+                                                color: '#2B2B2B',
+                                                mb: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                '&::before': {
+                                                    content: '""',
+                                                    display: 'inline-block',
+                                                    width: '4px',
+                                                    height: '16px',
+                                                    backgroundColor: primaryColor,
+                                                    marginRight: '8px',
+                                                    borderRadius: '2px',
+                                                }
+                                            }}
+                                        >
+                                            Size
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 1 }}>
+                                            {availableSizes.map((size) => (
+                                                <Box
+                                                    key={size}
+                                                    onClick={() => handleSizeFilterChange(size)}
+                                                    sx={{
+                                                        padding: '5px 10px',
+                                                        border: '1px solid',
+                                                        borderColor: filters.sizes.includes(size) ? primaryColor : 'rgba(0, 0, 0, 0.12)',
+                                                        borderRadius: '4px',
+                                                        cursor: 'pointer',
+                                                        backgroundColor: filters.sizes.includes(size) ? `${primaryColor}10` : 'transparent',
+                                                        color: filters.sizes.includes(size) ? primaryColor : '#555',
+                                                        fontWeight: filters.sizes.includes(size) ? 600 : 400,
+                                                        fontSize: '0.8rem',
+                                                        textAlign: 'center',
+                                                        '&:hover': {
+                                                            borderColor: primaryColor,
+                                                            backgroundColor: `${primaryColor}08`,
+                                                        },
+                                                    }}
+                                                >
+                                                    {size}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                        {filters.sizes.length > 0 && (
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                onClick={() => setFilters(prev => ({ ...prev, sizes: [] }))}
+                                                sx={{
+                                                    color: '#555',
+                                                    textTransform: 'none',
+                                                    fontSize: '0.8rem',
+                                                    mt: 2,
+                                                }}
+                                            >
+                                                Clear Size Filters
+                                            </Button>
+                                        )}
+                                    </Box>
+                                )}
+
+                                {/* Mobile-only filter actions */}
+                                <Box 
+                                    sx={{ 
+                                        mt: 3, 
+                                        pt: 2, 
+                                        borderTop: '1px solid rgba(0,0,0,0.08)',
+                                        display: { xs: 'flex', md: 'block' },
+                                        gap: 2
+                                    }}
+                                >
                                     <Button
                                         variant="contained"
-                                        size="small"
-                                        onClick={applyPriceFilter}
+                                        fullWidth
+                                        onClick={() => {
+                                            setMobileFiltersOpen(false);
+                                        }}
                                         sx={{
-                                            flex: 1,
+                                            display: { xs: 'block', md: 'none' },
                                             backgroundColor: primaryColor,
                                             '&:hover': {
                                                 backgroundColor: primaryDarkColor,
                                             },
                                             textTransform: 'none',
                                             fontWeight: 600,
-                                            fontSize: '0.8rem',
+                                            fontSize: '0.9rem',
                                         }}
                                     >
-                                        Apply
+                                        Apply Filters
                                     </Button>
-                                </Box>
-                            </Box>
-                        </Box>
-
-                        {/* Rating Filter - Updated */}
-                        <Box sx={{ mb: 4 }}>
-                            <Typography
-                                variant="subtitle1"
-                                gutterBottom
-                                sx={{
-                                    fontFamily: "'Montserrat', sans-serif",
-                                    fontWeight: 600,
-                                    fontSize: '1rem',
-                                    color: '#2B2B2B',
-                                    mb: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&::before': {
-                                        content: '""',
-                                        display: 'inline-block',
-                                        width: '4px',
-                                        height: '16px',
-                                        backgroundColor: primaryColor,
-                                        marginRight: '8px',
-                                        borderRadius: '2px',
-                                    }
-                                }}
-                            >
-                                Rating
-                            </Typography>
-                            <Box sx={{ px: 1 }}>
-                                {/* Add All option */}
-                                <Box
-                                    onClick={() => handleRatingChange(0)}
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: '6px 12px',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        mb: 1,
-                                        backgroundColor: filters.minRating === 0 ? `${primaryColor}10` : 'transparent',
-                                        '&:hover': {
-                                            backgroundColor: `${primaryColor}08`,
-                                        },
-                                    }}
-                                >
-                                    <Typography variant="body2" sx={{ color: '#555', fontWeight: filters.minRating === 0 ? 600 : 400 }}>
-                                        All Ratings
-                                    </Typography>
-                                </Box>
-                                {/* 4 to 1 stars */}
-                                {[4, 3, 2, 1].map((rating) => (
-                                    <Box
-                                        key={rating}
-                                        onClick={() => handleRatingChange(rating)}
+                                    
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        onClick={() => {
+                                            // Reset all filters
+                                            setFilters({ 
+                                                category: [], 
+                                                name: '', 
+                                                priceRange: [0, maxPrice], 
+                                                minRating: 0, 
+                                                sizes: [] 
+                                            });
+                                            // Also reset price inputs to match
+                                            setPriceInputs({ 
+                                                min: '0', 
+                                                max: maxPrice.toString() 
+                                            });
+                                        }}
                                         sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            padding: '6px 12px',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                            mb: 1,
-                                            backgroundColor: filters.minRating === rating ? `${primaryColor}10` : 'transparent',
+                                            color: primaryColor,
+                                            borderColor: primaryColor,
+                                            fontWeight: 600,
+                                            textTransform: { xs: 'none', md: 'uppercase' },
+                                            letterSpacing: { xs: 0, md: '0.5px' },
+                                            fontSize: '0.9rem',
+                                            padding: '8px 16px',
                                             '&:hover': {
+                                                borderColor: primaryColor,
                                                 backgroundColor: `${primaryColor}08`,
                                             },
                                         }}
                                     >
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-                                            {[...Array(5)].map((_, index) => (
-                                                <Box
-                                                    key={index}
-                                                    sx={{
-                                                        color: index < rating ? '#FFC107' : '#E0E0E0',
-                                                        fontSize: '0.9rem',
-                                                    }}
-                                                >
-                                                    ★
-                                                </Box>
-                                            ))}
-                                        </Box>
-                                        <Typography variant="body2" sx={{ color: '#555' }}>
-                                            & Up
-                                        </Typography>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Box>
-
-                        {/* Size Filter */}
-                        {availableSizes.length > 0 && (
-                            <Box sx={{ mb: 4 }}>
-                                <Typography
-                                    variant="subtitle1"
-                                    gutterBottom
-                                    sx={{
-                                        fontFamily: "'Montserrat', sans-serif",
-                                        fontWeight: 600,
-                                        fontSize: '1rem',
-                                        color: '#2B2B2B',
-                                        mb: 2,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        '&::before': {
-                                            content: '""',
-                                            display: 'inline-block',
-                                            width: '4px',
-                                            height: '16px',
-                                            backgroundColor: primaryColor,
-                                            marginRight: '8px',
-                                            borderRadius: '2px',
-                                        }
-                                    }}
-                                >
-                                    Size
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 1 }}>
-                                    {availableSizes.map((size) => (
-                                        <Box
-                                            key={size}
-                                            onClick={() => handleSizeFilterChange(size)}
-                                            sx={{
-                                                padding: '5px 10px',
-                                                border: '1px solid',
-                                                borderColor: filters.sizes.includes(size) ? primaryColor : 'rgba(0, 0, 0, 0.12)',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                backgroundColor: filters.sizes.includes(size) ? `${primaryColor}10` : 'transparent',
-                                                color: filters.sizes.includes(size) ? primaryColor : '#555',
-                                                fontWeight: filters.sizes.includes(size) ? 600 : 400,
-                                                fontSize: '0.8rem',
-                                                textAlign: 'center',
-                                                '&:hover': {
-                                                    borderColor: primaryColor,
-                                                    backgroundColor: `${primaryColor}08`,
-                                                },
-                                            }}
-                                        >
-                                            {size}
-                                        </Box>
-                                    ))}
-                                </Box>
-                                {filters.sizes.length > 0 && (
-                                    <Button
-                                        variant="text"
-                                        size="small"
-                                        onClick={() => setFilters(prev => ({ ...prev, sizes: [] }))}
-                                        sx={{
-                                            color: '#555',
-                                            textTransform: 'none',
-                                            fontSize: '0.8rem',
-                                            mt: 2,
-                                        }}
-                                    >
-                                        Clear Size Filters
+                                        Clear All Filters
                                     </Button>
-                                )}
+                                </Box>
                             </Box>
-                        )}
-
-                        <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                            <Button
-                                variant="outlined"
-                                fullWidth
-                                onClick={() => {
-                                    // Reset all filters
-                                    setFilters({ 
-                                        category: [], 
-                                        name: '', 
-                                        priceRange: [0, maxPrice], 
-                                        minRating: 0, 
-                                        sizes: [] 
-                                    });
-                                    // Also reset price inputs to match
-                                    setPriceInputs({ 
-                                        min: '0', 
-                                        max: maxPrice.toString() 
-                                    });
-                                }}
-                                sx={{
-                                    color: primaryColor,
-                                    borderColor: primaryColor,
-                                    fontWeight: 600,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    fontSize: '0.8rem',
-                                    padding: '8px 16px',
-                                    '&:hover': {
-                                        borderColor: primaryColor,
-                                        backgroundColor: `${primaryColor}08`,
-                                    },
-                                }}
-                            >
-                                Clear All Filters
-                            </Button>
-                        </Box>
+                        </Collapse>
                     </Box>
 
                     <Box sx={{ flex: 1 }}>
                         {sortedFilteredProducts.length > 0 ? (
                             <>
-                                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                                <Box sx={{ 
+                                    mb: 2, 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    gap: 1
+                                }}>
                                     <Chip
                                         label={`${sortedFilteredProducts.length} products found`}
                                         size="small"
@@ -1296,7 +1376,6 @@ const Products = () => {
                                             size="small"
                                             onDelete={() => setFilters(prev => ({ ...prev, name: '' }))}
                                             sx={{ 
-                                                ml: 1,
                                                 backgroundColor: `${primaryColor}10`,
                                                 color: primaryColor,
                                                 fontWeight: 500,
@@ -1307,106 +1386,124 @@ const Products = () => {
                                     <Typography 
                                         variant="body2" 
                                         color="text.secondary"
-                                        sx={{ ml: 'auto', fontSize: '0.85rem' }}
+                                        sx={{ 
+                                            ml: { xs: 0, sm: 'auto' }, 
+                                            fontSize: '0.85rem',
+                                            width: { xs: '100%', sm: 'auto' },
+                                            mt: { xs: 1, sm: 0 },
+                                            order: { xs: 3, sm: 0 },
+                                        }}
                                     >
                                         Showing {Math.min(sortedFilteredProducts.length, (page - 1) * productsPerPage + 1)}-
                                         {Math.min(page * productsPerPage, sortedFilteredProducts.length)} of {sortedFilteredProducts.length}
                                     </Typography>
                                 </Box>
-                                <Grid container spacing={3}>
+                                <Grid container spacing={{ xs: 2, md: 3 }}>
                                     {currentProducts.map((product) => (
-                                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                                        <Card
-                                            onClick={() => navigate(`/product/${product.id}`)}
-                                            onMouseEnter={() => setHoveredProduct(product.id)}
-                                            onMouseLeave={() => setHoveredProduct(null)}
-                                            sx={{
-                                                height: '100%',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                borderRadius: '12px',
-                                                border: '1px solid rgba(0,0,0,0.08)',
-                                                transition: 'all 0.3s ease',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                aspectRatio: '1/1.4',
-                                                '&:hover': {
-                                                    transform: 'translateY(-4px)',
-                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                    borderColor: 'rgba(0,0,0,0.12)'
-                                                }
-                                            }}
-                                        >
-                                            <Box sx={{ position: 'relative', flex: '1 0 auto', height: '65%' }}>
-                                                <CardMedia
-                                                    component="img"
-                                                    height="100%"
-                                                    width="100%"
-                                                    image={product.images && product.images.length > 0
-                                                        ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
-                                                        : '/placeholder-image.jpg'}
-                                                    alt={product.name}
-                                                    sx={{
-                                                        objectFit: 'cover',
-                                                        backgroundColor: '#f5f5f5',
-                                                        transition: 'transform 0.3s ease',
-                                                        height: '100%',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.05)'
-                                                        }
-                                                    }}
-                                                />
-                                                {/* Category Tag */}
-                                                <Box
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 12,
-                                                        left: 12,
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                        color: '#2B2B2B',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '16px',
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: 600,
-                                                        letterSpacing: '0.5px',
-                                                        textTransform: 'uppercase',
-                                                        backdropFilter: 'blur(4px)',
-                                                    }}
-                                                >
-                                                    {product.categoryName}
+                                        <Grid item xs={6} sm={6} md={4} lg={3} key={product.id}>
+                                            <Card
+                                                onClick={() => navigate(`/product/${product.id}`)}
+                                                onMouseEnter={() => setHoveredProduct(product.id)}
+                                                onMouseLeave={() => setHoveredProduct(null)}
+                                                sx={{
+                                                    height: '100%',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid rgba(0,0,0,0.08)',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer',
+                                                    width: '100%',
+                                                    aspectRatio: { xs: '1/1.6', sm: '1/1.4' },
+                                                    '&:hover': {
+                                                        transform: 'translateY(-4px)',
+                                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                        borderColor: 'rgba(0,0,0,0.12)'
+                                                    }
+                                                }}
+                                            >
+                                                <Box sx={{ position: 'relative', flex: '1 0 auto', height: { xs: '60%', sm: '65%' } }}>
+                                                    <CardMedia
+                                                        component="img"
+                                                        height="100%"
+                                                        width="100%"
+                                                        image={product.images && product.images.length > 0
+                                                            ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
+                                                            : '/placeholder-image.jpg'}
+                                                        alt={product.name}
+                                                        sx={{
+                                                            objectFit: 'cover',
+                                                            backgroundColor: '#f5f5f5',
+                                                            transition: 'transform 0.3s ease',
+                                                            height: '100%',
+                                                            '&:hover': {
+                                                                transform: 'scale(1.05)'
+                                                            }
+                                                        }}
+                                                    />
+                                                    {/* Category Tag */}
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: 12,
+                                                            left: 12,
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                            color: '#2B2B2B',
+                                                            padding: { xs: '2px 6px', sm: '4px 10px' },
+                                                            borderRadius: '16px',
+                                                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                                                            fontWeight: 600,
+                                                            letterSpacing: '0.5px',
+                                                            textTransform: 'uppercase',
+                                                            backdropFilter: 'blur(4px)',
+                                                        }}
+                                                    >
+                                                        {product.categoryName}
+                                                    </Box>
                                                 </Box>
-                                            </Box>
 
-                                            {/* Product Info */}
-                                            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '35%' }}>
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontSize: '0.9rem',
-                                                        fontWeight: 600,
-                                                        mb: 0.5,
-                                                        color: '#2B2B2B',
-                                                        fontFamily: "'Montserrat', sans-serif",
-                                                        lineHeight: 1.3,
-                                                    }}
-                                                >
-                                                    {product.name}
-                                                </Typography>
+                                                {/* Product Info */}
+                                                <Box sx={{ 
+                                                    p: { xs: 1.5, sm: 2 }, 
+                                                    display: 'flex', 
+                                                    flexDirection: 'column', 
+                                                    height: { xs: '40%', sm: '35%' },
+                                                    justifyContent: 'space-between'
+                                                }}>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                                            fontWeight: 600,
+                                                            mb: 0.5,
+                                                            color: '#2B2B2B',
+                                                            fontFamily: "'Montserrat', sans-serif",
+                                                            lineHeight: 1.3,
+                                                            // Make sure the title is limited to 2 lines on mobile
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: 'vertical',
+                                                        }}
+                                                    >
+                                                        {product.name}
+                                                    </Typography>
 
                                                     {/* Rating - Updated with half stars and bigger size */}
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.8 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 0.4, sm: 0.8 } }}>
                                                         {[...Array(5)].map((_, index) => {
                                                             const rating = productRatings[product.id] || 0;
                                                             const isHalfStar = index < rating && index >= Math.floor(rating);
                                                             
                                                             return (
-                                                        <Box
-                                                            key={index}
-                                                            sx={{
+                                                                <Box
+                                                                    key={index}
+                                                                    sx={{
                                                                         position: 'relative',
                                                                         display: 'inline-block',
                                                                         color: '#E0E0E0',
-                                                                        fontSize: '1rem',
+                                                                        fontSize: { xs: '0.8rem', sm: '1rem' },
                                                                         mr: 0.1,
                                                                     }}
                                                                 >
@@ -1423,59 +1520,65 @@ const Products = () => {
                                                                                 color: '#FFC107',
                                                                                 overflow: 'hidden',
                                                                                 width: isHalfStar ? '50%' : '100%',
-                                                            }}
-                                                        >
-                                                            ★
-                                                        </Box>
+                                                                            }}
+                                                                        >
+                                                                            ★
+                                                                        </Box>
                                                                     )}
                                                                 </Box>
                                                             );
                                                         })}
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
                                                                 ml: 0.6,
-                                                            color: '#666',
-                                                                fontSize: '0.8rem',
+                                                                color: '#666',
+                                                                fontSize: { xs: '0.7rem', sm: '0.8rem' },
                                                                 fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            ({(productRatings[product.id] || 0).toFixed(1)})
+                                                        </Typography>
+                                                    </Box>
+
+                                                    {/* Price */}
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            color: primaryColor,
+                                                            fontWeight: 700,
+                                                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                                                            fontFamily: "'Playfair Display', serif",
+                                                            mt: { xs: 'auto', sm: 'auto' }, // Keep at the bottom
                                                         }}
                                                     >
-                                                            ({(productRatings[product.id] || 0).toFixed(1)})
+                                                        ${product.price}
                                                     </Typography>
                                                 </Box>
-
-                                                {/* Price */}
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        mt: 'auto',
-                                                            color: primaryColor,
-                                                        fontWeight: 700,
-                                                        fontSize: '1.1rem',
-                                                        fontFamily: "'Playfair Display', serif",
-                                                    }}
-                                                >
-                                                    ${product.price}
-                                                </Typography>
-                                            </Box>
-                                        </Card>
-                                    </Grid>
-                                ))}
-                            </Grid>
+                                            </Card>
+                                        </Grid>
+                                    ))}
+                                </Grid>
                                 
                                 {/* Pagination */}
                                 {totalPages > 1 && (
-                                    <Stack spacing={2} sx={{ mt: 4, display: 'flex', alignItems: 'center' }}>
+                                    <Stack spacing={2} sx={{ 
+                                        mt: { xs: 3, md: 4 }, 
+                                        display: 'flex', 
+                                        alignItems: 'center'
+                                    }}>
                                         <Pagination 
                                             count={totalPages} 
                                             page={page} 
                                             onChange={handlePageChange}
                                             color="primary"
-                                            size="large"
+                                            size={isMobile ? "medium" : "large"}
+                                            siblingCount={isMobile ? 0 : 1}
                                             sx={{
                                                 '& .MuiPaginationItem-root': {
                                                     color: '#555',
                                                     fontWeight: 500,
+                                                    fontSize: { xs: '0.8rem', sm: 'inherit' },
                                                 },
                                                 '& .MuiPaginationItem-page.Mui-selected': {
                                                     backgroundColor: primaryColor,
@@ -1492,7 +1595,7 @@ const Products = () => {
                         ) : (
                             <Box sx={{ 
                                 textAlign: 'center', 
-                                py: 8, 
+                                py: { xs: 6, sm: 8 }, 
                                 backgroundColor: 'rgba(0,0,0,0.02)',
                                 borderRadius: '12px'
                             }}>

@@ -2,14 +2,11 @@
 * Add images to all products
 * Fix categories of some products
 * Send emails
-* Implement search bar functionality
 * Improve header categories ui
 * Fix header responsiveness on smaller screens
 * Fix issues with cart when logging out
 * Implement promotional banner
 * Implement finances
-* On all products page display only one decimal point for reviews
-* Login/Register with Google
 * Implement product reviews on order page
 * Fix product cards in favorites menu
 * Pagination for all products page
