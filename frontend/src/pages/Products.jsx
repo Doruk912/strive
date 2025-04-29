@@ -20,10 +20,8 @@ import {
     Stack,
     MenuItem,
     Select,
-    InputLabel,
     FormControl,
     Chip,
-    Divider,
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -43,9 +41,9 @@ const primaryLightColor = '#2196f3'; // Lighter blue color
 const primaryDarkColor = '#1565c0'; // Darker blue color
 
 // Create a separate component for category tree items
-const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories }) => {
-    const [expanded, setExpanded] = useState(false);
+const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories, expandedCategories, toggleCategoryExpand }) => {
     const hasChildren = category.children && category.children.length > 0;
+    const isExpanded = expandedCategories[category.id];
     const count = countProductsInSubcategories(category);
 
     return (
@@ -61,10 +59,10 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                 {hasChildren && (
                     <IconButton
                         size="small"
-                        onClick={() => setExpanded(!expanded)}
+                        onClick={() => toggleCategoryExpand(category.id)}
                         sx={{ mr: 1 }}
                     >
-                        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </IconButton>
                 )}
                 <FormControlLabel
@@ -89,7 +87,7 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                 />
             </ListItem>
             {hasChildren && (
-                <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                         {category.children.map((child) => (
                             <CategoryTreeItem
@@ -99,6 +97,8 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                                 filters={filters}
                                 handleFilterChange={handleFilterChange}
                                 countProductsInSubcategories={countProductsInSubcategories}
+                                expandedCategories={expandedCategories}
+                                toggleCategoryExpand={toggleCategoryExpand}
                             />
                         ))}
                     </List>
@@ -119,7 +119,6 @@ const Products = () => {
     const [expandedCategories, setExpandedCategories] = useState({});
     const [productRatings, setProductRatings] = useState({});
     const [notification, setNotification] = useState({ open: false, product: null, quantity: 1 });
-    const [hoveredProduct, setHoveredProduct] = useState(null);
     
     // Mobile responsive states
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -147,6 +146,41 @@ const Products = () => {
         sizes: []
     });
 
+    // Find a category by ID in the entire category tree (recursive)
+    const findCategoryById = useCallback((categoryId) => {
+        if (!categories || categories.length === 0) return null;
+        
+        // Helper function to search through category tree
+        const searchInCategories = (categoryList, id) => {
+            for (const category of categoryList) {
+                if (category.id === id) {
+                    return category;
+                }
+
+                if (category.children && category.children.length > 0) {
+                    const found = searchInCategories(category.children, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        return searchInCategories(categories, categoryId);
+    }, [categories]);
+
+    // Get all subcategory IDs for a given category (including itself)
+    const getAllSubcategoryIds = useCallback((category) => {
+        if (!category) return [];
+        
+        const ids = [category.id];
+        if (category.children && category.children.length > 0) {
+            category.children.forEach(child => {
+                ids.push(...getAllSubcategoryIds(child));
+            });
+        }
+        return ids;
+    }, []);
+
     // Parse URL parameters for initial filters
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -156,9 +190,27 @@ const Products = () => {
         let updates = {};
         
         if (categoryParam) {
-            const category = categories.find(cat => cat.name === categoryParam);
-            if (category) {
-                updates.category = [category.id];
+            // Check if categoryParam is a valid ID
+            const categoryId = parseInt(categoryParam, 10);
+            if (!isNaN(categoryId)) {
+                updates.category = [categoryId];
+                
+                // If we have categories data, expand the category in the UI
+                if (categories.length > 0) {
+                    const foundCategory = findCategoryById(categoryId);
+                    if (foundCategory && foundCategory.parent) {
+                        // Expand parent categories
+                        let parentId = foundCategory.parent;
+                        while (parentId) {
+                            setExpandedCategories(prev => ({
+                                ...prev,
+                                [parentId]: true
+                            }));
+                            const parentCategory = findCategoryById(parentId);
+                            parentId = parentCategory?.parent || null;
+                        }
+                    }
+                }
             }
         }
         
@@ -172,7 +224,7 @@ const Products = () => {
                 ...updates
             }));
         }
-    }, [location, categories]);
+    }, [location, categories, findCategoryById]);
 
     // Fetch categories and products
     useEffect(() => {
@@ -255,12 +307,30 @@ const Products = () => {
                 current = parent;
             }
 
+            // Expand all parent categories to make the selected subcategory visible
+            expandParentCategories(category);
+
             return {
                 ...prev,
                 category: filtered
             };
         });
     };
+
+    // Helper function to expand all parent categories of a selected category
+    const expandParentCategories = useCallback((category) => {
+        if (!category || !category.parent) return;
+        
+        let parentId = category.parent;
+        while (parentId) {
+            setExpandedCategories(prev => ({
+                ...prev,
+                [parentId]: true
+            }));
+            const parentCategory = findCategoryById(parentId);
+            parentId = parentCategory?.parent || null;
+        }
+    }, [findCategoryById]);
 
     const toggleCategoryExpand = (categoryId) => {
         setExpandedCategories(prev => ({
@@ -269,73 +339,10 @@ const Products = () => {
         }));
     };
 
-    const handleAddToCart = async (e, product) => {
-        e.stopPropagation(); // Prevent card click event
-
-        // For now, we'll add with a default size since we don't have size selection in the product card
-        // In a real implementation, you might want to show a size selection dialog
-        const defaultSize = product.stocks && product.stocks.length > 0 ? product.stocks[0].size : null;
-
-        if (!defaultSize) {
-            alert('This product is out of stock');
-            return;
-        }
-
-        const productWithImage = {
-            ...product,
-            image: product.images && product.images.length > 0
-                ? `data:${product.images[0].imageType};base64,${product.images[0].imageBase64}`
-                : '/default-product-image.jpg'
-        };
-
-        const success = await addToCart(productWithImage, 1, defaultSize);
-
-        if (success) {
-            setNotification({
-                open: true,
-                product: productWithImage,
-                quantity: 1
-            });
-
-            setTimeout(() => {
-                setNotification(prev => ({ ...prev, open: false }));
-            }, 3000);
-        }
-    };
-
-    // Find a category by ID in the entire category tree (recursive)
-    const findCategoryById = useCallback((categoryId) => {
-        // Helper function to search through category tree
-        const searchInCategories = (categories, id) => {
-            for (const category of categories) {
-                if (category.id === id) {
-                    return category;
-                }
-
-                if (category.children && category.children.length > 0) {
-                    const found = searchInCategories(category.children, id);
-                    if (found) return found;
-                }
-            }
-            return null;
-        };
-
-        return searchInCategories(categories, categoryId);
-    }, [categories]);
-
-    // Get all subcategory IDs for a given category (including itself)
-    const getAllSubcategoryIds = useCallback((category) => {
-        const ids = [category.id];
-        if (category.children && category.children.length > 0) {
-            category.children.forEach(child => {
-                ids.push(...getAllSubcategoryIds(child));
-            });
-        }
-        return ids;
-    }, []);
-
     // Count products in a category and its subcategories
     const countProductsInSubcategories = useCallback((category) => {
+        if (!category) return 0;
+        
         const categoryIds = getAllSubcategoryIds(category);
         return products.filter(product => categoryIds.includes(product.categoryId)).length;
     }, [products, getAllSubcategoryIds]);
@@ -624,97 +631,18 @@ const Products = () => {
         }));
     };
 
-    // Modify the renderCategoryTree function to remove the gray background
-    const renderCategoryTree = (category, level = 0) => {
-        const isExpanded = expandedCategories[category.id];
-        const hasChildren = category.children && category.children.length > 0;
-
-        return (
-            <React.Fragment key={category.id}>
-                <ListItem
-                    button
-                    onClick={() => toggleCategoryExpand(category.id)}
-                    sx={{
-                        pl: level * 2,
-                        // Remove the gray background
-                    }}
-                >
-                    {hasChildren && (
-                        <IconButton size="small" sx={{ mr: 1 }}>
-                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                    )}
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={filters.category.includes(category.id)}
-                                onChange={() => handleFilterChange('category', category.id)}
-                                sx={{
-                                    color: '#2B2B2B',
-                                    '&.Mui-checked': {
-                                        color: primaryColor,
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: `${primaryColor}08`,
-                                    },
-                                    padding: '4px',
-                                }}
-                            />
-                        }
-                        label={
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                alignItems: 'center',
-                            }}>
-                                <Typography
-                                    sx={{
-                                        color: '#2B2B2B',
-                                        fontSize: '0.9rem',
-                                        fontWeight: filters.category.includes(category.id) ? 600 : 400,
-                                    }}
-                                >
-                                    {category.name}
-                                </Typography>
-                                <Typography
-                                    sx={{
-                                        color: '#888',
-                                        fontSize: '0.8rem',
-                                        backgroundColor: 'rgba(0,0,0,0.05)',
-                                        padding: '2px 8px',
-                                        borderRadius: '10px',
-                                    }}
-                                >
-                                    ({countProductsInSubcategories(category)})
-                                </Typography>
-                            </Box>
-                        }
-                        sx={{
-                            mb: 1.5,
-                            color: '#2B2B2B',
-                            width: '100%',
-                            margin: 0,
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                backgroundColor: `${primaryColor}08`,
-                            },
-                        }}
-                    />
-                </ListItem>
-
-                {hasChildren && (
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding>
-                            {category.children.map(child => renderCategoryTree(child, level + 1))}
-                        </List>
-                    </Collapse>
-                )}
-            </React.Fragment>
-        );
-    };
+    // Apply filters and expand selected categories when filters change
+    useEffect(() => {
+        // When category filters are applied, ensure parent categories are expanded
+        if (filters.category.length > 0 && categories.length > 0) {
+            filters.category.forEach(categoryId => {
+                const category = findCategoryById(categoryId);
+                if (category) {
+                    expandParentCategories(category);
+                }
+            });
+        }
+    }, [filters.category, categories, findCategoryById, expandParentCategories]);
 
     if (loading) {
         return (
@@ -992,7 +920,18 @@ const Products = () => {
                                     <List>
                                         {categories
                                             .filter(category => !category.parent) // Only show root categories initially
-                                            .map(category => renderCategoryTree(category))}
+                                            .map(category => (
+                                                <CategoryTreeItem
+                                                    key={category.id}
+                                                    category={category}
+                                                    level={0}
+                                                    filters={filters}
+                                                    handleFilterChange={handleFilterChange}
+                                                    countProductsInSubcategories={countProductsInSubcategories}
+                                                    expandedCategories={expandedCategories}
+                                                    toggleCategoryExpand={toggleCategoryExpand}
+                                                />
+                                            ))}
                                     </List>
                                 </Box>
 
@@ -1403,8 +1342,6 @@ const Products = () => {
                                         <Grid item xs={6} sm={6} md={4} lg={3} key={product.id}>
                                             <Card
                                                 onClick={() => navigate(`/product/${product.id}`)}
-                                                onMouseEnter={() => setHoveredProduct(product.id)}
-                                                onMouseLeave={() => setHoveredProduct(null)}
                                                 sx={{
                                                     height: '100%',
                                                     display: 'flex',

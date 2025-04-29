@@ -22,8 +22,6 @@ import {
     MobileStepper,
     Paper,
     Avatar,
-    Card,
-    Fade,
 } from '@mui/material';
 import {
     FavoriteBorder as FavoriteBorderIcon,
@@ -253,7 +251,7 @@ const ProductDetail = () => {
                     <Link
                         key={category.id}
                         component="button"
-                        onClick={() => navigate(`/category/${category.id}`)}
+                        onClick={() => navigate(`/products?category=${category.id}`)}
                         color="inherit"
                         sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                     >

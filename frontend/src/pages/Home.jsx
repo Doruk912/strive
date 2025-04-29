@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Container, Typography, Box, Card, CardMedia, Button, IconButton, Tooltip } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { popularCategories } from '../mockData/Products';
+import { useNavigate } from 'react-router-dom';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -19,7 +18,6 @@ const Home = () => {
     const navigate = useNavigate(); // Initialize useNavigate
     const scrollContainerRef = useRef(null);
     const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
-    const [hoveredProduct, setHoveredProduct] = useState(null);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
     const [activeDot, setActiveDot] = useState(0);
@@ -113,7 +111,7 @@ const Home = () => {
 
     // Function to handle category click
     const handleCategoryClick = (categoryId) => {
-        navigate(`/products?category=${categoryId}`); // Navigate to Products.jsx with category name
+        navigate(`/products?category=${categoryId}`); // Navigate to Products.jsx with category ID
     };
 
     return (
@@ -505,8 +503,6 @@ const Home = () => {
                                 <Card
                                     key={product.id}
                                     onClick={() => navigate(`/product/${product.id}`)}
-                                    onMouseEnter={() => setHoveredProduct(product.id)}
-                                    onMouseLeave={() => setHoveredProduct(null)}
                                     sx={{
                                         height: '100%',
                                         display: 'flex',

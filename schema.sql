@@ -252,7 +252,7 @@ INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 ('Snowboarding', 37, NULL, NULL);
 
 INSERT INTO featured_categories (category_id, display_order) VALUES
-(9, 1),
+(9, 1),   -- Men's Jacekts
 (6, 2),   -- Men's Footwear
 (4, 3),   -- Outdoor
 (37, 4),  -- Winter Sports
