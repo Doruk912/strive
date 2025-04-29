@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final FinancialService financialService;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderDTO createOrderDTO) {
@@ -44,6 +45,10 @@ public class OrderService {
         order.setOrderItems(orderItems);
 
         order = orderRepository.save(order);
+        
+        // Record financial transaction for the order
+        financialService.recordOrderTransaction(order.getId());
+        
         return convertToDTO(order);
     }
 

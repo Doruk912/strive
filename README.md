@@ -10,6 +10,7 @@
 * Implement product reviews on order page
 * Fix product cards in favorites menu
 * When user clicks on a category and directed to the product page, category filter isn't expanded
+* Add a shipping api simulation
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 

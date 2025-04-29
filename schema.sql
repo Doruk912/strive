@@ -154,6 +154,29 @@ CREATE TABLE order_items (
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+-- Financial metrics table
+CREATE TABLE financial_metrics (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    date DATE NOT NULL,
+    daily_revenue DECIMAL(10,2) NOT NULL DEFAULT 0,
+    orders_count INT NOT NULL DEFAULT 0,
+    average_order_value DECIMAL(10,2) AS (CASE WHEN orders_count > 0 THEN daily_revenue / orders_count ELSE 0 END) STORED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_date (date)
+);
+
+-- Transaction records for individual financial events
+CREATE TABLE financial_transactions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    amount DECIMAL(10,2) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    transaction_type ENUM('ORDER', 'REFUND') NOT NULL DEFAULT 'ORDER',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+);
+
 -- Passwords: '123456'
 
 INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
@@ -378,3 +401,78 @@ INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
 (30, 3, 4, 'Has all the essential tools needed for basic repairs'),
 (30, 4, 5, 'Compact and comprehensive kit, saved me multiple times'),
 (30, 2, 4, 'Good quality tools, convenient carrying case');
+
+-- Sample Orders for Financial Data
+INSERT INTO orders (user_id, address_id, total_amount, status, payment_method, payment_status, created_at) VALUES
+(3, 1, 209.97, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-01 10:30:00'),
+(4, 1, 379.98, 'DELIVERED', 'PAYPAL', 'COMPLETED', '2024-07-01 14:15:00'),
+(3, 1, 499.99, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-02 09:45:00'),
+(4, 1, 149.99, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-02 16:20:00'),
+(3, 1, 299.98, 'SHIPPED', 'PAYPAL', 'COMPLETED', '2024-07-03 11:10:00'),
+(4, 1, 699.97, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-03 15:30:00'),
+(3, 1, 199.99, 'PROCESSING', 'CREDIT_CARD', 'COMPLETED', '2024-07-04 12:45:00'),
+(3, 1, 89.99, 'DELIVERED', 'PAYPAL', 'COMPLETED', '2024-07-05 10:15:00'),
+(4, 1, 249.98, 'SHIPPED', 'CREDIT_CARD', 'COMPLETED', '2024-07-05 14:50:00'),
+(3, 1, 129.99, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-06 09:30:00'),
+(4, 1, 459.97, 'PROCESSING', 'PAYPAL', 'COMPLETED', '2024-07-06 13:20:00'),
+(3, 1, 89.99, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-07 11:05:00'),
+(4, 1, 339.98, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-08 15:45:00'),
+(3, 1, 159.99, 'SHIPPED', 'PAYPAL', 'COMPLETED', '2024-07-09 10:25:00'),
+(4, 1, 549.98, 'DELIVERED', 'CREDIT_CARD', 'COMPLETED', '2024-07-10 14:10:00');
+
+-- Sample Order Items
+INSERT INTO order_items (order_id, product_id, quantity, size, price) VALUES
+(1, 2, 1, 'M', 34.99),
+(1, 3, 1, 'L', 45.99),
+(1, 9, 1, '42', 129.99),
+(2, 16, 1, 'ONE SIZE', 299.99),
+(2, 25, 1, 'ONE SIZE', 79.99),
+(3, 19, 1, 'L', 499.99),
+(4, 17, 1, '45L', 149.99),
+(5, 8, 1, '40', 129.99),
+(5, 12, 1, 'M', 169.99),
+(6, 28, 1, 'M (17")', 699.97),
+(7, 5, 1, 'L', 199.99),
+(8, 6, 1, 'M', 89.99),
+(9, 30, 1, 'ONE SIZE', 49.99),
+(9, 26, 1, 'ONE SIZE', 199.99),
+(10, 4, 1, 'XL', 129.99),
+(11, 7, 1, '43', 159.99),
+(11, 11, 1, 'S', 119.99),
+(11, 13, 1, '39', 179.99),
+(12, 6, 1, 'L', 89.99),
+(13, 21, 1, 'ONE SIZE', 159.99),
+(13, 24, 1, 'ONE SIZE', 179.99),
+(14, 8, 1, '41', 159.99),
+(15, 19, 1, 'L', 549.98);
+
+-- Financial Metrics Sample Data
+INSERT INTO financial_metrics (date, daily_revenue, orders_count) VALUES
+('2024-07-01', 589.95, 2),
+('2024-07-02', 649.98, 2),
+('2024-07-03', 999.95, 2),
+('2024-07-04', 199.99, 1),
+('2024-07-05', 339.97, 2),
+('2024-07-06', 589.96, 2),
+('2024-07-07', 89.99, 1),
+('2024-07-08', 339.98, 1),
+('2024-07-09', 159.99, 1),
+('2024-07-10', 549.98, 1);
+
+-- Financial Transactions Sample Data
+INSERT INTO financial_transactions (order_id, amount, description, transaction_type, created_at) VALUES
+(1, 209.97, 'Order #1', 'ORDER', '2024-07-01 10:30:00'),
+(2, 379.98, 'Order #2', 'ORDER', '2024-07-01 14:15:00'),
+(3, 499.99, 'Order #3', 'ORDER', '2024-07-02 09:45:00'),
+(4, 149.99, 'Order #4', 'ORDER', '2024-07-02 16:20:00'),
+(5, 299.98, 'Order #5', 'ORDER', '2024-07-03 11:10:00'),
+(6, 699.97, 'Order #6', 'ORDER', '2024-07-03 15:30:00'),
+(7, 199.99, 'Order #7', 'ORDER', '2024-07-04 12:45:00'),
+(8, 89.99, 'Order #8', 'ORDER', '2024-07-05 10:15:00'),
+(9, 249.98, 'Order #9', 'ORDER', '2024-07-05 14:50:00'),
+(10, 129.99, 'Order #10', 'ORDER', '2024-07-06 09:30:00'),
+(11, 459.97, 'Order #11', 'ORDER', '2024-07-06 13:20:00'),
+(12, 89.99, 'Order #12', 'ORDER', '2024-07-07 11:05:00'),
+(13, 339.98, 'Order #13', 'ORDER', '2024-07-08 15:45:00'),
+(14, 159.99, 'Order #14', 'ORDER', '2024-07-09 10:25:00'),
+(15, 549.98, 'Order #15', 'ORDER', '2024-07-10 14:10:00');
