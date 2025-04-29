@@ -30,14 +30,12 @@ import {
     FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
-import { useCart } from '../context/CartContext';
 import CartNotification from '../components/CartNotification';
 import {Helmet} from "react-helmet";
 import { useMediaQuery } from '@mui/material';
 
 // Update color constants to match the brand color from Header.jsx
 const primaryColor = '#1976d2'; // Primary blue color
-const primaryLightColor = '#2196f3'; // Lighter blue color
 const primaryDarkColor = '#1565c0'; // Darker blue color
 
 // Create a separate component for category tree items
@@ -111,14 +109,13 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
 const Products = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { addToCart } = useCart();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [categories, setCategories] = useState([]);
     const [expandedCategories, setExpandedCategories] = useState({});
     const [productRatings, setProductRatings] = useState({});
-    const [notification, setNotification] = useState({ open: false, product: null, quantity: 1 });
+    const [notification] = useState({ open: false, product: null, quantity: 1 });
     
     // Mobile responsive states
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -320,7 +317,7 @@ const Products = () => {
     // Helper function to expand all parent categories of a selected category
     const expandParentCategories = useCallback((category) => {
         if (!category || !category.parent) return;
-        
+
         let parentId = category.parent;
         while (parentId) {
             setExpandedCategories(prev => ({

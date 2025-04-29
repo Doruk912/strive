@@ -9,7 +9,7 @@
 * Implement finances
 * Implement product reviews on order page
 * Fix product cards in favorites menu
-* Pagination for all products page
+* When user clicks on a category and directed to the product page, category filter isn't expanded
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
