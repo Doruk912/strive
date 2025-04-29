@@ -16,8 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AuthService {
 
     @Autowired
@@ -31,6 +33,9 @@ public class AuthService {
 
     @Autowired
     private NotificationPreferencesRepository notificationPreferencesRepository;
+    
+    @Autowired
+    private EmailService emailService;
     
     public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
@@ -85,6 +90,14 @@ public class AuthService {
         
         notificationPreferencesRepository.save(defaultPreferences);
         
+        // Send welcome email to the new user
+        try {
+            emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getFirstName());
+        } catch (Exception e) {
+            // Log the exception but don't fail the registration process
+            log.error("Failed to send welcome email to {}: {}", savedUser.getEmail(), e.getMessage());
+        }
+        
         return savedUser;
     }
     
@@ -113,6 +126,14 @@ public class AuthService {
             defaultPreferences.setNewsletter(true);
             
             notificationPreferencesRepository.save(defaultPreferences);
+            
+            // Send welcome email to the new Google user
+            try {
+                emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+            } catch (Exception e) {
+                // Log the exception but don't fail the login process
+                log.error("Failed to send welcome email to {}: {}", user.getEmail(), e.getMessage());
+            }
         }
         
         // Generate JWT token
