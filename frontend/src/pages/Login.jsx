@@ -214,6 +214,19 @@ const Login = () => {
                 },
             },
         },
+        forgotPasswordLink: {
+            textAlign: 'right',
+            marginTop: '-12px',
+            marginBottom: '16px',
+            '& a': {
+                color: '#1976d2',
+                textDecoration: 'none',
+                fontSize: '14px',
+                '&:hover': {
+                    textDecoration: 'underline',
+                },
+            },
+        },
         errorMessage: {
             backgroundColor: '#fdeded',
             color: '#7d4747',
@@ -295,6 +308,12 @@ const Login = () => {
                                 ),
                             }}
                         />
+
+                        <Box sx={styles.forgotPasswordLink}>
+                            <Link href="/forgot-password">
+                                Forgot password?
+                            </Link>
+                        </Box>
 
                         <FormControlLabel
                             control={

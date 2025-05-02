@@ -28,6 +28,23 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendPasswordResetEmail(String to, String firstName, String resetToken) {
+        String subject = "Strive - Password Reset Request";
+        String resetUrl = "http://localhost:3000/reset-password?token=" + resetToken;
+        
+        String text = "Hello " + firstName + ",\n\n"
+                + "We received a request to reset your password for your Strive account.\n\n"
+                + "To reset your password, please click on the link below or copy and paste it into your browser:\n\n"
+                + resetUrl + "\n\n"
+                + "This link will expire in 30 minutes for security reasons.\n\n"
+                + "If you did not request a password reset, please ignore this email or contact our support team.\n\n"
+                + "Thank you,\n"
+                + "The Strive Team";
+        
+        sendEmail(to, subject, text);
+    }
+
+    @Override
     public void sendEmail(String to, String subject, String text) {
         try {
             log.info("Sending email to: {}", to);

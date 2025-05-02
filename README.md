@@ -11,7 +11,6 @@
 * Add a shipping api simulation
 * Fix address selection when ordering
 * Ordering without logging in
-* Forgot password
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
