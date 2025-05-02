@@ -9,6 +9,7 @@ import NewReleasesOutlinedIcon from '@mui/icons-material/NewReleasesOutlined';
 import CardMembershipOutlinedIcon from '@mui/icons-material/CardMembershipOutlined';
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined';
 import { useSwipeable } from 'react-swipeable';
+import { bannerService } from '../services/bannerService';
 
 const slideIn = keyframes`
     from {
@@ -24,48 +25,92 @@ const slideIn = keyframes`
 const PromotionalBanner = () => {
     const [activeSlide, setActiveSlide] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [promotions, setPromotions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const promotions = [
-        {
-            title: "FAST DELIVERY!",
-            subtitle: "ORDER NOW IN NEW YORK,",
-            highlight: "GET IT IN 3 HOURS!",
-            icon: <LocalShippingOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
-            backgroundColor: "#4051B5",
-        },
-        {
-            title: "SPECIAL OFFER!",
-            subtitle: "GET 20% OFF",
-            highlight: "ON ALL SPORTS EQUIPMENT",
-            icon: <LocalOfferOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
-            backgroundColor: "#2E7D32",
-        },
-        {
-            title: "NEW COLLECTION!",
-            subtitle: "DISCOVER OUR",
-            highlight: "SUMMER 2024 COLLECTION",
-            icon: <NewReleasesOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
-            backgroundColor: "#C2185B",
-        },
-        {
-            title: "MEMBERS ONLY!",
-            subtitle: "JOIN OUR CLUB AND GET",
-            highlight: "EXCLUSIVE BENEFITS",
-            icon: <CardMembershipOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
-            backgroundColor: "#F57C00",
-        },
-        {
-            title: "FREE RETURNS!",
-            subtitle: "TRY AT HOME WITH",
-            highlight: "30-DAY FREE RETURNS",
-            icon: <AssignmentReturnOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
-            backgroundColor: "#0097A7",
-        }
-    ];
+    // Icon mapping for dynamic rendering
+    const iconComponents = {
+        LocalShippingOutlined: <LocalShippingOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
+        LocalOfferOutlined: <LocalOfferOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
+        NewReleasesOutlined: <NewReleasesOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
+        CardMembershipOutlined: <CardMembershipOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
+        AssignmentReturnOutlined: <AssignmentReturnOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />
+    };
+
+    // Fetch banners from API
+    useEffect(() => {
+        const fetchBanners = async () => {
+            try {
+                setLoading(true);
+                const data = await bannerService.getActiveBanners();
+                
+                // Transform data to match component format and sort by display order
+                const transformedData = data
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map(banner => ({
+                        title: banner.title,
+                        subtitle: banner.subtitle,
+                        highlight: banner.highlight,
+                        icon: iconComponents[banner.icon],
+                        backgroundColor: banner.backgroundColor,
+                        id: banner.id
+                    }));
+                
+                setPromotions(transformedData);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching banners:', err);
+                setError('Failed to load promotional banners');
+                setLoading(false);
+                
+                // Fallback to hardcoded banners if API fails
+                setPromotions([
+                    {
+                        title: "Fast Delivery!",
+                        subtitle: "Order now in New York,",
+                        highlight: "get it in 3 hours!",
+                        icon: iconComponents.LocalShippingOutlined,
+                        backgroundColor: "#4051B5",
+                    },
+                    {
+                        title: "Special Offer!",
+                        subtitle: "Get 20% off",
+                        highlight: "on all sports equipment",
+                        icon: iconComponents.LocalOfferOutlined,
+                        backgroundColor: "#2E7D32",
+                    },
+                    {
+                        title: "New Collection!",
+                        subtitle: "Discover our",
+                        highlight: "Summer 2024 Collection",
+                        icon: iconComponents.NewReleasesOutlined,
+                        backgroundColor: "#C2185B",
+                    },
+                    {
+                        title: "Members Only!",
+                        subtitle: "Join our club and get",
+                        highlight: "exclusive benefits",
+                        icon: iconComponents.CardMembershipOutlined,
+                        backgroundColor: "#F57C00",
+                    },
+                    {
+                        title: "Free Returns!",
+                        subtitle: "Try at home with",
+                        highlight: "30-day free returns",
+                        icon: iconComponents.AssignmentReturnOutlined,
+                        backgroundColor: "#0097A7",
+                    }
+                ]);
+            }
+        };
+
+        fetchBanners();
+    }, []);
 
     useEffect(() => {
         let interval;
-        if (isAutoPlaying) {
+        if (isAutoPlaying && promotions.length > 0) {
             interval = setInterval(() => {
                 setActiveSlide((prev) => (prev + 1) % promotions.length);
             }, 5000);
@@ -88,6 +133,11 @@ const PromotionalBanner = () => {
         trackTouch: true,
     });
 
+    // If loading or no promotions available, don't render the component
+    if (loading || promotions.length === 0) {
+        return null;
+    }
+
     return (
         <Container
             maxWidth={false}
@@ -102,7 +152,7 @@ const PromotionalBanner = () => {
                 {...handlers}
                 sx={{
                     width: '100%',
-                    backgroundColor: promotions[activeSlide].backgroundColor,
+                    backgroundColor: promotions[activeSlide]?.backgroundColor || '#4051B5',
                     borderRadius: '8px',
                     overflow: 'hidden',
                     position: 'relative',
@@ -223,7 +273,7 @@ const PromotionalBanner = () => {
                                     sx={{
                                         fontSize: { xs: '1.1rem', md: '1.3rem' },
                                         fontWeight: 600,
-                                        textTransform: 'uppercase',
+                                        textTransform: 'none',
                                     }}
                                 >
                                     {promotions[activeSlide].subtitle}
@@ -234,7 +284,7 @@ const PromotionalBanner = () => {
                                         fontSize: { xs: '1.1rem', md: '1.3rem' },
                                         fontWeight: 600,
                                         color: '#a5f3ff',
-                                        textTransform: 'uppercase',
+                                        textTransform: 'none',
                                         ...(promotions[activeSlide].highlightStyle || {})
                                     }}
                                 >

@@ -37,6 +37,20 @@ CREATE TABLE featured_categories (
     CHECK (display_order BETWEEN 1 AND 6)
 );
 
+-- Promotional Banners
+CREATE TABLE promotional_banners (
+    id INT PRIMARY KEY AUTO_INCREMENT, 
+    title VARCHAR(50) NOT NULL,
+    subtitle VARCHAR(100) NOT NULL,
+    highlight VARCHAR(100) NOT NULL,
+    icon VARCHAR(50) NOT NULL,
+    background_color VARCHAR(20) NOT NULL,
+    display_order INT NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Products
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -184,6 +198,14 @@ INSERT INTO users (email, password, first_name, last_name, phone, country_code, 
 ('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
 ('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
 ('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
+
+-- Insert initial promotional banners
+INSERT INTO promotional_banners (title, subtitle, highlight, icon, background_color, display_order, active) VALUES
+('FAST DELIVERY!', 'ORDER NOW IN NEW YORK,', 'GET IT IN 3 HOURS!', 'LocalShippingOutlined', '#4051B5', 1, TRUE),
+('SPECIAL OFFER!', 'GET 20% OFF', 'ON ALL SPORTS EQUIPMENT', 'LocalOfferOutlined', '#2E7D32', 2, TRUE),
+('NEW COLLECTION!', 'DISCOVER OUR', 'SUMMER 2024 COLLECTION', 'NewReleasesOutlined', '#C2185B', 3, TRUE),
+('MEMBERS ONLY!', 'JOIN OUR CLUB AND GET', 'EXCLUSIVE BENEFITS', 'CardMembershipOutlined', '#F57C00', 4, TRUE),
+('FREE RETURNS!', 'TRY AT HOME WITH', '30-DAY FREE RETURNS', 'AssignmentReturnOutlined', '#0097A7', 5, TRUE);
 
 -- Insert default notification preferences for existing users
 INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
