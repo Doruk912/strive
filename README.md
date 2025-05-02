@@ -6,11 +6,11 @@
 * Fix header responsiveness on smaller screens
 * Fix issues with cart when logging out
 * Implement promotional banner
-* Implement finances
 * Implement product reviews on order page
 * Fix product cards in favorites menu
 * When user clicks on a category and directed to the product page, category filter isn't expanded
 * Add a shipping api simulation
+* Fix address selection when ordering
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
