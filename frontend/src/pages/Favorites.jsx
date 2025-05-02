@@ -15,30 +15,12 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StarIcon from '@mui/icons-material/Star';
 import { useFavorites } from '../context/FavoritesContext';
 import {Helmet} from "react-helmet";
-import { products } from '../mockData/Products';
 
 const Favorites = () => {
     const navigate = useNavigate();
     const { favoriteItems, removeFromFavorites } = useFavorites();
     const [hoveredProduct, setHoveredProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
-
-    useEffect(() => {
-        if (favoriteItems.length > 0) {
-            const related = getRelatedProducts(favoriteItems[0]);
-            setRelatedProducts(related);
-        }
-    }, [favoriteItems]);
-
-    const getRelatedProducts = (currentProduct) => {
-        return products
-            .filter(p => 
-                p.id !== currentProduct.id && 
-                (p.category === currentProduct.category || 
-                 p.gender === currentProduct.gender)
-            )
-            .slice(0, 4);
-    };
 
     const handleRemoveFavorite = (productId) => {
         removeFromFavorites(productId);
