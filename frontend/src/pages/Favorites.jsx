@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -19,8 +19,7 @@ import {Helmet} from "react-helmet";
 const Favorites = () => {
     const navigate = useNavigate();
     const { favoriteItems, removeFromFavorites } = useFavorites();
-    const [hoveredProduct, setHoveredProduct] = useState(null);
-    const [relatedProducts, setRelatedProducts] = useState([]);
+    const [relatedProducts] = useState([]);
 
     const handleRemoveFavorite = (productId) => {
         removeFromFavorites(productId);

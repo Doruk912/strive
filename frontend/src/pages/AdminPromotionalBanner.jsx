@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -98,12 +98,17 @@ const AdminPromotionalBanner = () => {
         severity: 'success'
     });
 
-    // Fetch banners on component mount
-    useEffect(() => {
-        fetchBanners();
+    // Define showSnackbar with useCallback to avoid dependency issues
+    const showSnackbar = useCallback((message, severity = 'success') => {
+        setSnackbar({
+            open: true,
+            message,
+            severity
+        });
     }, []);
 
-    const fetchBanners = async () => {
+    // Memoize fetchBanners to avoid recreating it on each render
+    const fetchBanners = useCallback(async () => {
         try {
             setLoading(true);
             const data = await bannerService.getAllBanners();
@@ -115,7 +120,12 @@ const AdminPromotionalBanner = () => {
             setLoading(false);
             showSnackbar('Error loading banners', 'error');
         }
-    };
+    }, [showSnackbar]); // Add showSnackbar as a dependency
+
+    // Fetch banners on component mount
+    useEffect(() => {
+        fetchBanners();
+    }, [fetchBanners]); // Now fetchBanners is a dependency
 
     const handleOpen = (banner = null) => {
         if (banner) {
@@ -156,7 +166,7 @@ const AdminPromotionalBanner = () => {
                 // If editing, preserve the display order, otherwise it will be set by the backend
                 displayOrder: editingBanner ? editingBanner.displayOrder : null
             };
-            
+
             if (editingBanner) {
                 await bannerService.updateBanner(editingBanner.id, bannerToSubmit);
                 showSnackbar('Banner updated successfully');
@@ -204,51 +214,51 @@ const AdminPromotionalBanner = () => {
     const handleMoveOrder = async (id, direction) => {
         try {
             setLoading(true);
-            
+
             const currentBanner = banners.find(banner => banner.id === id);
             const currentIndex = banners.findIndex(banner => banner.id === id);
-            
+
             if (!currentBanner) {
                 throw new Error('Banner not found');
             }
-            
+
             // Moving up (decreasing order number)
             if (direction === 'up' && currentIndex > 0) {
                 const prevBanner = banners[currentIndex - 1];
-                
+
                 // First update the previous banner's order to avoid unique constraint conflicts
                 await bannerService.updateBannerOrder(
-                    prevBanner.id, 
+                    prevBanner.id,
                     currentBanner.displayOrder
                 );
-                
+
                 // Then update the current banner's order
                 await bannerService.updateBannerOrder(
                     currentBanner.id,
                     prevBanner.displayOrder
                 );
-                
+
                 showSnackbar('Banner moved up successfully');
             }
             // Moving down (increasing order number)
             else if (direction === 'down' && currentIndex < banners.length - 1) {
                 const nextBanner = banners[currentIndex + 1];
-                
+
                 // First update the next banner's order to avoid unique constraint conflicts
                 await bannerService.updateBannerOrder(
-                    nextBanner.id, 
+                    nextBanner.id,
                     currentBanner.displayOrder
                 );
-                
+
                 // Then update the current banner's order
                 await bannerService.updateBannerOrder(
-                    currentBanner.id, 
+                    currentBanner.id,
                     nextBanner.displayOrder
                 );
-                
+
                 showSnackbar('Banner moved down successfully');
             }
-            
+
             // Refresh the banners list
             await fetchBanners();
         } catch (error) {
@@ -267,14 +277,6 @@ const AdminPromotionalBanner = () => {
         });
     };
 
-    const showSnackbar = (message, severity = 'success') => {
-        setSnackbar({
-            open: true,
-            message,
-            severity
-        });
-    };
-
     const handleCloseSnackbar = () => {
         setSnackbar({
             ...snackbar,
@@ -287,7 +289,7 @@ const AdminPromotionalBanner = () => {
             <Helmet>
                 <title>Strive - Admin Banners</title>
             </Helmet>
-            
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h5" component="h2">
                     Manage Promotional Banners
@@ -369,8 +371,8 @@ const AdminPromotionalBanner = () => {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <Chip 
-                                            label={banner.active ? 'Active' : 'Inactive'} 
+                                        <Chip
+                                            label={banner.active ? 'Active' : 'Inactive'}
                                             color={banner.active ? 'success' : 'default'}
                                             size="small"
                                             onClick={() => handleToggleActive(banner.id, banner.active)}
@@ -493,7 +495,7 @@ const AdminPromotionalBanner = () => {
                         <Grid item xs={12}>
                             <FormControlLabel
                                 control={
-                                    <Switch 
+                                    <Switch
                                         checked={formData.active}
                                         onChange={handleChange}
                                         name="active"
@@ -506,9 +508,9 @@ const AdminPromotionalBanner = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} disabled={loading}>Cancel</Button>
-                    <Button 
-                        onClick={handleSubmit} 
-                        variant="contained" 
+                    <Button
+                        onClick={handleSubmit}
+                        variant="contained"
                         disabled={loading || !formData.title || !formData.subtitle || !formData.highlight}
                     >
                         {loading ? <CircularProgress size={24} /> : editingBanner ? 'Save Changes' : 'Add Banner'}
@@ -516,9 +518,9 @@ const AdminPromotionalBanner = () => {
                 </DialogActions>
             </Dialog>
 
-            <Snackbar 
-                open={snackbar.open} 
-                autoHideDuration={6000} 
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >

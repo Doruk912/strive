@@ -35,4 +35,4 @@ class FinancialService {
     }
 }
 
-export default new FinancialService(); 
+export default FinancialService;

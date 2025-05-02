@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Typography, IconButton, Container} from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -27,86 +27,88 @@ const PromotionalBanner = () => {
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
     const [promotions, setPromotions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // Removed unused error state variable
+    const setError = useState(null)[1]; // Keep only the setter function
 
-    // Icon mapping for dynamic rendering
-    const iconComponents = {
+    // Icon mapping for dynamic rendering - using useMemo to avoid recreation on each render
+    const iconComponents = useMemo(() => ({
         LocalShippingOutlined: <LocalShippingOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
         LocalOfferOutlined: <LocalOfferOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
         NewReleasesOutlined: <NewReleasesOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
         CardMembershipOutlined: <CardMembershipOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />,
         AssignmentReturnOutlined: <AssignmentReturnOutlinedIcon sx={{ fontSize: { xs: 24, md: 32 } }} />
-    };
+    }), []);
 
-    // Fetch banners from API
+    // Fetch banners from API using useCallback
+    const fetchBanners = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await bannerService.getActiveBanners();
+
+            // Transform data to match component format and sort by display order
+            const transformedData = data
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map(banner => ({
+                    title: banner.title,
+                    subtitle: banner.subtitle,
+                    highlight: banner.highlight,
+                    icon: iconComponents[banner.icon],
+                    backgroundColor: banner.backgroundColor,
+                    id: banner.id
+                }));
+
+            setPromotions(transformedData);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching banners:', err);
+            setError('Failed to load promotional banners');
+            setLoading(false);
+
+            // Fallback to hardcoded banners if API fails
+            setPromotions([
+                {
+                    title: "Fast Delivery!",
+                    subtitle: "Order now in New York,",
+                    highlight: "get it in 3 hours!",
+                    icon: iconComponents.LocalShippingOutlined,
+                    backgroundColor: "#4051B5",
+                },
+                {
+                    title: "Special Offer!",
+                    subtitle: "Get 20% off",
+                    highlight: "on all sports equipment",
+                    icon: iconComponents.LocalOfferOutlined,
+                    backgroundColor: "#2E7D32",
+                },
+                {
+                    title: "New Collection!",
+                    subtitle: "Discover our",
+                    highlight: "Summer 2024 Collection",
+                    icon: iconComponents.NewReleasesOutlined,
+                    backgroundColor: "#C2185B",
+                },
+                {
+                    title: "Members Only!",
+                    subtitle: "Join our club and get",
+                    highlight: "exclusive benefits",
+                    icon: iconComponents.CardMembershipOutlined,
+                    backgroundColor: "#F57C00",
+                },
+                {
+                    title: "Free Returns!",
+                    subtitle: "Try at home with",
+                    highlight: "30-day free returns",
+                    icon: iconComponents.AssignmentReturnOutlined,
+                    backgroundColor: "#0097A7",
+                }
+            ]);
+        }
+    }, [iconComponents, setError]);
+
+    // Call fetchBanners on component mount
     useEffect(() => {
-        const fetchBanners = async () => {
-            try {
-                setLoading(true);
-                const data = await bannerService.getActiveBanners();
-                
-                // Transform data to match component format and sort by display order
-                const transformedData = data
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map(banner => ({
-                        title: banner.title,
-                        subtitle: banner.subtitle,
-                        highlight: banner.highlight,
-                        icon: iconComponents[banner.icon],
-                        backgroundColor: banner.backgroundColor,
-                        id: banner.id
-                    }));
-                
-                setPromotions(transformedData);
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching banners:', err);
-                setError('Failed to load promotional banners');
-                setLoading(false);
-                
-                // Fallback to hardcoded banners if API fails
-                setPromotions([
-                    {
-                        title: "Fast Delivery!",
-                        subtitle: "Order now in New York,",
-                        highlight: "get it in 3 hours!",
-                        icon: iconComponents.LocalShippingOutlined,
-                        backgroundColor: "#4051B5",
-                    },
-                    {
-                        title: "Special Offer!",
-                        subtitle: "Get 20% off",
-                        highlight: "on all sports equipment",
-                        icon: iconComponents.LocalOfferOutlined,
-                        backgroundColor: "#2E7D32",
-                    },
-                    {
-                        title: "New Collection!",
-                        subtitle: "Discover our",
-                        highlight: "Summer 2024 Collection",
-                        icon: iconComponents.NewReleasesOutlined,
-                        backgroundColor: "#C2185B",
-                    },
-                    {
-                        title: "Members Only!",
-                        subtitle: "Join our club and get",
-                        highlight: "exclusive benefits",
-                        icon: iconComponents.CardMembershipOutlined,
-                        backgroundColor: "#F57C00",
-                    },
-                    {
-                        title: "Free Returns!",
-                        subtitle: "Try at home with",
-                        highlight: "30-day free returns",
-                        icon: iconComponents.AssignmentReturnOutlined,
-                        backgroundColor: "#0097A7",
-                    }
-                ]);
-            }
-        };
-
         fetchBanners();
-    }, []);
+    }, [fetchBanners]);
 
     useEffect(() => {
         let interval;
