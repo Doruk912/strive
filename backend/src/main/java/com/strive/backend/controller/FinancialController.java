@@ -41,4 +41,10 @@ public class FinancialController {
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(financialService.getRecentTransactions(limit));
     }
+    
+    @GetMapping("/transactions/all")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<List<FinancialTransactionDTO>> getAllTransactions() {
+        return ResponseEntity.ok(financialService.getAllTransactions());
+    }
 } 

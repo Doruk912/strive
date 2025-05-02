@@ -19,6 +19,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -129,6 +130,15 @@ public class FinancialServiceImpl implements FinancialService {
     public List<FinancialTransactionDTO> getRecentTransactions(int limit) {
         return financialTransactionRepository.findLatestTransactions(limit)
             .stream()
+            .map(this::convertToFinancialTransactionDTO)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FinancialTransactionDTO> getAllTransactions() {
+        return financialTransactionRepository.findAll()
+            .stream()
+            .sorted(Comparator.comparing(FinancialTransaction::getCreatedAt).reversed())
             .map(this::convertToFinancialTransactionDTO)
             .collect(Collectors.toList());
     }

@@ -20,6 +20,9 @@ import {
     IconButton,
     Tooltip,
     useTheme,
+    TablePagination,
+    TextField,
+    InputAdornment,
 } from '@mui/material';
 import {
     TrendingUp,
@@ -33,6 +36,7 @@ import {
     DateRange,
     Refresh,
     Info,
+    Search as SearchIcon,
 } from '@mui/icons-material';
 import financialService from '../services/financialService';
 import { Bar, Line } from 'react-chartjs-2';
@@ -58,11 +62,55 @@ const FinancialOverview = () => {
         orderGrowthRate: 0,
     });
     const [activeTab, setActiveTab] = useState(0);
-
+    const [allTransactions, setAllTransactions] = useState([]);
+    const [transactionsLoading, setTransactionsLoading] = useState(false);
+    const [weeklyMetrics, setWeeklyMetrics] = useState([]);
+    
+    // Pagination for transactions
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState('');
+    
     useEffect(() => {
         fetchFinancialData();
+        fetchAllTransactions();
     }, []);
-
+    
+    // Process daily metrics into weekly metrics
+    useEffect(() => {
+        if (financialData.recentMetrics && financialData.recentMetrics.length > 0) {
+            // Group metrics by week
+            const weekMap = new Map();
+            
+            financialData.recentMetrics.forEach(metric => {
+                const date = new Date(metric.date);
+                // Get the start of the week (Sunday)
+                const weekStart = new Date(date);
+                weekStart.setDate(date.getDate() - date.getDay());
+                const weekKey = weekStart.toISOString().split('T')[0];
+                
+                if (!weekMap.has(weekKey)) {
+                    weekMap.set(weekKey, {
+                        weekStart: weekKey,
+                        weekLabel: `Week of ${formatDate(weekStart)}`,
+                        revenue: 0,
+                        orders: 0
+                    });
+                }
+                
+                const weekData = weekMap.get(weekKey);
+                weekData.revenue += Number(metric.dailyRevenue);
+                weekData.orders += metric.ordersCount;
+            });
+            
+            // Convert map to array and sort by date (newest first)
+            const weeklyData = Array.from(weekMap.values())
+                .sort((a, b) => new Date(b.weekStart) - new Date(a.weekStart));
+            
+            setWeeklyMetrics(weeklyData);
+        }
+    }, [financialData.recentMetrics]);
+    
     const fetchFinancialData = async () => {
         setLoading(true);
         setError(null);
@@ -76,29 +124,132 @@ const FinancialOverview = () => {
             setLoading(false);
         }
     };
+    
+    const fetchAllTransactions = async () => {
+        setTransactionsLoading(true);
+        try {
+            // Using the new endpoint to get all transactions
+            const transactions = await financialService.getAllTransactions();
+            setAllTransactions(transactions);
+        } catch (err) {
+            console.error('Error fetching all transactions:', err);
+        } finally {
+            setTransactionsLoading(false);
+        }
+    };
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
+    
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+    
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+    
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+        setPage(0); // Reset to first page when searching
+    };
+    
+    // Filter transactions based on search term
+    const filteredTransactions = allTransactions
+        // Sort by order ID from highest to lowest
+        .sort((a, b) => {
+            // First ensure we're comparing numbers
+            const orderIdA = parseInt(a.orderId) || 0;
+            const orderIdB = parseInt(b.orderId) || 0;
+            // Sort highest to lowest (descending)
+            return orderIdB - orderIdA;
+        })
+        .filter(transaction => 
+            transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            transaction.orderId?.toString().includes(searchTerm) ||
+            transaction.transactionType.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    
+    // Get displayed transactions for the current page
+    const displayedTransactions = filteredTransactions
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+    // Format date to day-month-year format
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
     const handleDownloadReport = () => {
-        // Generate CSV data
+        // Generate detailed CSV data
         const metrics = financialData.recentMetrics;
-        const rows = metrics.map(metric => 
-            `${metric.date},${metric.dailyRevenue},${metric.ordersCount},${metric.averageOrderValue}`
+        const transactions = allTransactions;
+        
+        // Create a timestamp for the report
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        
+        // Create financial metrics data
+        const metricRows = metrics.map(metric => 
+            `${formatDate(metric.date)},${metric.dailyRevenue},${metric.ordersCount},${metric.averageOrderValue}`
         );
         
-        const csvContent = [
+        // Weekly metrics data
+        const weeklyRows = weeklyMetrics.map(week => 
+            `${week.weekLabel},${week.revenue.toFixed(2)},${week.orders},${(week.revenue / week.orders).toFixed(2)}`
+        );
+        
+        const metricsCSV = [
+            "FINANCIAL METRICS REPORT",
+            `Generated on: ${formatDate(new Date())} ${new Date().toLocaleTimeString()}`,
+            "",
+            "SUMMARY",
+            `Total Revenue:,${financialData.totalRevenue.toFixed(2)}`,
+            `Monthly Revenue:,${financialData.monthlyRevenue.toFixed(2)}`,
+            `Weekly Revenue:,${financialData.weeklyRevenue.toFixed(2)}`,
+            `Daily Revenue:,${financialData.dailyRevenue.toFixed(2)}`,
+            `Total Orders:,${financialData.totalOrders}`,
+            `Average Order Value:,${financialData.averageOrderValue?.toFixed(2)}`,
+            `Revenue Growth Rate:,${financialData.revenueGrowthRate}%`,
+            `Order Growth Rate:,${financialData.orderGrowthRate}%`,
+            "",
+            "WEEKLY METRICS",
+            "Week,Revenue,Orders,Average Order Value",
+            ...weeklyRows,
+            "",
+            "DAILY METRICS",
             "Date,Revenue,Orders,Average Order Value",
-            ...rows
+            ...metricRows,
+            "",
+            "TRANSACTION DETAILS",
+            "Date,Order ID,Description,Type,Amount",
+            ...transactions
+                // Sort by order ID from highest to lowest
+                .sort((a, b) => {
+                    // First ensure we're comparing numbers
+                    const orderIdA = parseInt(a.orderId) || 0;
+                    const orderIdB = parseInt(b.orderId) || 0;
+                    // Sort highest to lowest (descending)
+                    return orderIdB - orderIdA;
+                })
+                .map(t => {
+                    const date = formatDate(t.createdAt);
+                    const amount = (t.transactionType === 'ORDER' ? '+' : '-') + t.amount.toFixed(2);
+                    return `${date},${t.orderId || ''},${t.description},${t.transactionType},${amount}`;
+                })
         ].join("\n");
         
         // Create the download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([metricsCSV], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `financial_report_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.download = `financial_report_detailed_${timestamp}.csv`;
         link.click();
         URL.revokeObjectURL(url);
     };
@@ -137,13 +288,14 @@ const FinancialOverview = () => {
         </Card>
     );
 
-    const RevenueChart = () => {
+    const WeeklyRevenueChart = () => {
+        // Use weekly aggregated data
         const chartData = {
-            labels: financialData.recentMetrics.map(metric => new Date(metric.date).toLocaleDateString()).reverse(),
+            labels: weeklyMetrics.slice(0, 10).map(week => week.weekLabel).reverse(),
             datasets: [
                 {
-                    label: 'Daily Revenue',
-                    data: financialData.recentMetrics.map(metric => metric.dailyRevenue).reverse(),
+                    label: 'Weekly Revenue',
+                    data: weeklyMetrics.slice(0, 10).map(week => week.revenue).reverse(),
                     backgroundColor: theme.palette.primary.main,
                     borderColor: theme.palette.primary.main,
                     borderWidth: 2,
@@ -162,7 +314,7 @@ const FinancialOverview = () => {
                 },
                 title: {
                     display: true,
-                    text: 'Revenue Trend',
+                    text: 'Weekly Revenue Trend',
                 },
             },
             scales: {
@@ -182,13 +334,14 @@ const FinancialOverview = () => {
         );
     };
 
-    const OrdersChart = () => {
+    const WeeklyOrdersChart = () => {
+        // Use weekly aggregated data
         const chartData = {
-            labels: financialData.recentMetrics.map(metric => new Date(metric.date).toLocaleDateString()).reverse(),
+            labels: weeklyMetrics.slice(0, 10).map(week => week.weekLabel).reverse(),
             datasets: [
                 {
-                    label: 'Daily Orders',
-                    data: financialData.recentMetrics.map(metric => metric.ordersCount).reverse(),
+                    label: 'Weekly Orders',
+                    data: weeklyMetrics.slice(0, 10).map(week => week.orders).reverse(),
                     backgroundColor: theme.palette.info.main,
                     borderColor: theme.palette.info.main,
                     borderWidth: 2,
@@ -205,7 +358,7 @@ const FinancialOverview = () => {
                 },
                 title: {
                     display: true,
-                    text: 'Orders Trend',
+                    text: 'Weekly Orders Trend',
                 },
             },
         };
@@ -260,12 +413,15 @@ const FinancialOverview = () => {
                         onClick={handleDownloadReport}
                         sx={{ mr: 1 }}
                     >
-                        Download Report
+                        Download Detailed Report
                     </Button>
                     <Button
                         variant="outlined"
                         startIcon={<Refresh />}
-                        onClick={fetchFinancialData}
+                        onClick={() => {
+                            fetchFinancialData();
+                            fetchAllTransactions();
+                        }}
                     >
                         Refresh
                     </Button>
@@ -316,7 +472,7 @@ const FinancialOverview = () => {
             <Paper sx={{ mb: 4, boxShadow: 3, borderRadius: 2 }}>
                 <Tabs value={activeTab} onChange={handleTabChange} centered>
                     <Tab icon={<BarChart />} label="Revenue Analysis" />
-                    <Tab icon={<CalendarToday />} label="Recent Transactions" />
+                    <Tab icon={<CalendarToday />} label="All Transactions" />
                 </Tabs>
                 <Divider />
                 
@@ -325,14 +481,14 @@ const FinancialOverview = () => {
                         <Grid container spacing={3}>
                             <Grid item xs={12} md={6}>
                                 <Paper sx={{ p: 2, boxShadow: 2, height: '100%' }}>
-                                    <Typography variant="h6" gutterBottom>Revenue Trend</Typography>
-                                    <RevenueChart />
+                                    <Typography variant="h6" gutterBottom>Weekly Revenue Trend</Typography>
+                                    <WeeklyRevenueChart />
                                 </Paper>
                             </Grid>
                             <Grid item xs={12} md={6}>
                                 <Paper sx={{ p: 2, boxShadow: 2, height: '100%' }}>
-                                    <Typography variant="h6" gutterBottom>Orders Trend</Typography>
-                                    <OrdersChart />
+                                    <Typography variant="h6" gutterBottom>Weekly Orders Trend</Typography>
+                                    <WeeklyOrdersChart />
                                 </Paper>
                             </Grid>
                         </Grid>
@@ -341,60 +497,96 @@ const FinancialOverview = () => {
                 
                 {activeTab === 1 && (
                     <Box sx={{ p: 2 }}>
-                        <Typography variant="h6" sx={{ mb: 2 }}>Recent Transactions</Typography>
-                        <TableContainer sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: 'grey.100' }}>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Order ID</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Amount</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {financialData.recentTransactions.map((transaction) => (
-                                        <TableRow
-                                            key={transaction.id}
-                                            sx={{ 
-                                                '&:hover': { backgroundColor: 'grey.50' },
-                                                transition: 'background-color 0.2s'
-                                            }}
-                                        >
-                                            <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
-                                            <TableCell>{transaction.orderId}</TableCell>
-                                            <TableCell>{transaction.description}</TableCell>
-                                            <TableCell>
-                                                <Typography
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6">All Transactions</Typography>
+                            <TextField
+                                variant="outlined"
+                                size="small"
+                                placeholder="Search transactions..."
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon fontSize="small" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ width: 250 }}
+                            />
+                        </Box>
+                        
+                        {transactionsLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                                <CircularProgress size={40} />
+                            </Box>
+                        ) : (
+                            <>
+                                <TableContainer sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow sx={{ backgroundColor: 'grey.100' }}>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Order ID</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Amount</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {displayedTransactions.map((transaction) => (
+                                                <TableRow
+                                                    key={transaction.id}
                                                     sx={{ 
-                                                        display: 'inline-block',
-                                                        px: 1,
-                                                        py: 0.5,
-                                                        borderRadius: 1,
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 'bold',
-                                                        bgcolor: transaction.transactionType === 'ORDER' ? 'success.light' : 'error.light',
-                                                        color: transaction.transactionType === 'ORDER' ? 'success.dark' : 'error.dark',
+                                                        '&:hover': { backgroundColor: 'grey.50' },
+                                                        transition: 'background-color 0.2s'
                                                     }}
                                                 >
-                                                    {transaction.transactionType}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography
-                                                    sx={{ fontWeight: 'bold' }}
-                                                    color={transaction.transactionType === 'ORDER' ? 'success.main' : 'error.main'}
-                                                >
-                                                    {transaction.transactionType === 'ORDER' ? '+' : '-'}
-                                                    ${transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </Typography>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                                                    <TableCell>{formatDate(transaction.createdAt)}</TableCell>
+                                                    <TableCell>{transaction.orderId}</TableCell>
+                                                    <TableCell>{transaction.description}</TableCell>
+                                                    <TableCell>
+                                                        <Typography
+                                                            sx={{ 
+                                                                display: 'inline-block',
+                                                                px: 1,
+                                                                py: 0.5,
+                                                                borderRadius: 1,
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 'bold',
+                                                                bgcolor: transaction.transactionType === 'ORDER' ? 'success.light' : 'error.light',
+                                                                color: transaction.transactionType === 'ORDER' ? 'success.dark' : 'error.dark',
+                                                            }}
+                                                        >
+                                                            {transaction.transactionType}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography
+                                                            sx={{ fontWeight: 'bold' }}
+                                                            color={transaction.transactionType === 'ORDER' ? 'success.main' : 'error.main'}
+                                                        >
+                                                            {transaction.transactionType === 'ORDER' ? '+' : '-'}
+                                                            ${transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                                
+                                <TablePagination
+                                    component="div"
+                                    count={filteredTransactions.length}
+                                    page={page}
+                                    onPageChange={handleChangePage}
+                                    rowsPerPage={rowsPerPage}
+                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                    rowsPerPageOptions={[10, 25, 50, 100]}
+                                />
+                            </>
+                        )}
                     </Box>
                 )}
             </Paper>

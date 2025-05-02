@@ -14,5 +14,7 @@ public interface FinancialService {
     
     List<FinancialTransactionDTO> getRecentTransactions(int limit);
     
+    List<FinancialTransactionDTO> getAllTransactions();
+    
     void recordOrderTransaction(Long orderId);
 } 

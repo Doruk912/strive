@@ -27,6 +27,12 @@ class FinancialService {
             })
             .then(response => response.data);
     }
+    
+    getAllTransactions() {
+        return axios
+            .get(`${API_URL}/transactions/all`, { headers: authHeader() })
+            .then(response => response.data);
+    }
 }
 
 export default new FinancialService(); 
