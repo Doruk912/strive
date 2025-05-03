@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
     Typography,
     Box,
@@ -109,6 +109,7 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
 const Products = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -178,33 +179,60 @@ const Products = () => {
         return ids;
     }, []);
 
-    // Parse URL parameters for initial filters
+    // Add a new effect to handle expandFilters parameter
+    useEffect(() => {
+        const expandFilters = searchParams.get('expandFilters');
+        if (expandFilters === 'true') {
+            setMobileFiltersOpen(true);
+        }
+    }, [searchParams]);
+    
+    // Update the useEffect that handles URL parameters
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
+        const parentCategoryParam = params.get('parentCategory');
         const nameParam = params.get('name');
+        const expandFiltersParam = params.get('expandFilters');
+        
+        // Open the filters section when expandFilters is true
+        if (expandFiltersParam === 'true') {
+            setMobileFiltersOpen(true);
+        }
         
         let updates = {};
         
+        // Process the category parameter
         if (categoryParam) {
             // Check if categoryParam is a valid ID
             const categoryId = parseInt(categoryParam, 10);
             if (!isNaN(categoryId)) {
                 updates.category = [categoryId];
                 
-                // If we have categories data, expand the category in the UI
+                // If we have categories data and a parent category is specified
                 if (categories.length > 0) {
-                    const foundCategory = findCategoryById(categoryId);
-                    if (foundCategory && foundCategory.parent) {
-                        // Expand parent categories
-                        let parentId = foundCategory.parent;
-                        while (parentId) {
+                    // If a parent category was specified in the URL, expand that dropdown
+                    if (parentCategoryParam) {
+                        const parentId = parseInt(parentCategoryParam, 10);
+                        if (!isNaN(parentId)) {
+                            // Expand the parent category dropdown
+                            console.log("Expanding parent category dropdown:", parentId);
                             setExpandedCategories(prev => ({
                                 ...prev,
                                 [parentId]: true
                             }));
-                            const parentCategory = findCategoryById(parentId);
-                            parentId = parentCategory?.parent || null;
+                        }
+                    } 
+                    // Otherwise find the parent of the selected category
+                    else {
+                        const selectedCategory = findCategoryById(categoryId);
+                        if (selectedCategory && selectedCategory.parent) {
+                            console.log("Expanding parent of selected category:", selectedCategory.parent);
+                            // Expand the parent of the selected category
+                            setExpandedCategories(prev => ({
+                                ...prev,
+                                [selectedCategory.parent]: true
+                            }));
                         }
                     }
                 }

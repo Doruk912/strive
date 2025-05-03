@@ -244,12 +244,16 @@ const Header = () => {
         // If using the database categories:
         if (dbCategories.length > 0) {
             const subcategoryId = subcategoryObj.id;
-            navigate(`/products?category=${subcategoryId}`);
+            // Find the parent category ID
+            const parentCategoryId = typeof categoryObj === 'object' ? categoryObj.id : null;
+            
+            // Include both parent and subcategory IDs in the URL
+            navigate(`/products?category=${subcategoryId}&parentCategory=${parentCategoryId}&expandFilters=true`);
         } else {
             // Fallback for when database categories aren't loaded yet
             const categoryName = typeof categoryObj === 'string' ? categoryObj : categoryObj.name;
             const subcategoryName = typeof subcategoryObj === 'string' ? subcategoryObj : subcategoryObj.name;
-            navigate(`/products?category=${categoryName.toLowerCase()}&subcategory=${subcategoryName.toLowerCase().replace(/\s+/g, '-')}`);
+            navigate(`/products?category=${categoryName.toLowerCase()}&subcategory=${subcategoryName.toLowerCase().replace(/\s+/g, '-')}&expandFilters=true`);
         }
         setHoveredCategory(null);
     };
@@ -354,7 +358,7 @@ const Header = () => {
                                 ) : (
                                     // Show a "Browse All" option if no subcategories
                                     <MenuItem
-                                        onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}`)}
+                                        onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`)}
                                         sx={{
                                             py: 1,
                                             borderRadius: '4px',
@@ -405,10 +409,10 @@ const Header = () => {
     const handleNavigateToProducts = (category, subcategory) => {
         if (subcategory) {
             // Navigate with specific subcategory
-            navigate(`/products?category=${subcategory.id || subcategory}`);
+            navigate(`/products?category=${subcategory.id || subcategory}&expandFilters=true`);
         } else if (category) {
             // Navigate with just the category
-            navigate(`/products?category=${category.id || category.name.toLowerCase()}`);
+            navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`);
         } else {
             // Navigate to all products if no category specified
             navigate('/products');
@@ -996,7 +1000,7 @@ const Header = () => {
                                                     color="inherit"
                                                     onMouseEnter={() => handleMouseEnter(category)}
                                                     onMouseLeave={handleMouseLeave}
-                                                    onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}`)}
+                                                    onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`)}
                                                     sx={{
                                                         textTransform: 'none',
                                                         fontWeight: 'medium',
@@ -1179,7 +1183,7 @@ const Header = () => {
                                                     boxShadow: '0 4px 8px rgba(0,0,0,0.03)'
                                                 },
                                             }}
-                                            onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}`)}
+                                            onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}&expandFilters=true`)}
                                         >
                                             <Typography
                                                 variant="subtitle1"
