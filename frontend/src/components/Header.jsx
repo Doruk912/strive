@@ -623,9 +623,9 @@ const Header = () => {
                 left: 0,
                 top: 0,
                 backgroundColor: 'white',
-                p: 2,
+                p: 0,
                 zIndex: 1200,
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
                 height: 'auto',
                 maxHeight: '80vh',
                 overflow: 'auto',
@@ -637,46 +637,20 @@ const Header = () => {
                     display: 'flex',
                     alignItems: 'center',
                     width: '100%',
-                    px: 2,
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                    px: { xs: 2, md: 4 },
+                    py: 1.5,
+                    backgroundColor: '#f8f8f8',
                     opacity: searchExpanded ? 1 : 0,
                     transform: searchExpanded ? 'translateY(0)' : 'translateY(-20px)',
                     transition: 'all 0.3s ease-in-out',
                 }}>
-                    <IconButton
-                        color="inherit"
-                        onClick={handleSearchClick}
-                        sx={{
-                            backgroundColor: '#f0f0f0',
-                            borderRadius: '20px',
-                            width: '200px',
-                            justifyContent: 'flex-start',
-                            pl: 2,
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                backgroundColor: '#e8e8e8',
-                                transform: 'translateY(-1px)',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                            },
-                            border: '1px solid #e0e0e0',
-                        }}
-                    >
-                        <SearchIcon sx={{ color: 'text.secondary' }} />
-                        <Typography
-                            sx={{
-                                ml: 1,
-                                color: 'text.secondary',
-                                flexGrow: 1,
-                                textAlign: 'left'
-                            }}
-                        >
-                            Search
-                        </Typography>
-                    </IconButton>
+                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1.3rem', mr: 2 }} />
                     <TextField
                         autoFocus
                         fullWidth
                         variant="standard"
-                        placeholder="Search"
+                        placeholder="Search for products..."
                         value={searchValue}
                         onChange={handleSearchChange}
                         onKeyDown={(e) => {
@@ -684,24 +658,39 @@ const Header = () => {
                         }}
                         InputProps={{
                             disableUnderline: true,
+                            sx: { 
+                                fontSize: '1.1rem', 
+                                fontWeight: 400,
+                                padding: '6px 0'
+                            }
                         }}
                         sx={{
                             '& input': {
-                                fontSize: '1.2rem',
-                                py: 1.5,
+                                fontSize: '1.1rem',
                                 transition: 'all 0.2s ease',
                             }
                         }}
                     />
-                    <IconButton color="inherit" onClick={handleSearchClose}>
+                    <IconButton 
+                        color="inherit" 
+                        onClick={handleSearchClose}
+                        sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                            },
+                            ml: 1
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </Box>
 
-                {/* Search history and popular searches */}
+                {/* Search history and popular searches with improved layout */}
                 <Box sx={{
-                    mt: 3,
-                    px: 2,
+                    mt: 0,
+                    p: { xs: 2, md: 4 },
+                    pt: 3,
                     opacity: searchExpanded ? 1 : 0,
                     transform: searchExpanded ? 'translateY(0)' : 'translateY(20px)',
                     transition: 'all 0.3s ease-in-out 0.1s',
@@ -709,13 +698,13 @@ const Header = () => {
                     {searchHistory.length > 0 && (
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
                                     Search History
                                 </Typography>
                                 <Button
                                     size="small"
                                     onClick={clearSearchHistory}
-                                    sx={{ textTransform: 'none', color: 'text.secondary' }}
+                                    sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}
                                 >
                                     Clear All
                                 </Button>
@@ -727,8 +716,10 @@ const Header = () => {
                                         sx={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            py: 1,
+                                            py: 1.2,
                                             cursor: 'pointer',
+                                            borderRadius: '8px',
+                                            px: 1.5,
                                             transition: 'background-color 0.2s ease',
                                             '&:hover': {
                                                 backgroundColor: '#f5f5f5'
@@ -736,8 +727,8 @@ const Header = () => {
                                         }}
                                         onClick={() => handleHistoryItemClick(term)}
                                     >
-                                        <HistoryIcon sx={{ color: 'text.secondary', mr: 2 }} />
-                                        <Typography sx={{ flexGrow: 1 }}>{term}</Typography>
+                                        <HistoryIcon sx={{ color: 'text.secondary', mr: 2, fontSize: '1.1rem' }} />
+                                        <Typography sx={{ flexGrow: 1, fontSize: '0.9rem' }}>{term}</Typography>
                                         <IconButton
                                             size="small"
                                             onClick={(e) => removeHistoryItem(e, term)}
@@ -747,6 +738,7 @@ const Header = () => {
                                                 transition: 'opacity 0.2s ease',
                                                 '&:hover': {
                                                     opacity: 1,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.05)'
                                                 }
                                             }}
                                         >
@@ -759,7 +751,7 @@ const Header = () => {
                         </>
                     )}
 
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, fontSize: '0.95rem' }}>
                         Popular Searches
                     </Typography>
                     <Box sx={{
@@ -779,7 +771,10 @@ const Header = () => {
                                     backgroundColor: '#f5f5f5',
                                     borderColor: '#e0e0e0',
                                     color: 'text.primary',
+                                    px: 2,
                                     transition: 'all 0.2s ease',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
                                     animation: `fadeIn 0.3s ease forwards ${index * 0.1}s`,
                                     '@keyframes fadeIn': {
                                         from: {
