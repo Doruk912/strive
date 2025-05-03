@@ -5,6 +5,7 @@ import com.strive.backend.dto.OrderItemDTO;
 import com.strive.backend.dto.OrderResponseDTO;
 import com.strive.backend.model.Order;
 import com.strive.backend.model.OrderItem;
+import com.strive.backend.model.OrderStatus;
 import com.strive.backend.model.PaymentStatus;
 import com.strive.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,21 @@ public class OrderService {
     public OrderResponseDTO getOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        return convertToDTO(order);
+    }
+    
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderRepository.findAllByOrderByIdDesc().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus(status);
+        order = orderRepository.save(order);
         return convertToDTO(order);
     }
 

@@ -30,6 +30,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import ManagerLayout from "./components/ManagerLayout";
 import EmployeeManagement from "./pages/ManagerEmployeeManagement";
 import FinancialOverview from "./pages/ManagerFinancialOverview";
+import ManagerOrderManagement from "./pages/ManagerOrderManagement";
 import Terms from './pages/Terms';
 import Orders from "./pages/Orders";
 
@@ -132,6 +133,7 @@ function AppContent() {
                             <Route index element={<Navigate to="/manager/employees" replace />} />
                             <Route path="employees" element={<EmployeeManagement />} />
                             <Route path="finances" element={<FinancialOverview />} />
+                            <Route path="orders" element={<ManagerOrderManagement />} />
                         </Route>
                     </Routes>
                 </Box>

@@ -17,6 +17,7 @@ import {
     ExitToApp as LogoutIcon,
     Menu as MenuIcon,
     Home as HomeIcon,
+    LocalShipping as ShippingIcon,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -49,6 +50,7 @@ const ManagerLayout = () => {
     const menuItems = [
         { text: 'Employees', icon: <EmployeesIcon />, path: '/manager/employees' },
         { text: 'Financial Overview', icon: <FinanceIcon />, path: '/manager/finances' },
+        { text: 'Order Management', icon: <ShippingIcon />, path: '/manager/orders' },
     ];
 
     const drawer = (
