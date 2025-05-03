@@ -23,4 +23,5 @@ public class FinancialOverviewDTO {
     private List<FinancialTransactionDTO> recentTransactions;
     private Integer revenueGrowthRate;
     private Integer orderGrowthRate;
+    private Integer weeklyRevenueGrowthRate;
 } 

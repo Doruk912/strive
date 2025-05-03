@@ -35,4 +35,6 @@ class FinancialService {
     }
 }
 
-export default FinancialService;
+// Create an instance of the class before exporting
+const financialService = new FinancialService();
+export default financialService;

@@ -60,6 +60,7 @@ const FinancialOverview = () => {
         recentTransactions: [],
         revenueGrowthRate: 0,
         orderGrowthRate: 0,
+        weeklyRevenueGrowthRate: 0,
     });
     const [activeTab, setActiveTab] = useState(0);
     const [allTransactions, setAllTransactions] = useState([]);
@@ -215,7 +216,8 @@ const FinancialOverview = () => {
             `Daily Revenue:,${financialData.dailyRevenue.toFixed(2)}`,
             `Total Orders:,${financialData.totalOrders}`,
             `Average Order Value:,${financialData.averageOrderValue?.toFixed(2)}`,
-            `Revenue Growth Rate:,${financialData.revenueGrowthRate}%`,
+            `Monthly Revenue Growth Rate:,${financialData.revenueGrowthRate}%`,
+            `Weekly Revenue Growth Rate:,${financialData.weeklyRevenueGrowthRate}%`,
             `Order Growth Rate:,${financialData.orderGrowthRate}%`,
             "",
             "WEEKLY METRICS",
@@ -453,7 +455,7 @@ const FinancialOverview = () => {
                         title="Weekly Revenue"
                         value={financialData.weeklyRevenue}
                         icon={<DateRange sx={{ color: 'warning.main', fontSize: 30 }} />}
-                        trend={0}
+                        trend={financialData.weeklyRevenueGrowthRate}
                         subtitle="Current week"
                     />
                 </Grid>
@@ -462,7 +464,7 @@ const FinancialOverview = () => {
                         title="Avg. Order Value"
                         value={financialData.averageOrderValue}
                         icon={<Receipt sx={{ color: 'info.main', fontSize: 30 }} />}
-                        trend={0}
+                        trend={financialData.orderGrowthRate}
                         subtitle={`Total Orders: ${financialData.totalOrders}`}
                     />
                 </Grid>

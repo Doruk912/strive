@@ -93,6 +93,19 @@ public class FinancialServiceImpl implements FinancialService {
             orderGrowthRate = (currentMonthOrders - previousMonthOrders) * 100 / previousMonthOrders;
         }
 
+        // Calculate weekly revenue growth rate
+        BigDecimal previousWeekRevenue = financialMetricRepository.sumRevenueByDateRange(startOfPreviousWeek, endOfPreviousWeek) != null 
+            ? financialMetricRepository.sumRevenueByDateRange(startOfPreviousWeek, endOfPreviousWeek) 
+            : BigDecimal.ZERO;
+
+        Integer weeklyRevenueGrowthRate = 0;
+        if (previousWeekRevenue.compareTo(BigDecimal.ZERO) > 0) {
+            weeklyRevenueGrowthRate = weeklyRevenue.subtract(previousWeekRevenue)
+                .multiply(new BigDecimal(100))
+                .divide(previousWeekRevenue, 0, RoundingMode.HALF_UP)
+                .intValue();
+        }
+
         // Get recent data
         List<FinancialMetricDTO> recentMetrics = financialMetricRepository.findLatestMetrics(10)
             .stream()
@@ -115,6 +128,7 @@ public class FinancialServiceImpl implements FinancialService {
             .recentTransactions(recentTransactions)
             .revenueGrowthRate(revenueGrowthRate)
             .orderGrowthRate(orderGrowthRate)
+            .weeklyRevenueGrowthRate(weeklyRevenueGrowthRate)
             .build();
     }
 
