@@ -22,6 +22,8 @@ import {
     MenuItem,
     ListItemIcon,
     Menu,
+    ListItemButton,
+    SwipeableDrawer,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
@@ -40,6 +42,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
 import CloseIcon from '@mui/icons-material/Close';
 import {ShoppingBag} from "@mui/icons-material";
+import axios from 'axios';
 
 const Header = () => {
     const location = useLocation();
@@ -64,6 +67,10 @@ const Header = () => {
     // State for hover-based dropdown
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [hoverTimeout, setHoverTimeout] = useState(null);
+    
+    // Database categories state
+    const [dbCategories, setDbCategories] = useState([]);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -73,28 +80,60 @@ const Header = () => {
         setAnchorEl(null);
     };
 
-    const categories = [
-        {
-            name: 'NEW',
-            path: '/new',
-            subcategories: ['TRENDING PRODUCTS', 'NEW ARRIVALS', 'HIGHLIGHTS'],
-        },
-        {
-            name: 'MEN',
-            path: '/men',
-            subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
-        },
-        {
-            name: 'WOMEN',
-            path: '/women',
-            subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
-        },
-        {
-            name: 'SPORTS',
-            path: '/sports',
-            subcategories: ['BASKETBALL', 'SOCCER', 'BASEBALL', 'TENNIS', 'RUNNING', 'YOGA'],
-        },
-    ];
+    // Fetch categories from database
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setIsLoadingCategories(true);
+                const response = await axios.get('http://localhost:8080/api/categories');
+                setDbCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } finally {
+                setIsLoadingCategories(false);
+            }
+        };
+        
+        fetchCategories();
+    }, []);
+
+    // Prepare categories for display
+    const categories = dbCategories.length > 0 
+        ? dbCategories
+            .filter(category => !category.parent) // Only root categories
+            .map(category => ({
+                id: category.id,
+                name: category.name.toUpperCase(),
+                path: `/products?category=${category.id}`,
+                subcategories: category.children ? 
+                    category.children.map(child => ({
+                        id: child.id,
+                        name: child.name.toUpperCase()
+                    })) : [],
+                children: category.children || []
+            }))
+        : [
+            {
+                name: 'NEW',
+                path: '/new',
+                subcategories: ['TRENDING PRODUCTS', 'NEW ARRIVALS', 'HIGHLIGHTS'],
+            },
+            {
+                name: 'MEN',
+                path: '/men',
+                subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
+            },
+            {
+                name: 'WOMEN',
+                path: '/women',
+                subcategories: ['JACKETS', 'BOOTS', 'PANTS', 'INNERWEAR', 'ACCESSORIES', 'HIGHLIGHTS'],
+            },
+            {
+                name: 'SPORTS',
+                path: '/sports',
+                subcategories: ['BASKETBALL', 'SOCCER', 'BASEBALL', 'TENNIS', 'RUNNING', 'YOGA'],
+            },
+        ];
 
     useEffect(() => {
         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
@@ -200,6 +239,146 @@ const Header = () => {
         }
     }, [searchExpanded, handleSearch]);
 
+    // Handle subcategory navigation with proper filtering
+    const handleSubcategoryClick = (categoryObj, subcategoryObj) => {
+        // If using the database categories:
+        if (dbCategories.length > 0) {
+            const subcategoryId = subcategoryObj.id;
+            navigate(`/products?category=${subcategoryId}`);
+        } else {
+            // Fallback for when database categories aren't loaded yet
+            const categoryName = typeof categoryObj === 'string' ? categoryObj : categoryObj.name;
+            const subcategoryName = typeof subcategoryObj === 'string' ? subcategoryObj : subcategoryObj.name;
+            navigate(`/products?category=${categoryName.toLowerCase()}&subcategory=${subcategoryName.toLowerCase().replace(/\s+/g, '-')}`);
+        }
+        setHoveredCategory(null);
+    };
+
+    const renderCategoryDropdown = (category) => (
+        <Box
+            onMouseEnter={() => handleMouseEnter(category)}
+            onMouseLeave={handleMouseLeave}
+            sx={{
+                position: 'relative',
+                cursor: 'pointer',
+                height: '64px',
+                display: 'flex',
+                alignItems: 'center',
+                '&:hover': {
+                    '& .MuiTypography-root': {
+                        color: 'primary.main',
+                        transform: 'translateY(-1px)',
+                        transition: 'all 0.2s ease-in-out'
+                    }
+                }
+            }}
+        >
+            <Typography
+                sx={{
+                    px: 2,
+                    fontWeight: 500,
+                    color: hoveredCategory === category ? 'primary.main' : 'text.primary',
+                    position: 'relative',
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: -5,
+                        left: '50%',
+                        width: hoveredCategory === category ? '40%' : '0%',
+                        height: '2px',
+                        backgroundColor: 'primary.main',
+                        transform: 'translateX(-50%)',
+                        transition: 'width 0.2s ease'
+                    }
+                }}
+            >
+                {category.name}
+            </Typography>
+
+            {/* Dropdown Panel */}
+            {hoveredCategory === category && (
+                <Paper
+                    onMouseEnter={handleDropdownMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    sx={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        minWidth: '220px',
+                        backgroundColor: 'white',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
+                        borderRadius: '6px',
+                        animation: 'fadeIn 0.25s ease-in-out',
+                        zIndex: 1300,
+                        '@keyframes fadeIn': {
+                            from: {
+                                opacity: 0,
+                                transform: 'translateY(-8px)'
+                            },
+                            to: {
+                                opacity: 1,
+                                transform: 'translateY(0)'
+                            }
+                        }
+                    }}
+                >
+                    <Box sx={{ p: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                            {category.name}
+                        </Typography>
+                        <Divider sx={{ mb: 1 }} />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                {category.subcategories && category.subcategories.length > 0 ? (
+                                    // Map through subcategories
+                                    category.subcategories.map((subcat, index) => (
+                                        <MenuItem
+                                            key={index}
+                                            onClick={() => handleSubcategoryClick(category, subcat)}
+                                            sx={{
+                                                py: 1,
+                                                borderRadius: '4px',
+                                                transition: 'all 0.15s ease',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                    color: 'primary.main',
+                                                    transform: 'translateX(3px)'
+                                                }
+                                            }}
+                                        >
+                                            <Typography variant="body2">
+                                                {typeof subcat === 'string' ? subcat : subcat.name}
+                                            </Typography>
+                                        </MenuItem>
+                                    ))
+                                ) : (
+                                    // Show a "Browse All" option if no subcategories
+                                    <MenuItem
+                                        onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}`)}
+                                        sx={{
+                                            py: 1,
+                                            borderRadius: '4px',
+                                            transition: 'all 0.15s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                color: 'primary.main',
+                                                transform: 'translateX(3px)'
+                                            }
+                                        }}
+                                    >
+                                        <Typography variant="body2">
+                                            Browse All
+                                        </Typography>
+                                    </MenuItem>
+                                )}
+                            </Grid>
+                        </Grid>
+                    </Box>
+                </Paper>
+            )}
+        </Box>
+    );
+
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
         return () => {
@@ -222,32 +401,43 @@ const Header = () => {
         }
     };
 
-    const handleNavigateToProducts = () => {
-        navigate('/products');
+    // Modified navigation function for products page
+    const handleNavigateToProducts = (category, subcategory) => {
+        if (subcategory) {
+            // Navigate with specific subcategory
+            navigate(`/products?category=${subcategory.id || subcategory}`);
+        } else if (category) {
+            // Navigate with just the category
+            navigate(`/products?category=${category.id || category.name.toLowerCase()}`);
+        } else {
+            // Navigate to all products if no category specified
+            navigate('/products');
+        }
         setDrawerOpen(false);
     };
 
     const drawer = (
-        <Box sx={{ width: 250 }} role="presentation" onKeyDown={toggleDrawer(false)}>
+        <Box sx={{ width: 280 }} role="presentation" onKeyDown={toggleDrawer(false)}>
             {/* Header with Logo and Name */}
             <Box
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    p: 2,
-                    borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                    cursor: 'pointer', // Add cursor pointer
+                    p: 2.5,
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                    cursor: 'pointer',
                 }}
-                onClick={() => { navigate('/'); setDrawerOpen(false); }} // Add click handler
+                onClick={() => { navigate('/'); setDrawerOpen(false); }}
             >
                 <img
                     src="/logo.png"
                     alt="Logo"
                     style={{
-                        height: 40,
+                        height: 42,
                         width: 'auto',
                         marginRight: 12,
+                        filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.1))'
                     }}
                 />
                 <Typography
@@ -264,17 +454,25 @@ const Header = () => {
                 </Typography>
             </Box>
 
-            {/* Categories Section - removed the "Categories" text */}
-            <List>
+            {/* Categories Section */}
+            <List sx={{ pt: 1.5 }}>
                 {categories.map((category) => (
                     <React.Fragment key={category.name}>
                         <ListItem
                             button
-                            onClick={() => handleNavigateToProducts()}
+                            onClick={() => handleNavigateToProducts(category)}
                             sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                px: 2,
+                                px: 2.5,
+                                py: 1.5,
+                                mb: 0.5,
+                                transition: 'all 0.15s ease',
+                                borderRadius: '0 24px 24px 0',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                    paddingLeft: 3.5
+                                }
                             }}
                         >
                             <ListItemText
@@ -292,24 +490,60 @@ const Header = () => {
                                     handleCategoryClick(category.name);
                                 }}
                                 size="small"
+                                sx={{
+                                    transition: 'transform 0.2s ease',
+                                    transform: expandedCategory === category.name ? 'rotate(180deg)' : 'rotate(0deg)'
+                                }}
                             >
-                                {expandedCategory === category.name ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                <ExpandMoreIcon />
                             </IconButton>
                         </ListItem>
                         <Collapse in={expandedCategory === category.name} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                {category.subcategories.map((subcategory) => (
+                                {category.subcategories && category.subcategories.length > 0 ? (
+                                    category.subcategories.map((subcategory, idx) => (
+                                        <ListItem
+                                            button
+                                            key={idx}
+                                            sx={{
+                                                pl: 4.5,
+                                                py: 1.2,
+                                                backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                    pl: 5.5
+                                                }
+                                            }}
+                                            onClick={() => handleNavigateToProducts(category, subcategory)}
+                                        >
+                                            <ListItemText
+                                                primary={typeof subcategory === 'string' ? subcategory : subcategory.name}
+                                                sx={{
+                                                    '& .MuiListItemText-primary': {
+                                                        fontSize: '0.9rem',
+                                                    }
+                                                }}
+                                            />
+                                        </ListItem>
+                                    ))
+                                ) : (
                                     <ListItem
                                         button
-                                        key={subcategory}
                                         sx={{
-                                            pl: 4,
-                                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                                            pl: 4.5,
+                                            py: 1.2,
+                                            backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                                            transition: 'all 0.2s ease',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                pl: 5.5
+                                            }
                                         }}
-                                        onClick={handleNavigateToProducts}
+                                        onClick={() => handleNavigateToProducts(category)}
                                     >
                                         <ListItemText
-                                            primary={subcategory}
+                                            primary="Browse All"
                                             sx={{
                                                 '& .MuiListItemText-primary': {
                                                     fontSize: '0.9rem',
@@ -317,7 +551,7 @@ const Header = () => {
                                             }}
                                         />
                                     </ListItem>
-                                ))}
+                                )}
                             </List>
                         </Collapse>
                     </React.Fragment>
@@ -404,18 +638,36 @@ const Header = () => {
                     transform: searchExpanded ? 'translateY(0)' : 'translateY(-20px)',
                     transition: 'all 0.3s ease-in-out',
                 }}>
-                    <SearchIcon
+                    <IconButton
+                        color="inherit"
+                        onClick={handleSearchClick}
                         sx={{
-                            color: 'text.secondary',
-                            mr: 1,
-                            cursor: 'pointer',
-                            transition: 'color 0.2s ease',
+                            backgroundColor: '#f0f0f0',
+                            borderRadius: '20px',
+                            width: '200px',
+                            justifyContent: 'flex-start',
+                            pl: 2,
+                            transition: 'all 0.2s ease',
                             '&:hover': {
-                                color: 'primary.main',
+                                backgroundColor: '#e8e8e8',
+                                transform: 'translateY(-1px)',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
                             },
+                            border: '1px solid #e0e0e0',
                         }}
-                        onClick={handleSearch}
-                    />
+                    >
+                        <SearchIcon sx={{ color: 'text.secondary' }} />
+                        <Typography
+                            sx={{
+                                ml: 1,
+                                color: 'text.secondary',
+                                flexGrow: 1,
+                                textAlign: 'left'
+                            }}
+                        >
+                            Search
+                        </Typography>
+                    </IconButton>
                     <TextField
                         autoFocus
                         fullWidth
@@ -665,9 +917,13 @@ const Header = () => {
                                                 color="inherit"
                                                 onClick={() => navigate('/')}
                                                 sx={{
-                                                    p: 0.5, // Reduced padding
+                                                    p: 0.5,
                                                     '&:hover': {
                                                         backgroundColor: 'transparent',
+                                                        '& img': {
+                                                            transform: 'scale(1.05)',
+                                                            filter: 'brightness(1.15)'
+                                                        }
                                                     }
                                                 }}
                                             >
@@ -675,10 +931,10 @@ const Header = () => {
                                                     src="/logo.png"
                                                     alt="Logo"
                                                     style={{
-                                                        height: 45, // Slightly larger
+                                                        height: 45,
                                                         width: 'auto',
-                                                        filter: 'brightness(1.1)', // Makes the logo slightly brighter
-                                                        transition: 'transform 0.3s ease',
+                                                        filter: 'brightness(1.1)',
+                                                        transition: 'all 0.3s ease',
                                                     }}
                                                 />
                                             </IconButton>
@@ -694,7 +950,7 @@ const Header = () => {
                                                     component="div"
                                                     sx={{
                                                         cursor: 'pointer',
-                                                        fontFamily: '"Montserrat", sans-serif', // More modern font
+                                                        fontFamily: '"Montserrat", sans-serif',
                                                         fontWeight: 700,
                                                         letterSpacing: '0.15em',
                                                         color: 'primary.main',
@@ -738,18 +994,31 @@ const Header = () => {
                                                 <Button
                                                     key={category.name}
                                                     color="inherit"
-                                                    onMouseEnter={() => handleMouseEnter(category.name)}
+                                                    onMouseEnter={() => handleMouseEnter(category)}
                                                     onMouseLeave={handleMouseLeave}
-                                                    onClick={() => navigate(`/products?category=${category.name.toLowerCase()}`)} // Navigate to Products.jsx
+                                                    onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}`)}
                                                     sx={{
                                                         textTransform: 'none',
                                                         fontWeight: 'medium',
                                                         fontSize: '1rem',
                                                         p: 1,
                                                         borderRadius: '4px',
-                                                        transition: 'background-color 0.2s ease',
+                                                        transition: 'all 0.2s ease',
+                                                        position: 'relative',
+                                                        '&::after': {
+                                                            content: '""',
+                                                            position: 'absolute',
+                                                            bottom: 5,
+                                                            left: '50%',
+                                                            width: hoveredCategory === category ? '30%' : '0%',
+                                                            height: '2px',
+                                                            backgroundColor: 'primary.main',
+                                                            transform: 'translateX(-50%)',
+                                                            transition: 'width 0.2s ease'
+                                                        },
                                                         '&:hover': {
-                                                            backgroundColor: '#f5f5f5',
+                                                            backgroundColor: 'rgba(0,0,0,0.02)',
+                                                            transform: 'translateY(-1px)'
                                                         },
                                                     }}
                                                 >
@@ -768,8 +1037,11 @@ const Header = () => {
                                                     width: '200px',
                                                     justifyContent: 'flex-start',
                                                     pl: 2,
+                                                    transition: 'all 0.2s ease',
                                                     '&:hover': {
                                                         backgroundColor: '#e8e8e8',
+                                                        transform: 'translateY(-1px)',
+                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
                                                     },
                                                     border: '1px solid #e0e0e0',
                                                 }}
@@ -786,7 +1058,17 @@ const Header = () => {
                                                     Search
                                                 </Typography>
                                             </IconButton>
-                                            <IconButton color="inherit" onClick={() => navigate('/favorites')}>
+                                            <IconButton
+                                                color="inherit"
+                                                onClick={() => navigate('/favorites')}
+                                                sx={{
+                                                    transition: 'all 0.2s ease',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0,0,0,0.04)',
+                                                        transform: 'translateY(-2px)'
+                                                    }
+                                                }}
+                                            >
                                                 <FavoriteBorderIcon />
                                             </IconButton>
                                             <IconButton color="inherit" onClick={() => navigate('/cart')}>
@@ -826,58 +1108,95 @@ const Header = () => {
                             left: 0,
                             width: '100%',
                             zIndex: 1000,
-                            overflow: 'hidden', // Hide overflow during animation
+                            overflow: 'hidden',
                         }}
                     >
                         <Paper
                             elevation={3}
-                            onMouseEnter={handleDropdownMouseEnter} // Keep the dropdown open when hovered
-                            onMouseLeave={handleMouseLeave} // Close the dropdown when the mouse leaves
+                            onMouseEnter={handleDropdownMouseEnter}
+                            onMouseLeave={handleMouseLeave}
                             sx={{
                                 backgroundColor: 'white',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
                                 p: 4,
-                                transform: hoveredCategory ? 'translateY(0)' : 'translateY(-100%)', // Slide down or up
-                                transition: 'transform 0.3s ease', // Smooth sliding animation
+                                transform: hoveredCategory ? 'translateY(0)' : 'translateY(-100%)',
+                                transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                             }}
                         >
                             <Grid
                                 container
                                 spacing={4}
-                                justifyContent="center" // Center the grid horizontally
+                                justifyContent="center"
                             >
-                                {categories
-                                    .find((cat) => cat.name === hoveredCategory)
-                                    ?.subcategories.map((subcategory) => (
-                                        <Grid item xs={4} key={subcategory}> {/* 3 items per row (12/4 = 3) */}
+                                {hoveredCategory && hoveredCategory.subcategories && hoveredCategory.subcategories.length > 0 ? (
+                                    // Map through subcategories if they exist
+                                    hoveredCategory.subcategories.map((subcategory, idx) => (
+                                        <Grid item xs={4} key={idx}>
                                             <Box
                                                 sx={{
                                                     cursor: 'pointer',
                                                     p: 2,
-                                                    borderRadius: '4px',
-                                                    transition: 'background-color 0.2s ease',
-                                                    textAlign: 'center', // Center the text
+                                                    borderRadius: '6px',
+                                                    transition: 'all 0.2s ease',
+                                                    textAlign: 'center',
                                                     '&:hover': {
-                                                        backgroundColor: '#f5f5f5',
+                                                        backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 4px 8px rgba(0,0,0,0.03)'
                                                     },
                                                 }}
-                                                onClick={() => navigate(`/products?category=${hoveredCategory.toLowerCase()}&subcategory=${subcategory.toLowerCase().replace(/\s+/g, '-')}`)} // Navigate to Products.jsx
+                                                onClick={() => handleSubcategoryClick(hoveredCategory, subcategory)}
                                             >
                                                 <Typography
                                                     variant="subtitle1"
                                                     sx={{
                                                         fontWeight: 'medium',
                                                         color: 'text.primary',
+                                                        transition: 'color 0.15s ease',
                                                         '&:hover': {
                                                             color: 'primary.main',
                                                         },
                                                     }}
                                                 >
-                                                    {subcategory}
+                                                    {typeof subcategory === 'string' ? subcategory : subcategory.name}
                                                 </Typography>
                                             </Box>
                                         </Grid>
-                                    ))}
+                                    ))
+                                ) : (
+                                    // Show "Browse All" option if no subcategories
+                                    <Grid item xs={4}>
+                                        <Box
+                                            sx={{
+                                                cursor: 'pointer',
+                                                p: 2,
+                                                borderRadius: '6px',
+                                                transition: 'all 0.2s ease',
+                                                textAlign: 'center',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.03)'
+                                                },
+                                            }}
+                                            onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}`)}
+                                        >
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    color: 'text.primary',
+                                                    transition: 'color 0.15s ease',
+                                                    '&:hover': {
+                                                        color: 'primary.main',
+                                                    },
+                                                }}
+                                            >
+                                                Browse All Products
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                )}
                             </Grid>
                         </Paper>
                     </Box>
