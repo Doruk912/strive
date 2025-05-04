@@ -10,6 +10,7 @@ import com.strive.backend.model.OrderAddress;
 import com.strive.backend.model.OrderItem;
 import com.strive.backend.model.OrderStatus;
 import com.strive.backend.model.PaymentStatus;
+import com.strive.backend.model.User;
 import com.strive.backend.repository.OrderAddressRepository;
 import com.strive.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class OrderService {
     private final OrderAddressRepository orderAddressRepository;
     private final FinancialService financialService;
     private final AddressService addressService;
+    private final EmailService emailService;
+    private final UserService userService;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderDTO createOrderDTO) {
@@ -90,6 +93,23 @@ public class OrderService {
         
         // Record financial transaction for the order
         financialService.recordOrderTransaction(order.getId());
+        
+        // Send order confirmation email
+        try {
+            User user = userService.getUserById(order.getUserId().intValue());
+            if (user != null && user.getEmail() != null) {
+                emailService.sendOrderConfirmationEmail(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    order.getId(),
+                    order.getTotalAmount().toString()
+                );
+            }
+        } catch (Exception e) {
+            // Log error but don't stop order processing
+            // We don't want a failed email to prevent order completion
+            System.err.println("Failed to send order confirmation email: " + e.getMessage());
+        }
         
         return convertToDTO(order);
     }

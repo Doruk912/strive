@@ -13,7 +13,6 @@ import {
     Button,
     Radio,
     RadioGroup,
-    FormControlLabel,
     FormControl,
     FormLabel,
     Alert,
@@ -26,11 +25,8 @@ import {
 } from '@mui/material';
 import {
     LocationOn as LocationIcon,
-    CreditCard as CreditCardIcon,
-    CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import {Helmet} from "react-helmet";
-import CheckoutAddressForm from '../components/CheckoutAddressForm';
 import CheckoutAddressDialog from '../components/CheckoutAddressDialog';
 import CheckoutCardForm from '../components/CheckoutCardForm';
 
@@ -45,7 +41,7 @@ const Checkout = () => {
     const [error, setError] = useState(null);
     const [addresses, setAddresses] = useState([]);
     const [selectedAddress, setSelectedAddress] = useState(null);
-    const [paymentMethod, setPaymentMethod] = useState('credit_card');
+    const [paymentMethod] = useState('credit_card');
     const [showNewAddressDialog, setShowNewAddressDialog] = useState(false);
     const [cardDetails, setCardDetails] = useState({
         cardNumber: '',
