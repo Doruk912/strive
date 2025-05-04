@@ -41,7 +41,7 @@ const primaryDarkColor = '#1565c0'; // Darker blue color
 // Create a separate component for category tree items
 const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories, expandedCategories, toggleCategoryExpand }) => {
     const hasChildren = category.children && category.children.length > 0;
-    const isExpanded = expandedCategories[category.id];
+    const isExpanded = expandedCategories[category.id] === true;
     const count = countProductsInSubcategories(category);
 
     return (
@@ -57,7 +57,10 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                 {hasChildren && (
                     <IconButton
                         size="small"
-                        onClick={() => toggleCategoryExpand(category.id)}
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevent event bubbling
+                            toggleCategoryExpand(category.id);
+                        }}
                         sx={{ mr: 1 }}
                     >
                         {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -200,56 +203,57 @@ const Products = () => {
             setMobileFiltersOpen(true);
         }
         
-        let updates = {};
+        let filterUpdates = {};
         
         // Process the category parameter
         if (categoryParam) {
             // Check if categoryParam is a valid ID
             const categoryId = parseInt(categoryParam, 10);
             if (!isNaN(categoryId)) {
-                updates.category = [categoryId];
+                filterUpdates.category = [categoryId];
                 
-                // If we have categories data and a parent category is specified
-                if (categories.length > 0) {
-                    // If a parent category was specified in the URL, expand that dropdown
-                    if (parentCategoryParam) {
-                        const parentId = parseInt(parentCategoryParam, 10);
-                        if (!isNaN(parentId)) {
-                            // Expand the parent category dropdown
-                            console.log("Expanding parent category dropdown:", parentId);
-                            setExpandedCategories(prev => ({
-                                ...prev,
-                                [parentId]: true
-                            }));
-                        }
-                    } 
-                    // Otherwise find the parent of the selected category
-                    else {
-                        const selectedCategory = findCategoryById(categoryId);
-                        if (selectedCategory && selectedCategory.parent) {
-                            console.log("Expanding parent of selected category:", selectedCategory.parent);
-                            // Expand the parent of the selected category
-                            setExpandedCategories(prev => ({
-                                ...prev,
-                                [selectedCategory.parent]: true
-                            }));
-                        }
+                // If parent category is specified, expand it immediately
+                if (parentCategoryParam && categories.length > 0) {
+                    const parentId = parseInt(parentCategoryParam, 10);
+                    if (!isNaN(parentId)) {
+                        // Use functional update to safely modify the state
+                        setExpandedCategories(prevExpanded => {
+                            // Only update if it's not already true
+                            if (prevExpanded[parentId]) {
+                                return prevExpanded; // Avoid unnecessary re-renders
+                            }
+                            // Return a new object with the parentId set to true
+                            return { ...prevExpanded, [parentId]: true };
+                        });
+                    }
+                }
+                // If parent is not specified but the category exists and has a parent, expand it
+                else if (categories.length > 0) {
+                    const selectedCategory = findCategoryById(categoryId);
+                    if (selectedCategory && selectedCategory.parent) {
+                        // Use functional update to safely modify the state
+                        setExpandedCategories(prevExpanded => {
+                            if (prevExpanded[selectedCategory.parent]) {
+                                return prevExpanded;
+                            }
+                            return { ...prevExpanded, [selectedCategory.parent]: true };
+                        });
                     }
                 }
             }
         }
         
         if (nameParam) {
-            updates.name = nameParam;
+            filterUpdates.name = nameParam;
         }
         
-        if (Object.keys(updates).length > 0) {
+        if (Object.keys(filterUpdates).length > 0) {
             setFilters(prev => ({
                 ...prev,
-                ...updates
+                ...filterUpdates
             }));
         }
-    }, [location, categories, findCategoryById]);
+    }, [location.search, categories, findCategoryById, expandedCategories]);
 
     // Fetch categories and products
     useEffect(() => {
@@ -289,6 +293,27 @@ const Products = () => {
 
         fetchData();
     }, []);
+
+    // Add a dedicated effect that runs when categories are loaded
+    useEffect(() => {
+        // Only run if categories have been loaded
+        if (categories.length === 0) return;
+        
+        const params = new URLSearchParams(location.search);
+        const parentCategoryParam = params.get('parentCategory');
+        
+        // If parent category is specified in URL, make sure it's expanded
+        if (parentCategoryParam) {
+            const parentId = parseInt(parentCategoryParam, 10);
+            if (!isNaN(parentId)) {
+                // Force the parent category to be expanded
+                setExpandedCategories(prev => ({
+                    ...prev,
+                    [parentId]: true
+                }));
+            }
+        }
+    }, [categories, location.search]);
 
     const handleFilterChange = (filterType, value) => {
         if (filterType !== 'category') {
@@ -340,28 +365,6 @@ const Products = () => {
                 category: filtered
             };
         });
-    };
-
-    // Helper function to expand all parent categories of a selected category
-    const expandParentCategories = useCallback((category) => {
-        if (!category || !category.parent) return;
-
-        let parentId = category.parent;
-        while (parentId) {
-            setExpandedCategories(prev => ({
-                ...prev,
-                [parentId]: true
-            }));
-            const parentCategory = findCategoryById(parentId);
-            parentId = parentCategory?.parent || null;
-        }
-    }, [findCategoryById]);
-
-    const toggleCategoryExpand = (categoryId) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [categoryId]: !prev[categoryId]
-        }));
     };
 
     // Count products in a category and its subcategories
@@ -656,18 +659,48 @@ const Products = () => {
         }));
     };
 
-    // Apply filters and expand selected categories when filters change
-    useEffect(() => {
-        // When category filters are applied, ensure parent categories are expanded
-        if (filters.category.length > 0 && categories.length > 0) {
-            filters.category.forEach(categoryId => {
-                const category = findCategoryById(categoryId);
-                if (category) {
-                    expandParentCategories(category);
-                }
-            });
+    // Helper function to expand all parent categories of a selected category
+    const expandParentCategories = useCallback((category) => {
+        if (!category || !category.parent) return;
+        
+        let parentId = category.parent;
+        while (parentId) {
+            setExpandedCategories(prev => ({
+                ...prev,
+                [parentId]: true
+            }));
+            const parentCategory = findCategoryById(parentId);
+            parentId = parentCategory?.parent || null;
         }
-    }, [filters.category, categories, findCategoryById, expandParentCategories]);
+    }, [findCategoryById]);
+
+    const toggleCategoryExpand = (categoryId) => {
+        // Create a new object with the old state
+        const newExpandedCategories = {...expandedCategories};
+        // Toggle the state for the specific category
+        newExpandedCategories[categoryId] = !expandedCategories[categoryId];
+        // Set the new state directly
+        setExpandedCategories(newExpandedCategories);
+    };
+    
+    // Restore the previous effect for expandedCategories and filters
+    useEffect(() => {
+        if (!categories.length || !filters.category.length) return;
+        filters.category.forEach(categoryId => {
+            const category = findCategoryById(categoryId);
+            if (category && category.parent) {
+                setExpandedCategories(prev => ({
+                    ...prev,
+                    [category.parent]: true
+                }));
+            }
+        });
+    }, [filters.category, categories, findCategoryById]);
+
+    // Log expandedCategories when it changes
+    useEffect(() => {
+        console.log('expandedCategories state:', expandedCategories);
+    }, [expandedCategories]);
 
     if (loading) {
         return (

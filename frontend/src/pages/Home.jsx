@@ -43,11 +43,29 @@ const Home = () => {
 
     const fetchCategories = async () => {
         try {
-            const categories = await featuredCategoryService.getAllFeaturedCategories();
-            setPopularCategories(categories);
+            // Get featured categories
+            const featuredCategories = await featuredCategoryService.getAllFeaturedCategories();
+            
+            // Fetch all categories to get parent/child relationships
+            const allCategoriesResponse = await axios.get('http://localhost:8080/api/categories');
+            const allCategories = allCategoriesResponse.data;
+            
+            // Enhance featured categories with parent information when available
+            const enhancedCategories = featuredCategories.map(featCat => {
+                // Find this category in the full categories list to get its parent info
+                const fullCategoryInfo = allCategories.find(cat => cat.id === featCat.categoryId);
+                return {
+                    ...featCat,
+                    parentId: fullCategoryInfo?.parent || null
+                };
+            });
+            
+            console.log('Enhanced categories with parent info:', enhancedCategories);
+            
+            setPopularCategories(enhancedCategories);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching featured categories:', error);
+            console.error('Error fetching categories:', error);
             setError('Failed to load categories');
             setLoading(false);
         }
@@ -111,7 +129,16 @@ const Home = () => {
 
     // Function to handle category click
     const handleCategoryClick = (categoryId) => {
-        navigate(`/products?category=${categoryId}`); // Navigate to Products.jsx with category ID
+        // Check if we have the parent category ID from our fetched data
+        const selectedCategory = popularCategories.find(cat => cat.categoryId === categoryId);
+        
+        if (selectedCategory && selectedCategory.parentId) {
+            // If this is a subcategory, include the parent information to expand the correct section
+            navigate(`/products?category=${categoryId}&parentCategory=${selectedCategory.parentId}&expandFilters=true`);
+        } else {
+            // Otherwise just navigate with the category and expand filters
+            navigate(`/products?category=${categoryId}&expandFilters=true`);
+        }
     };
 
     return (
