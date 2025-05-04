@@ -240,6 +240,18 @@ const Checkout = () => {
 
     const cartTotals = getCartTotal();
 
+    // Improved render image helper function to handle different image sources
+    const renderProductImage = (item) => {
+        if (item.images && item.images.length > 0 && item.images[0].imageBase64) {
+            // If product has base64 images from API
+            return `data:${item.images[0].imageType};base64,${item.images[0].imageBase64}`;
+        } else if (item.image) {
+            // If product has a direct image URL
+            return item.image;
+        }
+        return '/default-product-image.jpg';
+    };
+
     if (loading) {
         return (
             <Container>
@@ -273,15 +285,28 @@ const Checkout = () => {
                 <Grid container spacing={4}>
                     <Grid item xs={12} md={8}>
                         {activeStep === 0 && (
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>
+                            <Card sx={{ p: 0, overflow: 'hidden', borderRadius: 2 }}>
+                                <Box sx={{ 
+                                    p: 3, 
+                                    borderBottom: '1px solid', 
+                                    borderColor: 'divider',
+                                    bgcolor: 'primary.light',
+                                    color: 'primary.dark',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    <LocationIcon sx={{ mr: 1 }} />
+                                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                         Shipping Address
                                     </Typography>
-
-                                    {addresses.length > 0 && (
+                                </Box>
+                                
+                                <CardContent sx={{ p: 3 }}>
+                                    {addresses.length > 0 ? (
                                         <FormControl component="fieldset" sx={{ width: '100%', mb: 2 }}>
-                                            <FormLabel component="legend">Select Address</FormLabel>
+                                            <FormLabel component="legend" sx={{ fontWeight: 500, mb: 2, color: 'text.primary' }}>
+                                                Select a saved address:
+                                            </FormLabel>
                                             <RadioGroup>
                                                 {addresses.map((address) => (
                                                     <Card
@@ -291,25 +316,30 @@ const Checkout = () => {
                                                             cursor: 'pointer',
                                                             border: selectedAddress?.id === address.id ? '2px solid' : '1px solid',
                                                             borderColor: selectedAddress?.id === address.id ? 'primary.main' : 'divider',
+                                                            borderRadius: 2,
+                                                            transition: 'all 0.2s ease-in-out',
                                                             '&:hover': {
                                                                 borderColor: 'primary.main',
+                                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                                                transform: 'translateY(-2px)'
                                                             },
                                                         }}
                                                         onClick={() => handleAddressSelect(address)}
                                                     >
                                                         <CardContent>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                                <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                                                <FormControlLabel
-                                                                    value={address.id.toString()}
-                                                                    control={
-                                                                        <Radio
-                                                                            checked={selectedAddress?.id === address.id}
-                                                                            onChange={() => handleAddressSelect(address)}
-                                                                        />
-                                                                    }
-                                                                    label={
-                                                                        <Typography variant="subtitle1">
+                                                            <Box sx={{ 
+                                                                display: 'flex', 
+                                                                alignItems: 'flex-start', 
+                                                                justifyContent: 'space-between'
+                                                            }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                                    <Radio
+                                                                        checked={selectedAddress?.id === address.id}
+                                                                        onChange={() => handleAddressSelect(address)}
+                                                                        sx={{ mt: -0.5, mr: 1 }}
+                                                                    />
+                                                                    <Box>
+                                                                        <Typography variant="subtitle1" fontWeight={600}>
                                                                             {address.name}
                                                                             {address.isDefault && (
                                                                                 <Typography
@@ -318,7 +348,7 @@ const Checkout = () => {
                                                                                     sx={{
                                                                                         ml: 1,
                                                                                         px: 1,
-                                                                                        py: 0.5,
+                                                                                        py: 0.3,
                                                                                         bgcolor: 'primary.light',
                                                                                         color: 'primary.main',
                                                                                         borderRadius: 1,
@@ -328,72 +358,113 @@ const Checkout = () => {
                                                                                 </Typography>
                                                                             )}
                                                                         </Typography>
-                                                                    }
-                                                                />
+                                                                        <Typography variant="body2" color="text.primary" fontWeight={500}>
+                                                                            {address.recipientName}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.recipientPhone}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.streetAddress}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.city}, {address.state} {address.postalCode}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.country}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
                                                             </Box>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {address.recipientName}
-                                                            </Typography>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {address.recipientPhone}
-                                                            </Typography>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {address.streetAddress}
-                                                            </Typography>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {address.city}, {address.state} {address.postalCode}
-                                                            </Typography>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {address.country}
-                                                            </Typography>
                                                         </CardContent>
                                                     </Card>
                                                 ))}
                                             </RadioGroup>
                                         </FormControl>
+                                    ) : (
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            alignItems: 'center', 
+                                            py: 4, 
+                                            px: 2,
+                                            bgcolor: 'grey.50', 
+                                            borderRadius: 2,
+                                            border: '1px dashed',
+                                            borderColor: 'divider',
+                                            textAlign: 'center'
+                                        }}>
+                                            <LocationIcon color="action" sx={{ fontSize: 48, mb: 2, opacity: 0.7 }} />
+                                            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                                                No Saved Addresses
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
+                                                You don't have any saved addresses yet. Add a new address to continue with checkout.
+                                            </Typography>
+                                            <Button
+                                                variant="contained"
+                                                onClick={() => setShowNewAddressDialog(true)}
+                                                startIcon={<LocationIcon />}
+                                            >
+                                                Add a New Address
+                                            </Button>
+                                        </Box>
                                     )}
 
                                     {selectedAddress && !addresses.some(addr => addr.id === selectedAddress.id) && (
-                                        <Card
-                                            sx={{
-                                                mb: 2,
-                                                border: '2px solid',
-                                                borderColor: 'primary.main',
-                                            }}
-                                        >
-                                            <CardContent>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                    <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                                    <Typography variant="subtitle1">
-                                                        New Address
+                                        <Box sx={{ mt: 3 }}>
+                                            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                                Selected New Address:
+                                            </Typography>
+                                            <Card
+                                                sx={{
+                                                    mb: 2,
+                                                    border: '2px solid',
+                                                    borderColor: 'primary.main',
+                                                    borderRadius: 2,
+                                                    bgcolor: 'primary.50'
+                                                }}
+                                            >
+                                                <CardContent>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                        <LocationIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                                        <Typography variant="subtitle1" fontWeight={600} color="primary.main">
+                                                            New Address
+                                                        </Typography>
+                                                    </Box>
+                                                    <Typography variant="body1" fontWeight={500}>
+                                                        {selectedAddress.recipientName}
                                                     </Typography>
-                                                </Box>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {selectedAddress.recipientName}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {selectedAddress.recipientPhone}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {selectedAddress.streetAddress}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {selectedAddress.city}, {selectedAddress.state} {selectedAddress.postalCode}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {selectedAddress.country}
-                                                </Typography>
-                                            </CardContent>
-                                        </Card>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {selectedAddress.recipientPhone}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {selectedAddress.streetAddress}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {selectedAddress.city}, {selectedAddress.state} {selectedAddress.postalCode}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {selectedAddress.country}
+                                                    </Typography>
+                                                </CardContent>
+                                            </Card>
+                                        </Box>
                                     )}
 
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => setShowNewAddressDialog(true)}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        Enter New Address
-                                    </Button>
+                                    <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                                        {addresses.length > 0 && (
+                                            <Button
+                                                variant="outlined"
+                                                size="large"
+                                                onClick={() => setShowNewAddressDialog(true)}
+                                                startIcon={<LocationIcon />}
+                                                sx={{ px: 3, py: 1, borderRadius: 2 }}
+                                            >
+                                                Add New Address
+                                            </Button>
+                                        )}
+                                    </Box>
                                 </CardContent>
                             </Card>
                         )}
@@ -456,43 +527,86 @@ const Checkout = () => {
                                 <Divider sx={{ my: 2 }} />
 
                                 <Box sx={{ mb: 3 }}>
-                                    <Typography variant="subtitle1" gutterBottom>
+                                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
                                         Order Summary
                                     </Typography>
                                     {cartItems.map((item) => (
-                                        <Box 
+                                        <Paper 
                                             key={`${item.id}-${item.selectedSize}`} 
+                                            elevation={0}
+                                            variant="outlined"
                                             sx={{ 
                                                 mb: 2,
+                                                overflow: 'hidden',
+                                                borderRadius: 2,
                                                 display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 2
+                                                transition: 'transform 0.2s ease-in-out',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                                }
                                             }}
                                         >
-                                            <Box sx={{ width: 80, height: 80, position: 'relative' }}>
+                                            <Box sx={{ width: 100, height: 100, position: 'relative', flexShrink: 0 }}>
                                                 <img
-                                                    src={item.image || '/default-product-image.jpg'}
+                                                    src={renderProductImage(item)}
                                                     alt={item.name}
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: 'cover',
-                                                        borderRadius: '4px'
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.src = '/default-product-image.jpg';
                                                     }}
                                                 />
                                             </Box>
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                    {item.name}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Size: {item.selectedSize} x {item.quantity}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
+                                            <Box sx={{ 
+                                                flex: 1, 
+                                                p: 2,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'space-between'
+                                            }}>
+                                                <Box>
+                                                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                                        {item.name}
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', mt: 1 }}>
+                                                        <Typography 
+                                                            variant="body2" 
+                                                            color="text.secondary"
+                                                            sx={{
+                                                                px: 1,
+                                                                py: 0.5,
+                                                                mr: 1,
+                                                                bgcolor: 'grey.100',
+                                                                borderRadius: 1,
+                                                                display: 'inline-block'
+                                                            }}
+                                                        >
+                                                            Size: {item.selectedSize}
+                                                        </Typography>
+                                                        <Typography 
+                                                            variant="body2" 
+                                                            color="text.secondary"
+                                                            sx={{
+                                                                px: 1,
+                                                                py: 0.5,
+                                                                bgcolor: 'grey.100',
+                                                                borderRadius: 1,
+                                                                display: 'inline-block'
+                                                            }}
+                                                        >
+                                                            Qty: {item.quantity}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 600, mt: 1, alignSelf: 'flex-end' }}>
                                                     ${(item.price * item.quantity).toFixed(2)}
                                                 </Typography>
                                             </Box>
-                                        </Box>
+                                        </Paper>
                                     ))}
                                 </Box>
 
@@ -532,37 +646,91 @@ const Checkout = () => {
                     </Grid>
 
                     <Grid item xs={12} md={4}>
-                        <Card sx={{ p: 2 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Order Summary
-                            </Typography>
-                            <Divider sx={{ my: 2 }} />
+                        <Card sx={{ p: 0, overflow: 'hidden', borderRadius: 2 }}>
+                            <Box sx={{ 
+                                p: 2, 
+                                bgcolor: 'primary.light', 
+                                color: 'primary.dark', 
+                                borderBottom: '1px solid', 
+                                borderColor: 'divider'
+                            }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    Order Summary
+                                </Typography>
+                            </Box>
+                            
+                            <Box sx={{ p: 2 }}>
+                                {cartItems.map((item) => (
+                                    <Box 
+                                        key={`${item.id}-${item.selectedSize}`} 
+                                        sx={{ 
+                                            mb: 2,
+                                            pb: 2,
+                                            borderBottom: '1px solid',
+                                            borderColor: 'divider',
+                                            '&:last-child': {
+                                                borderBottom: 'none',
+                                                mb: 0,
+                                                pb: 0
+                                            },
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2
+                                        }}
+                                    >
+                                        <Box 
+                                            sx={{ 
+                                                width: 60, 
+                                                height: 60, 
+                                                borderRadius: 1,
+                                                overflow: 'hidden',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            <img
+                                                src={renderProductImage(item)}
+                                                alt={item.name}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.src = '/default-product-image.jpg';
+                                                }}
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {item.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                                Size: {item.selectedSize} · Qty: {item.quantity}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                                ${(item.price * item.quantity).toFixed(2)}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                ))}
 
-                            {cartItems.map((item) => (
-                                <Box key={`${item.id}-${item.selectedSize}`} sx={{ mb: 2 }}>
-                                    <Typography variant="body2">
-                                        {item.name} - Size: {item.selectedSize}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {item.quantity} x ${item.price.toFixed(2)}
-                                    </Typography>
+                                <Divider sx={{ my: 2 }} />
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography>Subtotal</Typography>
+                                    <Typography>${cartTotals.subtotal.toFixed(2)}</Typography>
                                 </Box>
-                            ))}
-
-                            <Divider sx={{ my: 2 }} />
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Typography>Subtotal</Typography>
-                                <Typography>${cartTotals.subtotal.toFixed(2)}</Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Typography>Shipping</Typography>
-                                <Typography>Free</Typography>
-                            </Box>
-                            <Divider sx={{ my: 2 }} />
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="h6">Total</Typography>
-                                <Typography variant="h6">${cartTotals.total.toFixed(2)}</Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography>Shipping</Typography>
+                                    <Typography>Free</Typography>
+                                </Box>
+                                <Divider sx={{ my: 2 }} />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="h6">Total</Typography>
+                                    <Typography variant="h6" color="primary.main">${cartTotals.total.toFixed(2)}</Typography>
+                                </Box>
                             </Box>
                         </Card>
                     </Grid>

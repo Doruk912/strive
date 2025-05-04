@@ -7,10 +7,8 @@
 * Fix issues with cart when logging out
 * Implement product reviews on order page
 * Fix product cards in favorites menu
-* When user clicks on a category and directed to the product page, category filter isn't expanded
-* Add a shipping api simulation
-* Fix address selection when ordering
 * Ordering without logging in
+* Product details page breadcrumb
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
