@@ -24,6 +24,11 @@ public class AddressService {
                 .collect(Collectors.toList());
     }
 
+    public Address getAddressById(Integer id) {
+        return addressRepository.findById(id)
+                .orElseThrow(() -> new Error("Address not found"));
+    }
+
     public AddressDTO createAddress(AddressDTO addressDTO) {
         Address address = Address.builder()
                 .userId(addressDTO.getUserId())

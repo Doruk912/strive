@@ -292,15 +292,33 @@ const Orders = () => {
                                         })}
                                     </Box>
 
-                                    <Box
-                                        sx={{
-                                            p: 3,
-                                            bgcolor: 'background.default',
-                                            borderTop: '1px solid',
-                                            borderColor: 'divider'
-                                        }}
-                                    >
-                                        <Grid container spacing={2} alignItems="flex-end">
+                                    <Box sx={{ p: 3, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+                                        <Grid container spacing={2} alignItems="flex-start">
+                                            <Grid item xs={12} sm={6}>
+                                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                    Shipping Address
+                                                </Typography>
+                                                {order.orderAddress ? (
+                                                    <>
+                                                        <Typography variant="body1">
+                                                            {order.orderAddress.recipientName}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {order.orderAddress.streetAddress}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {order.orderAddress.city}, {order.orderAddress.state} {order.orderAddress.postalCode}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {order.orderAddress.country}
+                                                        </Typography>
+                                                    </>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Address information not available
+                                                    </Typography>
+                                                )}
+                                            </Grid>
                                             <Grid item xs={12} sm={6}>
                                                 <Typography variant="body2" color="text.secondary" gutterBottom>
                                                     Payment Method
@@ -312,8 +330,13 @@ const Orders = () => {
                                                     Expires: {order.cardExpiry}
                                                 </Typography>
                                             </Grid>
-                                            <Grid item xs={12} sm={6}>
-                                                <Box sx={{ textAlign: { sm: 'right' } }}>
+                                        </Grid>
+                                    </Box>
+
+                                    <Box sx={{ p: 3, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+                                        <Grid container spacing={2} alignItems="flex-end">
+                                            <Grid item xs={12}>
+                                                <Box sx={{ textAlign: 'right' }}>
                                                     <Typography variant="body2" color="text.secondary" gutterBottom>
                                                         Order Total
                                                     </Typography>

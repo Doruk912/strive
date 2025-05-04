@@ -108,6 +108,7 @@ CREATE TABLE reviews (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Original addresses table (no changes)
 CREATE TABLE addresses (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -125,6 +126,54 @@ CREATE TABLE addresses (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- New table for order addresses - created BEFORE orders table
+CREATE TABLE order_addresses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(25),
+    recipient_name VARCHAR(100) NOT NULL,
+    recipient_phone VARCHAR(20) NOT NULL,
+    street_address VARCHAR(255) NOT NULL,
+    city VARCHAR(25) NOT NULL,
+    state VARCHAR(25),
+    postal_code VARCHAR(25),
+    country VARCHAR(25) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert users
+INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
+('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', null , null , 'ADMIN'),
+('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
+('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
+('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
+
+-- Insert promotional banners
+INSERT INTO promotional_banners (title, subtitle, highlight, icon, background_color, display_order, active) VALUES
+('FAST DELIVERY!', 'ORDER NOW IN NEW YORK,', 'GET IT IN 3 HOURS!', 'LocalShippingOutlined', '#4051B5', 1, TRUE),
+('SPECIAL OFFER!', 'GET 20% OFF', 'ON ALL SPORTS EQUIPMENT', 'LocalOfferOutlined', '#2E7D32', 2, TRUE),
+('NEW COLLECTION!', 'DISCOVER OUR', 'SUMMER 2024 COLLECTION', 'NewReleasesOutlined', '#C2185B', 3, TRUE),
+('MEMBERS ONLY!', 'JOIN OUR CLUB AND GET', 'EXCLUSIVE BENEFITS', 'CardMembershipOutlined', '#F57C00', 4, TRUE),
+('FREE RETURNS!', 'TRY AT HOME WITH', '30-DAY FREE RETURNS', 'AssignmentReturnOutlined', '#0097A7', 5, TRUE);
+
+-- Insert notification preferences
+INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
+(1, TRUE, TRUE, FALSE, TRUE),  -- Admin
+(2, TRUE, TRUE, FALSE, TRUE),  -- Manager
+(3, TRUE, TRUE, FALSE, TRUE),  -- John
+(4, TRUE, TRUE, FALSE, TRUE);  -- Jane
+
+-- Insert addresses for users
+INSERT INTO addresses (user_id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country, is_default) VALUES
+(4, 'Home', 'John Doe', '555 111 22 33', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey', true),
+(4, 'Work', 'Jane Smith', '555 444 55 66', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey', false),
+(3, 'Home', 'John Doe', '555 111 22 33', '789 Oak Street', 'New York', 'NY', '10001', 'USA', true);
+
+-- Copy all user addresses to order_addresses to support existing orders
+INSERT INTO order_addresses (id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country)
+SELECT id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country 
+FROM addresses;
+
+-- Notification preferences
 CREATE TABLE notification_preferences (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -138,7 +187,7 @@ CREATE TABLE notification_preferences (
     UNIQUE KEY unique_user_preferences (user_id)
 );
 
--- Orders table
+-- Orders table (updated foreign key to point to order_addresses)
 CREATE TABLE orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -152,7 +201,7 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (address_id) REFERENCES addresses(id)
+    FOREIGN KEY (address_id) REFERENCES order_addresses(id)
 );
 
 -- Order Items table
@@ -202,27 +251,6 @@ CREATE TABLE password_reset_tokens (
 );
 
 -- Passwords: '123456'
-
-INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
-('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', null , null , 'ADMIN'),
-('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
-('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
-('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
-
--- Insert initial promotional banners
-INSERT INTO promotional_banners (title, subtitle, highlight, icon, background_color, display_order, active) VALUES
-('FAST DELIVERY!', 'ORDER NOW IN NEW YORK,', 'GET IT IN 3 HOURS!', 'LocalShippingOutlined', '#4051B5', 1, TRUE),
-('SPECIAL OFFER!', 'GET 20% OFF', 'ON ALL SPORTS EQUIPMENT', 'LocalOfferOutlined', '#2E7D32', 2, TRUE),
-('NEW COLLECTION!', 'DISCOVER OUR', 'SUMMER 2024 COLLECTION', 'NewReleasesOutlined', '#C2185B', 3, TRUE),
-('MEMBERS ONLY!', 'JOIN OUR CLUB AND GET', 'EXCLUSIVE BENEFITS', 'CardMembershipOutlined', '#F57C00', 4, TRUE),
-('FREE RETURNS!', 'TRY AT HOME WITH', '30-DAY FREE RETURNS', 'AssignmentReturnOutlined', '#0097A7', 5, TRUE);
-
--- Insert default notification preferences for existing users
-INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
-(1, TRUE, TRUE, FALSE, TRUE),  -- Admin
-(2, TRUE, TRUE, FALSE, TRUE),  -- Manager
-(3, TRUE, TRUE, FALSE, TRUE),  -- John
-(4, TRUE, TRUE, FALSE, TRUE);  -- Jane
 
 INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 -- Main Categories
@@ -364,10 +392,6 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Trail Master Pro Bike', 'Full suspension mountain bike with premium components', 1999.99, 38),
 ('Mountain Bike Helmet', 'Ventilated mountain bike helmet with adjustable fit', 89.99, 38),
 ('Bike Repair Kit', 'Complete tool kit for mountain bike maintenance', 49.99, 38);
-
-INSERT INTO addresses (user_id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country, is_default) VALUES
-(4, 'Home', 'John Doe', '555 111 22 33', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey', true),
-(4, 'Work', 'Jane Smith', '555 444 55 66', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey', false);
 
 INSERT INTO featured_products (product_id, display_order) VALUES
 (2, 1),

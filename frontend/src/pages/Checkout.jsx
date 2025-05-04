@@ -181,11 +181,11 @@ const Checkout = () => {
                 throw new Error('User not logged in');
             }
 
+            // Construct order data based on whether we're using a saved address or a new one
             const orderData = {
                 userId: user.userId,
-                addressId: selectedAddress.id,
                 totalAmount: getCartTotal().total,
-                paymentMethod: 'credit_card',
+                paymentMethod: paymentMethod,
                 cardLastFour: cardDetails.cardNumber.slice(-4),
                 cardExpiry: cardDetails.expiryDate,
                 items: cartItems.map(item => ({
@@ -195,6 +195,23 @@ const Checkout = () => {
                     price: item.price
                 }))
             };
+
+            // If the address is from the user's saved addresses, just send the ID
+            // Otherwise, send the full address details
+            if (addresses.some(addr => addr.id === selectedAddress.id)) {
+                orderData.addressId = selectedAddress.id;
+            } else {
+                orderData.orderAddress = {
+                    name: selectedAddress.name || 'Delivery Address',
+                    recipientName: selectedAddress.recipientName,
+                    recipientPhone: selectedAddress.recipientPhone,
+                    streetAddress: selectedAddress.streetAddress,
+                    city: selectedAddress.city,
+                    state: selectedAddress.state,
+                    postalCode: selectedAddress.postalCode,
+                    country: selectedAddress.country
+                };
+            }
 
             const response = await fetch('http://localhost:8080/api/orders', {
                 method: 'POST',

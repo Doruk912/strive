@@ -12,6 +12,7 @@ public class OrderResponseDTO {
     private Long id;
     private Long userId;
     private Long addressId;
+    private OrderAddressDTO orderAddress;
     private BigDecimal totalAmount;
     private OrderStatus status;
     private String paymentMethod;

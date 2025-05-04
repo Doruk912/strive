@@ -1,12 +1,16 @@
 package com.strive.backend.service;
 
 import com.strive.backend.dto.CreateOrderDTO;
+import com.strive.backend.dto.OrderAddressDTO;
 import com.strive.backend.dto.OrderItemDTO;
 import com.strive.backend.dto.OrderResponseDTO;
+import com.strive.backend.model.Address;
 import com.strive.backend.model.Order;
+import com.strive.backend.model.OrderAddress;
 import com.strive.backend.model.OrderItem;
 import com.strive.backend.model.OrderStatus;
 import com.strive.backend.model.PaymentStatus;
+import com.strive.backend.repository.OrderAddressRepository;
 import com.strive.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,13 +24,50 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final OrderAddressRepository orderAddressRepository;
     private final FinancialService financialService;
+    private final AddressService addressService;
 
     @Transactional
     public OrderResponseDTO createOrder(CreateOrderDTO createOrderDTO) {
+        // First, handle the order address
+        OrderAddress orderAddress;
+        if (createOrderDTO.getOrderAddress() != null) {
+            // New address provided in the order
+            orderAddress = OrderAddress.builder()
+                    .name(createOrderDTO.getOrderAddress().getName())
+                    .recipientName(createOrderDTO.getOrderAddress().getRecipientName())
+                    .recipientPhone(createOrderDTO.getOrderAddress().getRecipientPhone())
+                    .streetAddress(createOrderDTO.getOrderAddress().getStreetAddress())
+                    .city(createOrderDTO.getOrderAddress().getCity())
+                    .state(createOrderDTO.getOrderAddress().getState())
+                    .postalCode(createOrderDTO.getOrderAddress().getPostalCode())
+                    .country(createOrderDTO.getOrderAddress().getCountry())
+                    .build();
+            orderAddress = orderAddressRepository.save(orderAddress);
+        } else if (createOrderDTO.getAddressId() != null) {
+            // Copy from user's address to order_addresses
+            Address userAddress = addressService.getAddressById(createOrderDTO.getAddressId().intValue());
+            
+            orderAddress = OrderAddress.builder()
+                    .name(userAddress.getName())
+                    .recipientName(userAddress.getRecipientName())
+                    .recipientPhone(userAddress.getRecipientPhone())
+                    .streetAddress(userAddress.getStreetAddress())
+                    .city(userAddress.getCity())
+                    .state(userAddress.getState())
+                    .postalCode(userAddress.getPostalCode())
+                    .country(userAddress.getCountry())
+                    .build();
+            orderAddress = orderAddressRepository.save(orderAddress);
+        } else {
+            throw new RuntimeException("Order address information is required");
+        }
+
+        // Now create the order with the saved address ID
         Order order = new Order();
         order.setUserId(createOrderDTO.getUserId());
-        order.setAddressId(createOrderDTO.getAddressId());
+        order.setAddressId(orderAddress.getId().longValue()); // Use the newly created address
         order.setTotalAmount(createOrderDTO.getTotalAmount());
         order.setPaymentMethod(createOrderDTO.getPaymentMethod());
         order.setCardLastFour(createOrderDTO.getCardLastFour());
@@ -80,6 +121,20 @@ public class OrderService {
         order = orderRepository.save(order);
         return convertToDTO(order);
     }
+    
+    public OrderAddress getOrderAddress(Long addressId) {
+        if (addressId == null) {
+            return null;
+        }
+        
+        try {
+            return orderAddressRepository.findById(addressId.intValue()).orElse(null);
+        } catch (Exception e) {
+            // Log the error but don't break the application
+            // System.err.println("Failed to retrieve order address: " + e.getMessage());
+            return null;
+        }
+    }
 
     private OrderResponseDTO convertToDTO(Order order) {
         OrderResponseDTO dto = new OrderResponseDTO();
@@ -93,6 +148,12 @@ public class OrderService {
         dto.setCardLastFour(order.getCardLastFour());
         dto.setCardExpiry(order.getCardExpiry());
         dto.setCreatedAt(order.getCreatedAt());
+
+        // Add order address details if available
+        OrderAddress orderAddress = getOrderAddress(order.getAddressId());
+        if (orderAddress != null) {
+            dto.setOrderAddress(convertAddressToDTO(orderAddress));
+        }
 
         List<OrderResponseDTO.OrderItemResponseDTO> itemDTOs = order.getOrderItems().stream()
                 .map(item -> {
@@ -108,5 +169,19 @@ public class OrderService {
         dto.setItems(itemDTOs);
 
         return dto;
+    }
+    
+    private OrderAddressDTO convertAddressToDTO(OrderAddress address) {
+        return OrderAddressDTO.builder()
+                .id(address.getId())
+                .name(address.getName())
+                .recipientName(address.getRecipientName())
+                .recipientPhone(address.getRecipientPhone())
+                .streetAddress(address.getStreetAddress())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
+                .build();
     }
 } 
