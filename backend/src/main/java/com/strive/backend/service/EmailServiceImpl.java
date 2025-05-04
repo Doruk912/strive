@@ -45,6 +45,27 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendOrderConfirmationEmail(String to, String firstName, Long orderId, String totalAmount) {
+        String subject = "Strive - Order Confirmation #" + orderId;
+        String orderUrl = "http://localhost:3000/orders";
+        
+        String text = "Hello " + firstName + ",\n\n"
+                + "Thank you for your order! We're pleased to confirm that your order #" + orderId + " has been received and is being processed.\n\n"
+                + "Order Details:\n"
+                + "- Order Number: #" + orderId + "\n"
+                + "- Order Date: " + java.time.LocalDate.now().toString() + "\n"
+                + "- Total Amount: $" + totalAmount + "\n\n"
+                + "You can view your complete order details and track your shipment by visiting your account:\n"
+                + orderUrl + "\n\n"
+                + "If you have any questions about your order, please contact our customer support team.\n\n"
+                + "Thank you for shopping with Strive!\n\n"
+                + "Best regards,\n"
+                + "The Strive Team";
+        
+        sendEmail(to, subject, text);
+    }
+
+    @Override
     public void sendEmail(String to, String subject, String text) {
         try {
             log.info("Sending email to: {}", to);
