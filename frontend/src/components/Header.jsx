@@ -15,6 +15,7 @@ import {
     ListItem,
     ListItemText,
     useMediaQuery,
+    useTheme,
     Paper,
     Grid,
     Badge,
@@ -61,7 +62,14 @@ const Header = () => {
     ]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [expandedCategory, setExpandedCategory] = useState(null);
-    const isMobile = useMediaQuery('(max-width:600px)');
+    
+    // Use theme and improved breakpoints
+    const theme = useTheme();
+    const isExtraSmall = useMediaQuery(theme.breakpoints.down('sm')); // <600px
+    const isSmall = useMediaQuery(theme.breakpoints.between('sm', 'md')); // 600px-900px
+    const isMobile = useMediaQuery(theme.breakpoints.down('md')); // <900px
+    const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg')); // 900px-1200px
+    
     const cartItemsCount = cartItems.length;
 
     // State for hover-based dropdown
@@ -421,7 +429,7 @@ const Header = () => {
     };
 
     const drawer = (
-        <Box sx={{ width: 280 }} role="presentation" onKeyDown={toggleDrawer(false)}>
+        <Box sx={{ width: { xs: 250, sm: 280 } }} role="presentation" onKeyDown={toggleDrawer(false)}>
             {/* Header with Logo and Name */}
             <Box
                 sx={{
@@ -438,7 +446,7 @@ const Header = () => {
                     src="/logo.png"
                     alt="Logo"
                     style={{
-                        height: 42,
+                        height: 40,
                         width: 'auto',
                         marginRight: 12,
                         filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.1))'
@@ -449,6 +457,7 @@ const Header = () => {
                     sx={{
                         fontFamily: '"Montserrat", sans-serif',
                         fontWeight: 700,
+                        fontSize: { xs: '1.1rem', sm: '1.25rem' },
                         background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -458,8 +467,8 @@ const Header = () => {
                 </Typography>
             </Box>
 
-            {/* Categories Section */}
-            <List sx={{ pt: 1.5 }}>
+            {/* Categories Section - Improved spacing for touch */}
+            <List sx={{ pt: 1, pb: 1 }}>
                 {categories.map((category) => (
                     <React.Fragment key={category.name}>
                         <ListItem
@@ -469,7 +478,7 @@ const Header = () => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 px: 2.5,
-                                py: 1.5,
+                                py: { xs: 1.8, sm: 1.5 }, // More padding on smaller screens for better touch targets
                                 mb: 0.5,
                                 transition: 'all 0.15s ease',
                                 borderRadius: '0 24px 24px 0',
@@ -483,7 +492,7 @@ const Header = () => {
                                 primary={category.name}
                                 sx={{
                                     '& .MuiListItemText-primary': {
-                                        fontSize: '0.95rem',
+                                        fontSize: { xs: '0.9rem', sm: '0.95rem' },
                                         fontWeight: 500,
                                     }
                                 }}
@@ -496,7 +505,8 @@ const Header = () => {
                                 size="small"
                                 sx={{
                                     transition: 'transform 0.2s ease',
-                                    transform: expandedCategory === category.name ? 'rotate(180deg)' : 'rotate(0deg)'
+                                    transform: expandedCategory === category.name ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    padding: { xs: '8px', sm: '4px' }, // Larger touch target on mobile
                                 }}
                             >
                                 <ExpandMoreIcon />
@@ -511,7 +521,7 @@ const Header = () => {
                                             key={idx}
                                             sx={{
                                                 pl: 4.5,
-                                                py: 1.2,
+                                                py: { xs: 1.5, sm: 1.2 }, // Improved touch targets
                                                 backgroundColor: 'rgba(0, 0, 0, 0.01)',
                                                 transition: 'all 0.2s ease',
                                                 '&:hover': {
@@ -525,7 +535,7 @@ const Header = () => {
                                                 primary={typeof subcategory === 'string' ? subcategory : subcategory.name}
                                                 sx={{
                                                     '& .MuiListItemText-primary': {
-                                                        fontSize: '0.9rem',
+                                                        fontSize: { xs: '0.85rem', sm: '0.9rem' },
                                                     }
                                                 }}
                                             />
@@ -536,7 +546,7 @@ const Header = () => {
                                         button
                                         sx={{
                                             pl: 4.5,
-                                            py: 1.2,
+                                            py: { xs: 1.5, sm: 1.2 },
                                             backgroundColor: 'rgba(0, 0, 0, 0.01)',
                                             transition: 'all 0.2s ease',
                                             '&:hover': {
@@ -550,7 +560,7 @@ const Header = () => {
                                             primary="Browse All"
                                             sx={{
                                                 '& .MuiListItemText-primary': {
-                                                    fontSize: '0.9rem',
+                                                    fontSize: { xs: '0.85rem', sm: '0.9rem' },
                                                 }
                                             }}
                                         />
@@ -583,7 +593,10 @@ const Header = () => {
                         <ListItem
                             button
                             onClick={() => { navigate('/admin'); setDrawerOpen(false); }}
-                            sx={{ px: 2 }}
+                            sx={{ 
+                                px: 2,
+                                py: { xs: 1.5, sm: 1.2 } // Larger touch targets
+                            }}
                         >
                             <ListItemIcon>
                                 <AdminPanelSettingsIcon sx={{ color: 'primary.main' }} />
@@ -594,7 +607,10 @@ const Header = () => {
                     <ListItem
                         button
                         onClick={() => { logout(); navigate('/'); setDrawerOpen(false); }}
-                        sx={{ px: 2 }}
+                        sx={{ 
+                            px: 2,
+                            py: { xs: 1.5, sm: 1.2 } // Larger touch targets
+                        }}
                     >
                         <ListItemIcon>
                             <LogoutIcon sx={{ color: 'error.main' }} />
@@ -627,7 +643,7 @@ const Header = () => {
                 zIndex: 1200,
                 boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
                 height: 'auto',
-                maxHeight: '80vh',
+                maxHeight: { xs: '90vh', sm: '80vh' }, // Larger on mobile
                 overflow: 'auto',
                 transform: searchExpanded ? 'translateY(0)' : 'translateY(-100%)',
                 transition: 'transform 0.3s ease-in-out',
@@ -638,14 +654,14 @@ const Header = () => {
                     alignItems: 'center',
                     width: '100%',
                     borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-                    px: { xs: 2, md: 4 },
-                    py: 1.5,
+                    px: { xs: 1.5, sm: 2, md: 4 }, // Adjusted padding for different screen sizes
+                    py: { xs: 1.2, sm: 1.5 },
                     backgroundColor: '#f8f8f8',
                     opacity: searchExpanded ? 1 : 0,
                     transform: searchExpanded ? 'translateY(0)' : 'translateY(-20px)',
                     transition: 'all 0.3s ease-in-out',
                 }}>
-                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1.3rem', mr: 2 }} />
+                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1.3rem', mr: 1.5 }} />
                     <TextField
                         autoFocus
                         fullWidth
@@ -659,15 +675,9 @@ const Header = () => {
                         InputProps={{
                             disableUnderline: true,
                             sx: { 
-                                fontSize: '1.1rem', 
+                                fontSize: { xs: '1rem', sm: '1.1rem' }, 
                                 fontWeight: 400,
-                                padding: '6px 0'
-                            }
-                        }}
-                        sx={{
-                            '& input': {
-                                fontSize: '1.1rem',
-                                transition: 'all 0.2s ease',
+                                padding: { xs: '4px 0', sm: '6px 0' },
                             }
                         }}
                     />
@@ -679,18 +689,19 @@ const Header = () => {
                             '&:hover': {
                                 backgroundColor: 'rgba(0, 0, 0, 0.1)',
                             },
-                            ml: 1
+                            ml: 1,
+                            padding: { xs: '6px', sm: '8px' }, // Larger touch target on mobile
                         }}
                     >
-                        <CloseIcon />
+                        <CloseIcon fontSize={isExtraSmall ? 'small' : 'medium'} />
                     </IconButton>
                 </Box>
 
                 {/* Search history and popular searches with improved layout */}
                 <Box sx={{
                     mt: 0,
-                    p: { xs: 2, md: 4 },
-                    pt: 3,
+                    p: { xs: 1.5, sm: 2, md: 4 }, // Progressive padding based on screen size
+                    pt: { xs: 2, sm: 3 },
                     opacity: searchExpanded ? 1 : 0,
                     transform: searchExpanded ? 'translateY(0)' : 'translateY(20px)',
                     transition: 'all 0.3s ease-in-out 0.1s',
@@ -816,9 +827,11 @@ const Header = () => {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             width: '100%',
-                            px: isMobile ? 2 : 4,
+                            px: { xs: 1, sm: 2, md: 4 }, // Progressive padding based on screen size
+                            py: { xs: 0.5, md: 0 }, // Slight padding on small screens
+                            minHeight: { xs: '56px', sm: '64px' }, // Reduced height on mobile
                             transition: 'all 0.3s ease',
-                            position: 'relative'
+                            position: 'relative',
                         }}
                     >
                         {searchExpanded && renderSearchExpanded()}
@@ -831,9 +844,16 @@ const Header = () => {
 
                             {isMobile ? (
                                 <>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
-                                            <MenuIcon />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <IconButton 
+                                            edge="start" 
+                                            color="inherit" 
+                                            onClick={toggleDrawer(true)}
+                                            sx={{ 
+                                                p: { xs: 0.5, sm: 1 } 
+                                            }}
+                                        >
+                                            <MenuIcon fontSize={isExtraSmall ? 'medium' : 'large'} />
                                         </IconButton>
                                         <Box
                                             sx={{
@@ -843,47 +863,248 @@ const Header = () => {
                                             }}
                                             onClick={() => navigate('/')}
                                         >
-                                            <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-                                                <img src="/logo.png" alt="Logo" style={{ height: 35 }} />
-                                            </IconButton>
+                                            <img 
+                                                src="/logo.png" 
+                                                alt="Logo" 
+                                                style={{ 
+                                                    height: isExtraSmall ? 30 : 35,
+                                                    marginRight: isExtraSmall ? 4 : 8
+                                                }} 
+                                            />
                                             <Typography
                                                 variant="subtitle1"
                                                 sx={{
                                                     fontFamily: '"Montserrat", sans-serif',
                                                     fontWeight: 700,
-                                                    fontSize: '1.1rem',
+                                                    fontSize: { xs: '0.9rem', sm: '1.1rem' },
                                                     background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
                                                     WebkitBackgroundClip: 'text',
                                                     WebkitTextFillColor: 'transparent',
+                                                    display: { xs: 'none', sm: 'block' }, // Hide text on extra small screens
                                                 }}
                                             >
                                                 STRIVE
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+                                    <SwipeableDrawer 
+                                        anchor="left" 
+                                        open={drawerOpen} 
+                                        onClose={toggleDrawer(false)}
+                                        onOpen={toggleDrawer(true)}
+                                        disableBackdropTransition={!isExtraSmall}
+                                        disableDiscovery={isExtraSmall}
+                                    >
                                         {drawer}
-                                    </Drawer>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    </SwipeableDrawer>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
                                         <IconButton
                                             color="inherit"
                                             onClick={handleSearchClick}
-                                            sx={{ p: 1 }}
+                                            sx={{ p: { xs: 0.5, sm: 1 } }}
                                         >
-                                            <SearchIcon />
+                                            <SearchIcon fontSize={isExtraSmall ? 'small' : 'medium'} />
                                         </IconButton>
                                         <IconButton
                                             color="inherit"
                                             onClick={() => navigate('/favorites')}
-                                            sx={{ p: 1 }}
+                                            sx={{ p: { xs: 0.5, sm: 1 } }}
                                         >
-                                            <FavoriteBorderIcon />
+                                            <FavoriteBorderIcon fontSize={isExtraSmall ? 'small' : 'medium'} />
                                         </IconButton>
                                         <IconButton
                                             color="inherit"
                                             onClick={() => navigate('/cart')}
-                                            sx={{ p: 1 }}
+                                            sx={{ p: { xs: 0.5, sm: 1 } }}
                                         >
+                                            <Badge
+                                                badgeContent={cartItemsCount}
+                                                color="primary"
+                                                sx={{
+                                                    '& .MuiBadge-badge': {
+                                                        right: -3,
+                                                        top: 3,
+                                                        fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                                                        border: '2px solid white',
+                                                        padding: '0 4px',
+                                                    }
+                                                }}
+                                            >
+                                                <ShoppingCartIcon fontSize={isExtraSmall ? 'small' : 'medium'} />
+                                            </Badge>
+                                        </IconButton>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={handleProfileMenuOpen}
+                                            sx={{ p: { xs: 0.5, sm: 1 } }}
+                                        >
+                                            <AccountCircleIcon fontSize={isExtraSmall ? 'small' : 'medium'} />
+                                        </IconButton>
+                                    </Box>
+                                </>
+                            ) : (
+                                <>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
+                                        <IconButton
+                                            edge="start"
+                                            color="inherit"
+                                            onClick={() => navigate('/')}
+                                            sx={{
+                                                p: 0.5,
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    '& img': {
+                                                        transform: 'scale(1.05)',
+                                                        filter: 'brightness(1.15)'
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <img
+                                                src="/logo.png"
+                                                alt="Logo"
+                                                style={{
+                                                    height: 45,
+                                                    width: 'auto',
+                                                    filter: 'brightness(1.1)',
+                                                    transition: 'all 0.3s ease',
+                                                }}
+                                            />
+                                        </IconButton>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                ml: 1,
+                                            }}
+                                        >
+                                            <Typography
+                                                variant="h5"
+                                                component="div"
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    fontFamily: '"Montserrat", sans-serif',
+                                                    fontWeight: 700,
+                                                    letterSpacing: '0.15em',
+                                                    color: 'primary.main',
+                                                    textTransform: 'uppercase',
+                                                    lineHeight: 1,
+                                                    fontSize: '1.5rem',
+                                                    background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+                                                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                    WebkitBackgroundClip: 'text',
+                                                    WebkitTextFillColor: 'transparent',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        transform: 'scale(1.05)',
+                                                        background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                                                        WebkitBackgroundClip: 'text',
+                                                        WebkitTextFillColor: 'transparent',
+                                                    },
+                                                }}
+                                                onClick={() => navigate('/')}
+                                            >
+                                                STRIVE
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: 'text.secondary',
+                                                    letterSpacing: '0.1em',
+                                                    fontSize: '0.7rem',
+                                                    fontFamily: '"Roboto", sans-serif',
+                                                    opacity: 0.8,
+                                                    mt: -0.5,
+                                                }}
+                                            >
+                                                SPORTS & LIFESTYLE
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', width: '60%', gap: 4 }}>
+                                        {categories.map((category) => (
+                                            <Button
+                                                key={category.name}
+                                                color="inherit"
+                                                onMouseEnter={() => handleMouseEnter(category)}
+                                                onMouseLeave={handleMouseLeave}
+                                                onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`)}
+                                                sx={{
+                                                    textTransform: 'none',
+                                                    fontWeight: 'medium',
+                                                    fontSize: '1rem',
+                                                    p: 1,
+                                                    borderRadius: '4px',
+                                                    transition: 'all 0.2s ease',
+                                                    position: 'relative',
+                                                    '&::after': {
+                                                        content: '""',
+                                                        position: 'absolute',
+                                                        bottom: 5,
+                                                        left: '50%',
+                                                        width: hoveredCategory === category ? '30%' : '0%',
+                                                        height: '2px',
+                                                        backgroundColor: 'primary.main',
+                                                        transform: 'translateX(-50%)',
+                                                        transition: 'width 0.2s ease'
+                                                    },
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0,0,0,0.02)',
+                                                        transform: 'translateY(-1px)'
+                                                    },
+                                                }}
+                                            >
+                                                {category.name}
+                                            </Button>
+                                        ))}
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '20%', justifyContent: 'flex-end' }}>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={handleSearchClick}
+                                            sx={{
+                                                backgroundColor: '#f0f0f0',
+                                                borderRadius: '20px',
+                                                width: '200px',
+                                                justifyContent: 'flex-start',
+                                                pl: 2,
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: '#e8e8e8',
+                                                    transform: 'translateY(-1px)',
+                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                                                },
+                                                border: '1px solid #e0e0e0',
+                                            }}
+                                        >
+                                            <SearchIcon sx={{ color: 'text.secondary' }} />
+                                            <Typography
+                                                sx={{
+                                                    ml: 1,
+                                                    color: 'text.secondary',
+                                                    flexGrow: 1,
+                                                    textAlign: 'left'
+                                                }}
+                                            >
+                                                Search
+                                            </Typography>
+                                        </IconButton>
+                                        <IconButton
+                                            color="inherit"
+                                            onClick={() => navigate('/favorites')}
+                                            sx={{
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(0,0,0,0.04)',
+                                                    transform: 'translateY(-2px)'
+                                                }
+                                            }}
+                                        >
+                                            <FavoriteBorderIcon />
+                                        </IconButton>
+                                        <IconButton color="inherit" onClick={() => navigate('/cart')}>
                                             <Badge
                                                 badgeContent={cartItemsCount}
                                                 color="primary"
@@ -902,202 +1123,15 @@ const Header = () => {
                                         <IconButton
                                             color="inherit"
                                             onClick={handleProfileMenuOpen}
-                                            sx={{ p: 1 }}
+                                            sx={{ ml: 0 }}
                                         >
                                             <AccountCircleIcon />
                                         </IconButton>
                                     </Box>
                                 </>
-                                ) : (
-                                    <>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', width: '20%' }}>
-                                            <IconButton
-                                                edge="start"
-                                                color="inherit"
-                                                onClick={() => navigate('/')}
-                                                sx={{
-                                                    p: 0.5,
-                                                    '&:hover': {
-                                                        backgroundColor: 'transparent',
-                                                        '& img': {
-                                                            transform: 'scale(1.05)',
-                                                            filter: 'brightness(1.15)'
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                <img
-                                                    src="/logo.png"
-                                                    alt="Logo"
-                                                    style={{
-                                                        height: 45,
-                                                        width: 'auto',
-                                                        filter: 'brightness(1.1)',
-                                                        transition: 'all 0.3s ease',
-                                                    }}
-                                                />
-                                            </IconButton>
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    ml: 1,
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="h5"
-                                                    component="div"
-                                                    sx={{
-                                                        cursor: 'pointer',
-                                                        fontFamily: '"Montserrat", sans-serif',
-                                                        fontWeight: 700,
-                                                        letterSpacing: '0.15em',
-                                                        color: 'primary.main',
-                                                        textTransform: 'uppercase',
-                                                        lineHeight: 1,
-                                                        fontSize: '1.5rem',
-                                                        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
-                                                        textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                                        WebkitBackgroundClip: 'text',
-                                                        WebkitTextFillColor: 'transparent',
-                                                        transition: 'all 0.3s ease',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.05)',
-                                                            background: 'linear-gradient(45deg, #1565c0, #1976d2)',
-                                                            WebkitBackgroundClip: 'text',
-                                                            WebkitTextFillColor: 'transparent',
-                                                        },
-                                                    }}
-                                                    onClick={() => navigate('/')}
-                                                >
-                                                    STRIVE
-                                                </Typography>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'text.secondary',
-                                                        letterSpacing: '0.1em',
-                                                        fontSize: '0.7rem',
-                                                        fontFamily: '"Roboto", sans-serif',
-                                                        opacity: 0.8,
-                                                        mt: -0.5,
-                                                    }}
-                                                >
-                                                    SPORTS & LIFESTYLE
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-
-                                        <Box sx={{ display: 'flex', justifyContent: 'center', width: '60%', gap: 4 }}>
-                                            {categories.map((category) => (
-                                                <Button
-                                                    key={category.name}
-                                                    color="inherit"
-                                                    onMouseEnter={() => handleMouseEnter(category)}
-                                                    onMouseLeave={handleMouseLeave}
-                                                    onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`)}
-                                                    sx={{
-                                                        textTransform: 'none',
-                                                        fontWeight: 'medium',
-                                                        fontSize: '1rem',
-                                                        p: 1,
-                                                        borderRadius: '4px',
-                                                        transition: 'all 0.2s ease',
-                                                        position: 'relative',
-                                                        '&::after': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            bottom: 5,
-                                                            left: '50%',
-                                                            width: hoveredCategory === category ? '30%' : '0%',
-                                                            height: '2px',
-                                                            backgroundColor: 'primary.main',
-                                                            transform: 'translateX(-50%)',
-                                                            transition: 'width 0.2s ease'
-                                                        },
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(0,0,0,0.02)',
-                                                            transform: 'translateY(-1px)'
-                                                        },
-                                                    }}
-                                                >
-                                                    {category.name}
-                                                </Button>
-                                            ))}
-                                        </Box>
-
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '20%', justifyContent: 'flex-end' }}>
-                                            <IconButton
-                                                color="inherit"
-                                                onClick={handleSearchClick}
-                                                sx={{
-                                                    backgroundColor: '#f0f0f0',
-                                                    borderRadius: '20px',
-                                                    width: '200px',
-                                                    justifyContent: 'flex-start',
-                                                    pl: 2,
-                                                    transition: 'all 0.2s ease',
-                                                    '&:hover': {
-                                                        backgroundColor: '#e8e8e8',
-                                                        transform: 'translateY(-1px)',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                                                    },
-                                                    border: '1px solid #e0e0e0',
-                                                }}
-                                            >
-                                                <SearchIcon sx={{ color: 'text.secondary' }} />
-                                                <Typography
-                                                    sx={{
-                                                        ml: 1,
-                                                        color: 'text.secondary',
-                                                        flexGrow: 1,
-                                                        textAlign: 'left'
-                                                    }}
-                                                >
-                                                    Search
-                                                </Typography>
-                                            </IconButton>
-                                            <IconButton
-                                                color="inherit"
-                                                onClick={() => navigate('/favorites')}
-                                                sx={{
-                                                    transition: 'all 0.2s ease',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(0,0,0,0.04)',
-                                                        transform: 'translateY(-2px)'
-                                                    }
-                                                }}
-                                            >
-                                                <FavoriteBorderIcon />
-                                            </IconButton>
-                                            <IconButton color="inherit" onClick={() => navigate('/cart')}>
-                                                <Badge
-                                                    badgeContent={cartItemsCount}
-                                                    color="primary"
-                                                    sx={{
-                                                        '& .MuiBadge-badge': {
-                                                            right: -3,
-                                                            top: 3,
-                                                            border: '2px solid white',
-                                                            padding: '0 4px',
-                                                        }
-                                                    }}
-                                                >
-                                                    <ShoppingCartIcon />
-                                                </Badge>
-                                            </IconButton>
-                                            <IconButton
-                                                color="inherit"
-                                                onClick={handleProfileMenuOpen}
-                                                sx={{ ml: 0 }}
-                                            >
-                                                <AccountCircleIcon />
-                                            </IconButton>
-                                        </Box>
-                                    </>
-                                )}
-                            </Box>
-                        </Toolbar>
+                            )}
+                        </Box>
+                    </Toolbar>
 
                     {/* Full-width dropdown menu */}
                     <Box
