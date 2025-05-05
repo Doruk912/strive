@@ -140,14 +140,13 @@ CREATE TABLE order_addresses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert users
+-- Passwords: '123456'
 INSERT INTO users (email, password, first_name, last_name, phone, country_code, role) VALUES
 ('admin@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Admin', 'User', null , null , 'ADMIN'),
 ('manager@strive.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Manager', 'User', null , null , 'MANAGER'),
 ('john@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'John', 'Doe', null , null , 'CUSTOMER'),
 ('jane@example.com', '$2a$12$KMJjGzb6tX93GDD3djKJueVQpOkOP.iPzEMWRAZGlIimKel5Pw9nm', 'Jane', 'Smith', '555 111 22 33' , '+90', 'CUSTOMER');
 
--- Insert promotional banners
 INSERT INTO promotional_banners (title, subtitle, highlight, icon, background_color, display_order, active) VALUES
 ('FAST DELIVERY!', 'ORDER NOW IN NEW YORK,', 'GET IT IN 3 HOURS!', 'LocalShippingOutlined', '#4051B5', 1, TRUE),
 ('SPECIAL OFFER!', 'GET 20% OFF', 'ON ALL SPORTS EQUIPMENT', 'LocalOfferOutlined', '#2E7D32', 2, TRUE),
@@ -155,14 +154,6 @@ INSERT INTO promotional_banners (title, subtitle, highlight, icon, background_co
 ('MEMBERS ONLY!', 'JOIN OUR CLUB AND GET', 'EXCLUSIVE BENEFITS', 'CardMembershipOutlined', '#F57C00', 4, TRUE),
 ('FREE RETURNS!', 'TRY AT HOME WITH', '30-DAY FREE RETURNS', 'AssignmentReturnOutlined', '#0097A7', 5, TRUE);
 
--- Insert notification preferences
-INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
-(1, TRUE, TRUE, FALSE, TRUE),  -- Admin
-(2, TRUE, TRUE, FALSE, TRUE),  -- Manager
-(3, TRUE, TRUE, FALSE, TRUE),  -- John
-(4, TRUE, TRUE, FALSE, TRUE);  -- Jane
-
--- Insert addresses for users
 INSERT INTO addresses (user_id, name, recipient_name, recipient_phone, street_address, city, state, postal_code, country, is_default) VALUES
 (4, 'Home', 'John Doe', '555 111 22 33', '123 Main Street', 'Istanbul', 'Istanbul', '34000', 'Turkey', true),
 (4, 'Work', 'Jane Smith', '555 444 55 66', '456 Business Avenue', 'Istanbul', 'Istanbul', '34000', 'Turkey', false),
@@ -250,7 +241,12 @@ CREATE TABLE password_reset_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Passwords: '123456'
+-- Insert notification preferences
+INSERT INTO notification_preferences (user_id, email_notifications, order_updates, promotions, newsletter) VALUES
+(1, TRUE, TRUE, FALSE, TRUE),  -- Admin
+(2, TRUE, TRUE, FALSE, TRUE),  -- Manager
+(3, TRUE, TRUE, FALSE, TRUE),  -- John
+(4, TRUE, TRUE, FALSE, TRUE);  -- Jane
 
 INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 -- Main Categories
