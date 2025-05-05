@@ -15,9 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 
+import com.strive.backend.dto.ProductDTO;
+import com.strive.backend.dto.ProductImageDTO;
 import com.strive.backend.model.OrderItem;
 import com.strive.backend.model.Product;
 import com.strive.backend.model.ProductImage;
@@ -33,6 +37,9 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private ProductRepository productRepository;
     
+    @Autowired
+    private ProductService productService;
+    
     @Value("${spring.mail.username}")
     private String fromEmail;
     
@@ -43,6 +50,14 @@ public class EmailServiceImpl implements EmailService {
     public void sendWelcomeEmail(String to, String firstName) {
         String subject = "Welcome to Strive!";
         try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail != null ? fromEmail : "strive.onlineshop@gmail.com");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            
+            // HTML content
             String htmlContent = "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
@@ -97,7 +112,13 @@ public class EmailServiceImpl implements EmailService {
                 "</body>\n" +
                 "</html>";
             
-            sendHtmlEmail(to, subject, htmlContent);
+            // Set HTML content
+            helper.setText(htmlContent, true);
+            
+            // Send the email
+            emailSender.send(message);
+            log.info("HTML welcome email sent successfully to: {}", to);
+            
         } catch (Exception e) {
             log.error("Failed to send HTML welcome email: {}", e.getMessage(), e);
             // Fallback to plain text email
@@ -156,37 +177,55 @@ public class EmailServiceImpl implements EmailService {
         try {
             String subject = "Thank you for your Strive order #" + orderId;
             
+            // Create the email message
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail != null ? fromEmail : "strive.onlineshop@gmail.com");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            
+            // Store product images to be added as inline attachments
+            Map<Integer, byte[]> productImages = new HashMap<>();
+            Map<Integer, String> imageTypes = new HashMap<>();
+            
             StringBuilder itemsHtml = new StringBuilder();
             
             for (OrderItem item : orderItems) {
                 try {
-                    Product product = productRepository.findById(item.getProductId().intValue())
-                        .orElse(null);
+                    log.info("Processing order item: productId={}, quantity={}, size={}", 
+                        item.getProductId(), item.getQuantity(), item.getSize());
                     
-                    if (product != null) {
-                        String productImage = "";
+                    // Using ProductService which properly handles images conversion
+                    ProductDTO productDTO = productService.getProductById(item.getProductId().intValue());
+                    
+                    if (productDTO != null) {
+                        log.info("Found product: id={}, name={}", productDTO.getId(), productDTO.getName());
                         
-                        // Get the first product image if available
-                        if (product.getImages() != null && !product.getImages().isEmpty()) {
-                            ProductImage image = product.getImages().get(0);
-                            // Limit the image size for email - resize if necessary
-                            byte[] imageData = image.getImageData();
-                            if (imageData.length > 100000) { // If image is larger than ~100KB
-                                log.info("Image for product {} is too large ({}KB), using placeholder", 
-                                    product.getId(), imageData.length / 1024);
-                                productImage = ""; // Don't include very large images in email
-                            } else {
-                                String base64Image = Base64.getEncoder().encodeToString(imageData);
-                                productImage = "data:" + image.getImageType() + ";base64," + base64Image;
+                        // Get image data for CID embedding
+                        String cidReference = "";
+                        if (productDTO.getImages() != null && !productDTO.getImages().isEmpty()) {
+                            ProductImageDTO imageDTO = productDTO.getImages().get(0);
+                            if (imageDTO.getImageBase64() != null && !imageDTO.getImageBase64().isEmpty()) {
+                                // Extract image data from base64 and store for later attachment
+                                byte[] imageData = Base64.getDecoder().decode(imageDTO.getImageBase64());
+                                productImages.put(productDTO.getId(), imageData);
+                                imageTypes.put(productDTO.getId(), imageDTO.getImageType());
+                                
+                                // Create CID reference
+                                cidReference = "cid:product-" + productDTO.getId();
+                                log.info("Created CID reference for product ID: {}", productDTO.getId());
                             }
                         }
                         
                         itemsHtml.append("<tr style='border-bottom: 1px solid #e5e5e5;'>");
                         
-                        // Product Image
+                        // Product Image - use CID reference
                         itemsHtml.append("<td style='padding: 15px; text-align: center;'>");
-                        if (!productImage.isEmpty()) {
-                            itemsHtml.append("<img src='").append(productImage).append("' alt='").append(product.getName()).append("' style='width: 80px; height: 80px; object-fit: cover; border-radius: 4px;' />");
+                        if (!cidReference.isEmpty()) {
+                            itemsHtml.append("<img src='").append(cidReference).append("' ")
+                                   .append("alt='").append(productDTO.getName()).append("' ")
+                                   .append("width='80' height='80' style='display: block; width: 80px; height: 80px; object-fit: cover; border-radius: 4px;' />");
                         } else {
                             itemsHtml.append("<div style='width: 80px; height: 80px; background-color: #f0f0f0; border-radius: 4px; display: inline-block; line-height: 80px; text-align: center;'>No Image</div>");
                         }
@@ -194,7 +233,7 @@ public class EmailServiceImpl implements EmailService {
                         
                         // Product Details
                         itemsHtml.append("<td style='padding: 15px;'>");
-                        itemsHtml.append("<h3 style='margin: 0 0 5px 0; font-size: 16px;'>").append(product.getName()).append("</h3>");
+                        itemsHtml.append("<h3 style='margin: 0 0 5px 0; font-size: 16px;'>").append(productDTO.getName()).append("</h3>");
                         itemsHtml.append("<p style='margin: 0; color: #666; font-size: 14px;'>Size: ").append(item.getSize()).append("</p>");
                         itemsHtml.append("</td>");
                         
@@ -205,6 +244,8 @@ public class EmailServiceImpl implements EmailService {
                         itemsHtml.append("<td style='padding: 15px; text-align: right;'>$").append(item.getPrice()).append("</td>");
                         
                         itemsHtml.append("</tr>");
+                    } else {
+                        log.warn("Product not found for ID: {}", item.getProductId());
                     }
                 } catch (Exception e) {
                     log.error("Error processing order item for email: {}", e.getMessage(), e);
@@ -293,13 +334,54 @@ public class EmailServiceImpl implements EmailService {
                 "</body>\n" +
                 "</html>";
             
-            sendHtmlEmail(to, subject, htmlContent);
-        
+            // Set the HTML content
+            helper.setText(htmlContent, true);
+            
+            // Add all product images as inline attachments with Content-IDs
+            for (Map.Entry<Integer, byte[]> entry : productImages.entrySet()) {
+                Integer productId = entry.getKey();
+                byte[] imageData = entry.getValue();
+                String contentType = imageTypes.get(productId);
+                if (contentType == null) contentType = "image/jpeg";
+                
+                // Add the image as an inline attachment with Content-ID
+                String contentId = "product-" + productId;
+                helper.addInline(contentId, new ByteArrayResource(imageData), contentType);
+                log.info("Added inline image attachment for product ID: {} with Content-ID: {}", productId, contentId);
+            }
+            
+            // Send the email
+            emailSender.send(message);
+            log.info("HTML email with CID images sent successfully to: {}", to);
+            
         } catch (Exception e) {
             log.error("Failed to send HTML order confirmation email: {}", e.getMessage(), e);
             // Fallback to plain text email if HTML email fails
             sendOrderConfirmationEmail(to, firstName, orderId, totalAmount);
         }
+    }
+
+    /**
+     * Helper method to optimize base64 for email clients by removing whitespace and limiting size
+     * @param base64 The original base64 string
+     * @return Optimized base64 string
+     */
+    private String optimizeBase64ForEmail(String base64) {
+        if (base64 == null || base64.isEmpty()) {
+            return "";
+        }
+        
+        // Remove any whitespace
+        String cleanBase64 = base64.replaceAll("\\s", "");
+        
+        // Limit size to prevent email delivery issues (max 70KB)
+        // Some email clients have trouble with large base64 images
+        int maxSize = 70000; 
+        if (cleanBase64.length() > maxSize) {
+            cleanBase64 = cleanBase64.substring(0, maxSize);
+        }
+        
+        return cleanBase64;
     }
 
     @Override
@@ -315,7 +397,7 @@ public class EmailServiceImpl implements EmailService {
             log.info("Email sent successfully to: {}", to);
         } catch (Exception e) {
             log.error("Failed to send email to: {}", to, e);
-            throw e;
+            throw new RuntimeException("Failed to send email", e);
         }
     }
     
@@ -330,9 +412,6 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            
-            // Add logo image if needed
-            // helper.addInline("logo", new ClassPathResource("static/images/logo.png"));
             
             emailSender.send(message);
             log.info("HTML email sent successfully to: {}", to);

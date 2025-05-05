@@ -1,12 +1,11 @@
 # Todo List
 * Add images to all products
 * Fix categories of some products
-* Send emails
 * Improve header categories ui
 * Fix header responsiveness on smaller screens
-* Fix issues with cart when logging out
+* Fix issues with cart and favorites when logging out
 * Implement product reviews on order page
-* Fix product cards in favorites menu
+* Revisit product cards
 * Ordering without logging in
 * Product details page breadcrumb
 
