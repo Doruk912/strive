@@ -420,4 +420,193 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send HTML email", e);
         }
     }
+    
+    @Override
+    public void sendOrderDeliveredEmail(String to, String firstName, Long orderId, List<OrderItem> orderItems) {
+        try {
+            String subject = "Great news! Your Strive order has been delivered";
+            
+            // Create the email message
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail != null ? fromEmail : "strive.onlineshop@gmail.com");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            
+            // Store product images to be added as inline attachments
+            Map<Integer, byte[]> productImages = new HashMap<>();
+            Map<Integer, String> imageTypes = new HashMap<>();
+            
+            StringBuilder itemsHtml = new StringBuilder();
+            
+            for (OrderItem item : orderItems) {
+                try {
+                    log.info("Processing order item: productId={}, quantity={}, size={}", 
+                        item.getProductId(), item.getQuantity(), item.getSize());
+                    
+                    // Using ProductService which properly handles images conversion
+                    ProductDTO productDTO = productService.getProductById(item.getProductId().intValue());
+                    
+                    if (productDTO != null) {
+                        log.info("Found product: id={}, name={}", productDTO.getId(), productDTO.getName());
+                        
+                        // Get image data for CID embedding
+                        String cidReference = "";
+                        if (productDTO.getImages() != null && !productDTO.getImages().isEmpty()) {
+                            ProductImageDTO imageDTO = productDTO.getImages().get(0);
+                            if (imageDTO.getImageBase64() != null && !imageDTO.getImageBase64().isEmpty()) {
+                                // Extract image data from base64 and store for later attachment
+                                byte[] imageData = Base64.getDecoder().decode(imageDTO.getImageBase64());
+                                productImages.put(productDTO.getId(), imageData);
+                                imageTypes.put(productDTO.getId(), imageDTO.getImageType());
+                                
+                                // Create CID reference
+                                cidReference = "cid:product-" + productDTO.getId();
+                                log.info("Created CID reference for product ID: {}", productDTO.getId());
+                            }
+                        }
+                        
+                        itemsHtml.append("<tr style='border-bottom: 1px solid #e5e5e5;'>");
+                        
+                        // Product Image - use CID reference
+                        itemsHtml.append("<td style='padding: 15px; text-align: center;'>");
+                        if (!cidReference.isEmpty()) {
+                            itemsHtml.append("<img src='").append(cidReference).append("' ")
+                                   .append("alt='").append(productDTO.getName()).append("' ")
+                                   .append("width='80' height='80' style='display: block; width: 80px; height: 80px; object-fit: cover; border-radius: 4px;' />");
+                        } else {
+                            itemsHtml.append("<div style='width: 80px; height: 80px; background-color: #f0f0f0; border-radius: 4px; display: inline-block; line-height: 80px; text-align: center;'>No Image</div>");
+                        }
+                        itemsHtml.append("</td>");
+                        
+                        // Product Details with Review Link
+                        itemsHtml.append("<td style='padding: 15px;'>");
+                        itemsHtml.append("<h3 style='margin: 0 0 5px 0; font-size: 16px;'>").append(productDTO.getName()).append("</h3>");
+                        itemsHtml.append("<p style='margin: 0; color: #666; font-size: 14px;'>Size: ").append(item.getSize()).append("</p>");
+                        
+                        // Add a review link for this product
+                        String reviewUrl = frontendUrl + "/reviews/new?productId=" + productDTO.getId() + "&orderId=" + orderId;
+                        itemsHtml.append("<p style='margin-top: 10px;'><a href='").append(reviewUrl)
+                                .append("' style='color: #1976d2; text-decoration: none; font-weight: 500;'>Leave a review</a></p>");
+                        
+                        itemsHtml.append("</td>");
+                        
+                        // Quantity
+                        itemsHtml.append("<td style='padding: 15px; text-align: center;'>").append(item.getQuantity()).append("</td>");
+                        
+                        itemsHtml.append("</tr>");
+                    } else {
+                        log.warn("Product not found for ID: {}", item.getProductId());
+                    }
+                } catch (Exception e) {
+                    log.error("Error processing order item for email: {}", e.getMessage(), e);
+                }
+            }
+            
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy");
+            String formattedDate = java.time.LocalDate.now().format(dateFormatter);
+            
+            String htmlContent = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "    <meta charset='utf-8'>\n" +
+                "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n" +
+                "    <title>Order Delivered</title>\n" +
+                "</head>\n" +
+                "<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9f9f9;'>\n" +
+                "    <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>\n" +
+                "        <!-- Header -->\n" +
+                "        <div style='background-color: #000; padding: 20px; text-align: center;'>\n" +
+                "            <h1 style='color: #fff; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;'>STRIVE</h1>\n" +
+                "        </div>\n" +
+                "        \n" +
+                "        <!-- Content -->\n" +
+                "        <div style='padding: 30px;'>\n" +
+                "            <h2 style='margin-top: 0; color: #333;'>Your Order Has Been Delivered!</h2>\n" +
+                "            <p>Hello " + firstName + ",</p>\n" +
+                "            <p>Great news! Your package has been delivered and is ready for you to enjoy.</p>\n" +
+                "            \n" +
+                "            <!-- Delivery Box -->\n" +
+                "            <div style='background-color: #e8f5e9; border-radius: 6px; padding: 20px; margin: 20px 0; border-left: 4px solid #43a047;'>\n" +
+                "                <h3 style='margin-top: 0; color: #2e7d32; font-size: 18px;'>Delivery Complete</h3>\n" +
+                "                <p style='margin: 5px 0; font-size: 15px;'><strong>Delivered On:</strong> " + formattedDate + "</p>\n" +
+                "                <p style='margin: 5px 0; font-size: 15px;'><strong>Reference Number:</strong> #" + orderId + "</p>\n" +
+                "            </div>\n" +
+                "            \n" +
+                "            <!-- Review Invitation -->\n" +
+                "            <div style='background-color: #fff8e1; border-radius: 6px; padding: 20px; margin: 20px 0; text-align: center; border-left: 4px solid #ffb300;'>\n" +
+                "                <h3 style='margin-top: 0; color: #ff8f00; font-size: 18px;'>We'd Love Your Feedback!</h3>\n" +
+                "                <p style='margin-bottom: 20px;'>Your opinion helps us improve and assists other customers in making informed decisions.</p>\n" +
+                "                <a href='" + frontendUrl + "/orders' style='background-color: #ff9800; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>Review Your Purchase</a>\n" +
+                "            </div>\n" +
+                "            \n" +
+                "            <!-- Order Items with Review Links -->\n" +
+                "            <h3 style='color: #333; font-size: 18px;'>Items Delivered</h3>\n" +
+                "            <table style='width: 100%; border-collapse: collapse;'>\n" +
+                "                <thead>\n" +
+                "                    <tr style='background-color: #f5f5f5;'>\n" +
+                "                        <th style='padding: 10px; text-align: center; width: 80px;'>Image</th>\n" +
+                "                        <th style='padding: 10px; text-align: left;'>Product</th>\n" +
+                "                        <th style='padding: 10px; text-align: center;'>Qty</th>\n" +
+                "                    </tr>\n" +
+                "                </thead>\n" +
+                "                <tbody>\n" +
+                "                    " + itemsHtml.toString() + "\n" +
+                "                </tbody>\n" +
+                "            </table>\n" +
+                "            \n" +
+                "            <p style='margin-top: 30px;'>Thank you for shopping with Strive! We hope you enjoy your purchase.</p>\n" +
+                "            <p>Best regards,<br>The Strive Team</p>\n" +
+                "        </div>\n" +
+                "        \n" +
+                "        <!-- Footer -->\n" +
+                "        <div style='background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666;'>\n" +
+                "            <p>&copy; " + java.time.Year.now().getValue() + " Strive. All rights reserved.</p>\n" +
+                "            <p>\n" +
+                "                <a href='" + frontendUrl + "/privacy-policy' style='color: #666; text-decoration: underline; margin: 0 10px;'>Privacy Policy</a>\n" +
+                "                <a href='" + frontendUrl + "/terms' style='color: #666; text-decoration: underline; margin: 0 10px;'>Terms of Service</a>\n" +
+                "                <a href='" + frontendUrl + "/contact' style='color: #666; text-decoration: underline; margin: 0 10px;'>Contact Us</a>\n" +
+                "            </p>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "</body>\n" +
+                "</html>";
+            
+            // Set the HTML content
+            helper.setText(htmlContent, true);
+            
+            // Add all product images as inline attachments with Content-IDs
+            for (Map.Entry<Integer, byte[]> entry : productImages.entrySet()) {
+                Integer productId = entry.getKey();
+                byte[] imageData = entry.getValue();
+                String contentType = imageTypes.get(productId);
+                if (contentType == null) contentType = "image/jpeg";
+                
+                // Add the image as an inline attachment with Content-ID
+                String contentId = "product-" + productId;
+                helper.addInline(contentId, new ByteArrayResource(imageData), contentType);
+            }
+            
+            // Send the email
+            emailSender.send(message);
+            log.info("Order delivered email sent successfully to: {}", to);
+            
+        } catch (Exception e) {
+            log.error("Failed to send order delivered email: {}", e.getMessage(), e);
+            // Fallback to plain text email if HTML email fails
+            String subject = "Great news! Your Strive order has been delivered";
+            String text = "Hello " + firstName + ",\n\n"
+                    + "Great news! Your package has been delivered and is ready for you to enjoy.\n\n"
+                    + "Reference Number: #" + orderId + "\n"
+                    + "Delivered On: " + java.time.LocalDate.now() + "\n\n"
+                    + "We'd love to hear your thoughts about your purchase. Please consider leaving a review for the items you received.\n\n"
+                    + "You can leave reviews by visiting: " + frontendUrl + "/orders\n\n"
+                    + "Thank you for shopping with Strive!\n\n"
+                    + "Best regards,\n"
+                    + "The Strive Team";
+            
+            sendEmail(to, subject, text);
+        }
+    }
 } 

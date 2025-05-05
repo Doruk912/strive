@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -24,5 +25,32 @@ public class ReviewController {
     @GetMapping("/product/{productId}/rating")
     public ResponseEntity<Double> getProductAverageRating(@PathVariable Integer productId) {
         return ResponseEntity.ok(reviewService.getAverageRating(productId));
+    }
+    
+    @PostMapping
+    public ResponseEntity<ReviewDTO> createReview(@RequestBody ReviewDTO reviewDTO) {
+        return ResponseEntity.ok(reviewService.createReview(reviewDTO));
+    }
+    
+    @GetMapping("/user/{userId}/product/{productId}")
+    public ResponseEntity<?> getUserProductReview(
+            @PathVariable Integer userId,
+            @PathVariable Integer productId) {
+        Optional<ReviewDTO> review = reviewService.getUserProductReview(userId, productId);
+        return review.isPresent() 
+                ? ResponseEntity.ok(review.get()) 
+                : ResponseEntity.notFound().build();
+    }
+    
+    @GetMapping("/user/{userId}/product/{productId}/exists")
+    public ResponseEntity<Boolean> hasUserReviewedProduct(
+            @PathVariable Integer userId,
+            @PathVariable Integer productId) {
+        return ResponseEntity.ok(reviewService.hasUserReviewedProduct(userId, productId));
+    }
+    
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewDTO>> getUserReviews(@PathVariable Integer userId) {
+        return ResponseEntity.ok(reviewService.getReviewsByUserId(userId));
     }
 } 

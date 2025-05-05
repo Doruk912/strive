@@ -33,6 +33,7 @@ import FinancialOverview from "./pages/ManagerFinancialOverview";
 import ManagerOrderManagement from "./pages/ManagerOrderManagement";
 import Terms from './pages/Terms';
 import Orders from "./pages/Orders";
+import ReviewForm from "./pages/ReviewForm";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -94,6 +95,11 @@ function AppContent() {
                         <Route path="/favorites" element={<Favorites />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/terms" element={<Terms />} />
+                        <Route path="/reviews/new" element={
+                            <ProtectedRoute>
+                                <ReviewForm />
+                            </ProtectedRoute>
+                        } />
 
                         <Route path="/profile" element={
                             <ProtectedRoute>

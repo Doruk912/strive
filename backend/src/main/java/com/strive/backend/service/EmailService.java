@@ -7,4 +7,5 @@ public interface EmailService {
     void sendOrderConfirmationEmail(String to, String firstName, Long orderId, String totalAmount);
     void sendHtmlOrderConfirmationEmail(String to, String firstName, Long orderId, String totalAmount, java.util.List<com.strive.backend.model.OrderItem> orderItems);
     void sendHtmlEmail(String to, String subject, String htmlContent);
+    void sendOrderDeliveredEmail(String to, String firstName, Long orderId, java.util.List<com.strive.backend.model.OrderItem> orderItems);
 } 

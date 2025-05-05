@@ -139,8 +139,33 @@ public class OrderService {
     public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        
+        // Remember the previous status to check if it's changing to DELIVERED
+        OrderStatus previousStatus = order.getStatus();
+        
+        // Update the status
         order.setStatus(status);
         order = orderRepository.save(order);
+        
+        // If status is changing to DELIVERED, send a delivery notification email
+        if (status == OrderStatus.DELIVERED && previousStatus != OrderStatus.DELIVERED) {
+            try {
+                User user = userService.getUserById(order.getUserId().intValue());
+                if (user != null && user.getEmail() != null) {
+                    // Send delivery notification with review option
+                    emailService.sendOrderDeliveredEmail(
+                        user.getEmail(),
+                        user.getFirstName(),
+                        order.getId(),
+                        order.getOrderItems()
+                    );
+                }
+            } catch (Exception e) {
+                // Log error but don't stop the process
+                System.err.println("Failed to send order delivered email: " + e.getMessage());
+            }
+        }
+        
         return convertToDTO(order);
     }
     

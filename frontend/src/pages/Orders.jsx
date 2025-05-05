@@ -10,9 +10,20 @@ import {
     Card,
     CardMedia,
     useTheme,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Rating,
+    Snackbar,
+    Tooltip,
+    Chip,
+    Divider
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
-import { LocalShipping, CheckCircle, Cancel, Pending, Inventory } from '@mui/icons-material';
+import { LocalShipping, CheckCircle, Cancel, Pending, Inventory, RateReview, Star } from '@mui/icons-material';
 
 const Orders = () => {
     const { user } = useAuth();
@@ -21,6 +32,21 @@ const Orders = () => {
     const [error, setError] = useState(null);
     const [productDetails, setProductDetails] = useState({});
     const theme = useTheme();
+    
+    // Review state
+    const [openReviewDialog, setOpenReviewDialog] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+    
+    // Track user's reviews
+    const [userReviews, setUserReviews] = useState({});
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -60,6 +86,9 @@ const Orders = () => {
                     productDetailsMap[product.id] = product;
                 });
                 setProductDetails(productDetailsMap);
+                
+                // Now fetch user's reviews for these products
+                await fetchUserReviews(Array.from(productIds));
             } catch (error) {
                 console.error('Error fetching orders:', error);
                 setError('Failed to load orders. Please try again later.');
@@ -70,6 +99,35 @@ const Orders = () => {
 
         fetchOrders();
     }, [user]);
+    
+    // Fetch all reviews by the user
+    const fetchUserReviews = async (productIds) => {
+        if (!user) return;
+        
+        try {
+            const reviewsResponse = await fetch(`http://localhost:8080/api/reviews/user/${user.userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+            
+            if (!reviewsResponse.ok) {
+                console.error('Failed to fetch user reviews');
+                return;
+            }
+            
+            const reviews = await reviewsResponse.json();
+            const reviewsMap = {};
+            
+            reviews.forEach(review => {
+                reviewsMap[review.productId] = review;
+            });
+            
+            setUserReviews(reviewsMap);
+        } catch (error) {
+            console.error('Error fetching user reviews:', error);
+        }
+    };
 
     const getStatusInfo = (status) => {
         switch (status) {
@@ -130,6 +188,91 @@ const Orders = () => {
         }
         return method.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     };
+    
+    // Review functions
+    const handleOpenReviewDialog = (product) => {
+        setSelectedProduct(product);
+        
+        // If user has already reviewed this product, pre-populate the form
+        const existingReview = userReviews[product.id];
+        if (existingReview) {
+            setReviewRating(existingReview.rating);
+            setReviewComment(existingReview.comment);
+        } else {
+            setReviewRating(5);
+            setReviewComment('');
+        }
+        
+        setOpenReviewDialog(true);
+    };
+    
+    const handleCloseReviewDialog = () => {
+        setOpenReviewDialog(false);
+        setSelectedProduct(null);
+    };
+    
+    const handleSubmitReview = async () => {
+        if (!selectedProduct || !user) return;
+        
+        setReviewSubmitting(true);
+        
+        try {
+            const reviewData = {
+                productId: selectedProduct.id,
+                userId: user.userId,
+                rating: reviewRating,
+                comment: reviewComment
+            };
+            
+            const response = await fetch('http://localhost:8080/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify(reviewData)
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to submit review');
+            }
+            
+            const savedReview = await response.json();
+            
+            // Update the userReviews state
+            setUserReviews(prev => ({
+                ...prev,
+                [selectedProduct.id]: savedReview
+            }));
+            
+            // Show success message
+            setSnackbar({
+                open: true,
+                message: 'Thank you for your review! It will help other customers.',
+                severity: 'success'
+            });
+            
+            handleCloseReviewDialog();
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            setSnackbar({
+                open: true,
+                message: 'Failed to submit review. Please try again.',
+                severity: 'error'
+            });
+        } finally {
+            setReviewSubmitting(false);
+        }
+    };
+    
+    const handleSnackbarClose = () => {
+        setSnackbar(prev => ({ ...prev, open: false }));
+    };
+    
+    // Check if user has already reviewed a product
+    const hasReviewedProduct = (productId) => {
+        return userReviews[productId] !== undefined;
+    };
 
     if (loading) {
         return (
@@ -166,6 +309,8 @@ const Orders = () => {
                 <Grid container spacing={3}>
                     {orders.map((order) => {
                         const statusInfo = getStatusInfo(order.status);
+                        const isDelivered = order.status === 'DELIVERED';
+                        
                         return (
                             <Grid item xs={12} key={order.id}>
                                 <Paper
@@ -228,6 +373,9 @@ const Orders = () => {
                                     <Box sx={{ p: 3 }}>
                                         {order.items.map((item) => {
                                             const product = productDetails[item.productId];
+                                            const hasReviewed = product ? hasReviewedProduct(product.id) : false;
+                                            const userReview = product ? userReviews[product.id] : null;
+                                            
                                             return (
                                                 <Card
                                                     key={item.id}
@@ -274,9 +422,68 @@ const Orders = () => {
                                                             justifyContent: 'space-between',
                                                             alignItems: 'flex-end'
                                                         }}>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                Size: {item.size} | Quantity: {item.quantity}
-                                                            </Typography>
+                                                            <Box>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    Size: {item.size} | Quantity: {item.quantity}
+                                                                </Typography>
+                                                                
+                                                                {/* Review Button or Review Display - only for delivered items */}
+                                                                {isDelivered && product && (
+                                                                    <Box sx={{ mt: 1 }}>
+                                                                        {hasReviewed ? (
+                                                                            <Box sx={{ mt: 2 }}>
+                                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                                    <Chip 
+                                                                                        icon={<CheckCircle fontSize="small" />}
+                                                                                        label="You reviewed this product" 
+                                                                                        size="small"
+                                                                                        color="success"
+                                                                                        variant="outlined"
+                                                                                    />
+                                                                                    <Button 
+                                                                                        size="small"
+                                                                                        color="primary"
+                                                                                        onClick={() => handleOpenReviewDialog(product)}
+                                                                                    >
+                                                                                        Edit
+                                                                                    </Button>
+                                                                                </Box>
+                                                                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                                                                    <Rating 
+                                                                                        value={userReview.rating} 
+                                                                                        readOnly 
+                                                                                        size="small" 
+                                                                                    />
+                                                                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                                                                                        {new Date(userReview.createdAt).toLocaleDateString()}
+                                                                                    </Typography>
+                                                                                </Box>
+                                                                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                                                                    {userReview.comment}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        ) : (
+                                                                            <Button 
+                                                                                variant="contained"
+                                                                                color="primary"
+                                                                                size="small"
+                                                                                startIcon={<RateReview />}
+                                                                                onClick={() => handleOpenReviewDialog(product)}
+                                                                                sx={{ 
+                                                                                    mt: 1,
+                                                                                    borderRadius: '20px',
+                                                                                    boxShadow: 2,
+                                                                                    '&:hover': {
+                                                                                        boxShadow: 4
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                Write a Review
+                                                                            </Button>
+                                                                        )}
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
                                                             <Typography variant="h6" color="primary.main" sx={{ fontWeight: 600 }}>
                                                                 ${(item.price * item.quantity).toFixed(2)}
                                                             </Typography>
@@ -379,6 +586,83 @@ const Orders = () => {
                     </Typography>
                 </Paper>
             )}
+            
+            {/* Review Dialog */}
+            <Dialog open={openReviewDialog} onClose={handleCloseReviewDialog} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    {userReviews[selectedProduct?.id] ? 'Edit Your Review' : 'Write a Review'}
+                </DialogTitle>
+                <DialogContent>
+                    {selectedProduct && (
+                        <Box sx={{ py: 2 }}>
+                            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+                                {selectedProduct.images?.[0] && (
+                                    <Box sx={{ mr: 2 }}>
+                                        <img 
+                                            src={`data:${selectedProduct.images[0].imageType};base64,${selectedProduct.images[0].imageBase64}`}
+                                            alt={selectedProduct.name}
+                                            style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }}
+                                        />
+                                    </Box>
+                                )}
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                    {selectedProduct.name}
+                                </Typography>
+                            </Box>
+                            
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Your Rating
+                            </Typography>
+                            <Rating
+                                value={reviewRating}
+                                onChange={(event, newValue) => {
+                                    setReviewRating(newValue);
+                                }}
+                                size="large"
+                                sx={{ mb: 3 }}
+                            />
+                            
+                            <TextField
+                                label="Your Review"
+                                multiline
+                                rows={4}
+                                fullWidth
+                                variant="outlined"
+                                value={reviewComment}
+                                onChange={(e) => setReviewComment(e.target.value)}
+                                placeholder="Share your experience with this product..."
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseReviewDialog}>Cancel</Button>
+                    <Button 
+                        onClick={handleSubmitReview} 
+                        variant="contained" 
+                        color="primary"
+                        disabled={reviewSubmitting || !reviewRating || reviewComment.trim() === ''}
+                    >
+                        {reviewSubmitting ? 'Submitting...' : (userReviews[selectedProduct?.id] ? 'Update Review' : 'Submit Review')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={5000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={handleSnackbarClose} 
+                    severity={snackbar.severity} 
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };
