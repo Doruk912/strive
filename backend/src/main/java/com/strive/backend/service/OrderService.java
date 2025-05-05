@@ -98,11 +98,13 @@ public class OrderService {
         try {
             User user = userService.getUserById(order.getUserId().intValue());
             if (user != null && user.getEmail() != null) {
-                emailService.sendOrderConfirmationEmail(
+                // Send HTML order confirmation email with product images
+                emailService.sendHtmlOrderConfirmationEmail(
                     user.getEmail(),
                     user.getFirstName(),
                     order.getId(),
-                    order.getTotalAmount().toString()
+                    order.getTotalAmount().toString(),
+                    order.getOrderItems()
                 );
             }
         } catch (Exception e) {
