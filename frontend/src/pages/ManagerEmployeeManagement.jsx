@@ -29,15 +29,19 @@ import {
     FormControl,
     InputLabel,
     Select,
-    CircularProgress
+    CircularProgress,
+    InputAdornment,
+    OutlinedInput
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet';
 
 const ManagerEmployeeManagement = () => {
     const [employees, setEmployees] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openUserSelectionDialog, setOpenUserSelectionDialog] = useState(false);
@@ -64,6 +68,21 @@ const ManagerEmployeeManagement = () => {
     useEffect(() => {
         fetchEmployees();
     }, []);
+
+    useEffect(() => {
+        // Filter users based on search query
+        if (allUsers.length > 0) {
+            const filtered = allUsers.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                const email = user.email.toLowerCase();
+                const query = searchQuery.toLowerCase();
+                
+                return fullName.includes(query) || email.includes(query);
+            });
+            
+            setFilteredUsers(filtered);
+        }
+    }, [searchQuery, allUsers]);
 
     const fetchEmployees = async () => {
         try {
@@ -106,6 +125,7 @@ const ManagerEmployeeManagement = () => {
             if (response.ok) {
                 const data = await response.json();
                 setAllUsers(data);
+                setFilteredUsers(data); // Initialize filtered users with all users
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to fetch users');
@@ -166,12 +186,22 @@ const ManagerEmployeeManagement = () => {
     };
 
     const handleOpenUserSelectionDialog = async () => {
+        setSearchQuery(''); // Reset search query
         setOpenUserSelectionDialog(true);
         await fetchAllUsers();
     };
 
     const handleCloseUserSelectionDialog = () => {
         setOpenUserSelectionDialog(false);
+        setSearchQuery(''); // Clear search when closing
+    };
+
+    const handleSearchChange = (event) => {
+        setSearchQuery(event.target.value);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
     };
 
     const handleUserSelect = (selectedUser) => {
@@ -442,7 +472,7 @@ const ManagerEmployeeManagement = () => {
                     </DialogActions>
                 </Dialog>
 
-                {/* User Selection Dialog */}
+                {/* User Selection Dialog with Search */}
                 <Dialog
                     open={openUserSelectionDialog}
                     onClose={handleCloseUserSelectionDialog}
@@ -456,51 +486,120 @@ const ManagerEmployeeManagement = () => {
                         Select a User to Assign as Employee
                     </DialogTitle>
                     <DialogContent sx={{ py: 3 }}>
-                        <Box sx={{ height: '500px', overflow: 'auto' }}>
+                        {/* Enhanced Search Bar */}
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                                Search for users by name or email
+                            </Typography>
+                            <FormControl fullWidth variant="outlined">
+                                <OutlinedInput
+                                    placeholder="Type to search..."
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    startAdornment={
+                                        <InputAdornment position="start">
+                                            <SearchIcon color="action" />
+                                        </InputAdornment>
+                                    }
+                                    endAdornment={
+                                        searchQuery ? (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="clear search"
+                                                    onClick={clearSearch}
+                                                    edge="end"
+                                                    size="small"
+                                                >
+                                                    <ClearIcon fontSize="small" />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ) : null
+                                    }
+                                    sx={{
+                                        borderRadius: 1,
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(0, 0, 0, 0.23)',
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'rgba(0, 0, 0, 0.87)',
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: 'primary.main',
+                                            borderWidth: 2,
+                                        },
+                                    }}
+                                />
+                            </FormControl>
+                        </Box>
+                        
+                        <Box sx={{ height: '450px', overflow: 'auto' }}>
                             {loading ? (
                                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                                     <CircularProgress />
                                 </Box>
-                            ) : allUsers.length === 0 ? (
-                                <Typography align="center" sx={{ py: 3 }}>
-                                    No users found. Please check your connection or try again later.
-                                </Typography>
+                            ) : filteredUsers.length === 0 ? (
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    height: '100%',
+                                    p: 3,
+                                    textAlign: 'center',
+                                    backgroundColor: 'rgba(0,0,0,0.02)',
+                                    borderRadius: 1
+                                }}>
+                                    <SearchIcon sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        {searchQuery ? "No users found matching your search" : "No users found"}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {searchQuery 
+                                            ? "Try using different keywords or check for spelling errors" 
+                                            : "Please check your connection or try again later"}
+                                    </Typography>
+                                </Box>
                             ) : (
-                                <List>
-                                    {allUsers.map((user) => (
-                                        <React.Fragment key={user.id}>
-                                            <ListItem
-                                                button
-                                                onClick={() => handleUserSelect(user)}
-                                                sx={{
-                                                    borderRadius: 1,
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                                    }
-                                                }}
-                                            >
-                                                <ListItemText
-                                                    primary={
-                                                        <Typography variant="subtitle1">
-                                                            {user.firstName} {user.lastName}
-                                                        </Typography>
-                                                    }
-                                                    secondary={
+                                <>
+                                    <Typography variant="caption" color="text.secondary" sx={{ pl: 2, mb: 1, display: 'block' }}>
+                                        Found {filteredUsers.length} users
+                                    </Typography>
+                                    <List>
+                                        {filteredUsers.map((user) => (
+                                            <React.Fragment key={user.id}>
+                                                <ListItem
+                                                    button
+                                                    onClick={() => handleUserSelect(user)}
+                                                    sx={{
+                                                        borderRadius: 1,
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <ListItemText
+                                                        primary={
+                                                            <Typography variant="subtitle1">
+                                                                {user.firstName} {user.lastName}
+                                                            </Typography>
+                                                        }
+                                                        secondary={
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {user.email}
+                                                            </Typography>
+                                                        }
+                                                    />
+                                                    <ListItemSecondaryAction>
                                                         <Typography variant="body2" color="text.secondary">
-                                                            {user.email}
+                                                            Current role: {user.role || 'None'}
                                                         </Typography>
-                                                    }
-                                                />
-                                                <ListItemSecondaryAction>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        Current role: {user.role || 'None'}
-                                                    </Typography>
-                                                </ListItemSecondaryAction>
-                                            </ListItem>
-                                            <Divider />
-                                        </React.Fragment>
-                                    ))}
-                                </List>
+                                                    </ListItemSecondaryAction>
+                                                </ListItem>
+                                                <Divider />
+                                            </React.Fragment>
+                                        ))}
+                                    </List>
+                                </>
                             )}
                         </Box>
                     </DialogContent>
