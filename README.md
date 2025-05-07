@@ -7,6 +7,9 @@
 * Revisit product cards
 * Ordering without logging in
 * Product details page breadcrumb
+* Implement Financial Overview
+* Implement Order Management
+* Implement Promotional Banner
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
