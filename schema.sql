@@ -572,3 +572,153 @@ INSERT INTO financial_transactions (order_id, amount, description, transaction_t
 (3, 179.99, 'Order #3', 'ORDER', CURRENT_DATE() - INTERVAL 175 DAY),
 (2, 239.98, 'Order #2', 'ORDER', CURRENT_DATE() - INTERVAL 185 DAY),
 (1, 419.99, 'Order #1', 'ORDER', CURRENT_DATE() - INTERVAL 200 DAY);
+
+
+-- Men's Clothing - T-Shirts (category_id: 8)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Premium Cotton Crew Neck T-Shirt - White', 'Soft, breathable cotton t-shirt with a classic fit and reinforced neckline', 34.99, 8),
+('Athletic Performance T-Shirt - Heather Grey', 'Moisture-wicking technical fabric with four-way stretch and odor control technology', 39.99, 8);
+
+-- Men's Clothing - Jackets (category_id: 9)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Alpine Explorer Insulated Jacket', 'Weatherproof insulated jacket with thermal retention technology and adjustable hood', 149.99, 9);
+
+-- Men's Accessories - Hats (category_id: 13)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Performance Outdoor Baseball Cap', 'Lightweight, quick-drying cap with UV protection and adjustable back closure', 29.99, 13);
+
+-- Men's Accessories - Watches (category_id: 12)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Expedition Chronograph Sports Watch', 'Multifunctional sports watch with water resistance up to 100m and luminous display', 189.99, 12);
+
+-- Men's Footwear - Running Shoes (category_id: 10)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Momentum Pro Performance Running Shoes', 'Lightweight running shoes with responsive cushioning and breathable mesh upper', 129.99, 10);
+
+-- Men's Footwear - Hiking Boots (category_id: 11)
+INSERT INTO products (name, description, price, category_id) VALUES
+('TrailMaster Waterproof Hiking Boots', 'Rugged hiking boots with waterproof membrane and advanced grip technology', 159.99, 11);
+
+-- Men's Tracksuits (Add to Men's Clothing - category_id: 5)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Performance Athletic Tracksuit - Navy Blue', 'Breathable tracksuit with moisture-wicking technology and ergonomic design', 89.99, 5),
+('Elite Training Tracksuit - Black', 'Premium tracksuit with reflective details and four-way stretch fabric', 99.99, 5);
+
+-- Women's Tracksuits (Add to Women's Clothing - category_id: 14)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Active Lifestyle Tracksuit - Ruby Red', 'Stylish tracksuit with quick-dry technology and flattering silhouette', 94.99, 14),
+('Essential Training Tracksuit - Beige', 'Comfortable tracksuit with soft fabric and subtle brand detailing', 89.99, 14);
+
+-- Women's Dresses (category_id: 17)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Summer Breeze Floral Dress - Lilac', 'Lightweight summer dress with delicate floral pattern and comfortable fit', 69.99, 17),
+('Weekend Getaway Wrap Dress - Pink', 'Versatile wrap dress in soft pink fabric with adjustable waist tie', 79.99, 17);
+
+-- Women's Tops (category_id: 18)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Essential Performance Top', 'Versatile athletic top with moisture-wicking fabric and flattering fit', 39.99, 18);
+
+-- Women's Footwear - Running Shoes (category_id: 19)
+INSERT INTO products (name, description, price, category_id) VALUES
+('StrideMax Cushioned Running Shoes', 'Women\'s performance running shoes with responsive cushioning and breathable upper', 129.99, 19);
+
+-- Women's Footwear - Sandals (category_id: 20)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Comfort Plus Ergonomic Sandals', 'Supportive sandals with contoured footbed and adjustable straps', 59.99, 20);
+
+-- Women's Accessories - Bags (category_id: 22)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Urban Explorer Crossbody Bag - Pink', 'Stylish and functional crossbody bag with multiple compartments and adjustable strap', 64.99, 22),
+('Weekend Adventure Tote - Black', 'Spacious tote bag with durable construction and interior organization pockets', 74.99, 22);
+
+-- Team Sports - Basketball (category_id: 28)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Professional Basketball Jersey', 'Competition-grade basketball jersey with moisture-wicking fabric and team customization options', 54.99, 28),
+('Competition Basketball - Official Size', 'Official size and weight basketball with superior grip and durability', 49.99, 28);
+
+-- Team Sports - Soccer (category_id: 27)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Match Quality Soccer Ball - Size 5', 'Tournament-grade soccer ball with precision stitching and durable construction', 39.99, 27);
+
+-- Individual Sports - Tennis (category_id: 29)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Pro Tour Tennis Racket', 'Performance tennis racket with power-enhancing frame and comfortable grip', 129.99, 29),
+('Championship Tennis Balls - 3 Pack', 'Professional-grade tennis balls with consistent bounce and visibility', 9.99, 29);
+
+-- Individual Sports - Golf (category_id: 30)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Tour Performance Golf Club Set', 'Complete set of high-performance golf clubs including driver, irons, and putter', 699.99, 30),
+('Premium Leather Golf Gloves', 'Soft yet durable leather golf gloves with precision fit and enhanced grip', 29.99, 30),
+('Distance Pro Golf Balls - 12 Pack', 'Long-distance golf balls with aerodynamic dimple pattern for reduced drag', 34.99, 30);
+
+-- Fitness - Gym Equipment (category_id: 31)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Precision Cast Iron Dumbbells - 2kg Pair', 'Professional-grade 2kg dumbbells with ergonomic grip and durable construction', 39.99, 31),
+('Heavy Duty Cast Iron Dumbbells - 5kg Pair', 'Premium 5kg dumbbells with comfortable grip and rust-resistant finish', 59.99, 31),
+('Professional Training Dumbbells - 10kg Pair', 'Gym-quality 10kg dumbbells with knurled grip for secure handling', 89.99, 31),
+('Competition Kettlebell Set - 5kg Pair', 'Competition-grade 5kg kettlebells with color-coded vinyl coating', 64.99, 31),
+('Premium Cast Iron Kettlebell - 8kg', 'Professional 8kg kettlebell with balanced design and comfortable grip', 49.99, 31);
+
+-- Fitness - Fitness Apparel (category_id: 32)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Men\'s Performance Training Set - Grey', 'Coordinated training outfit with moisture-wicking top and quick-dry shorts', 69.99, 32),
+('Men\'s Elite Workout Set - Black', 'Premium workout set featuring compression technology and four-way stretch fabric', 79.99, 32),
+('Women\'s Essential Training Set - Beige', 'Stylish workout set with supportive top and high-waisted leggings', 74.99, 32),
+('Women\'s Premium Fitness Set - Sage Green', 'Eco-friendly fitness set with buttery-soft fabric and seamless construction', 89.99, 32);
+
+-- Fitness - Yoga (category_id: 26)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Premium Yoga Mat - 6mm', 'Extra thick yoga mat with non-slip surface and eco-friendly materials', 44.99, 26),
+('Deluxe Yoga Starter Kit - Lilac', 'Complete yoga set including mat, blocks, strap, and carrying bag in calming lilac', 79.99, 26),
+('Essential Yoga Practice Set - Mint Green', 'Comprehensive yoga set with premium mat, foam blocks, and cotton strap', 74.99, 26),
+('Professional Pilates Resistance Bands Set', 'Set of 3 resistance bands with different strengths for varied workout intensity', 24.99, 26);
+
+-- Cycling - Mountain Bikes (category_id: 38)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Alpine Explorer Mountain Bike - Fire Red', 'All-terrain mountain bike with front suspension and precision gear system', 899.99, 38),
+('Trail Blazer Mountain Bike - Forest Green', 'Rugged mountain bike with hydraulic disc brakes and lightweight aluminum frame', 999.99, 38);
+
+-- Cycling - Road Bikes (category_id: 39)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Velocity Pro Road Bike - Electric Blue', 'Aerodynamic road bike with carbon fork and professional racing geometry', 1299.99, 39),
+('Endurance Elite Road Bike - Matte Black', 'Long-distance road bike with vibration-dampening frame and precision components', 1199.99, 39);
+
+-- Water Sports - Swimming (category_id: 40)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Pro Performance Swim Cap', 'Ergonomic silicone swim cap with wrinkle-free fit and UV protection', 19.99, 40),
+('Competition Men\'s Swimming Jammers', 'Professional swimming shorts with water-repellent technology and secure fit', 49.99, 40),
+('Aqua Vision Swimming Goggles', 'Anti-fog swimming goggles with UV protection and adjustable silicone strap', 29.99, 40);
+
+-- Team Sports - Track & Field (Add this as a new category under Individual Sports)
+INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
+('Track & Field', 24, NULL, NULL);
+
+-- Get the new category ID (assuming it will be the next ID after current max)
+SET @track_field_id = (SELECT MAX(id) FROM categories);
+
+-- Add the spike shoes to this new category
+INSERT INTO products (name, description, price, category_id) VALUES
+('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, @track_field_id);
+
+-- Camping & Hiking - Tents (category_id: 38)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Ultralight 2-Person Backpacking Tent', 'Compact and lightweight tent ideal for hiking trips with quick setup design', 249.99, 38),
+('Family Camping Tent - 4 Person', 'Spacious 4-person tent with weather protection and separate sleeping areas', 299.99, 38);
+
+-- Camping & Hiking - Backpacks (category_id: 39)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Expedition Trekking Backpack - Ruby Red', 'Durable 55L backpack with ergonomic harness system and multiple compartments', 159.99, 39),
+('Adventure Trail Backpack - Tactical Black', 'Weather-resistant 45L backpack with hydration compatibility and load stabilizers', 149.99, 39);
+
+-- Add stock information for these new products
+-- This would require knowing the product IDs assigned by the auto-increment, 
+-- but since we're adding many products, I'll provide a general approach:
+
+-- For example, for the first new product (assuming it gets ID 31):
+INSERT INTO stocks (product_id, size, quantity) VALUES
+(31, 'S', 30),
+(31, 'M', 45),
+(31, 'L', 40),
+(31, 'XL', 25);
+
+-- And so on for each product with appropriate sizes and quantities
