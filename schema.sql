@@ -340,24 +340,16 @@ INSERT INTO featured_categories (category_id, display_order) VALUES
 
 INSERT INTO products (name, description, price, category_id) VALUES
 -- Men's T-Shirts (category_id: 8)
-('Classic Cotton T-Shirt', 'Comfortable 100% cotton basic t-shirt perfect for everyday wear', 29.99, 8),
 ('Performance Sport T-Shirt', 'Moisture-wicking fabric ideal for workouts and sports activities', 34.99, 8),
-('Striped Polo Shirt', 'Classic striped polo shirt made from premium cotton blend', 45.99, 8),
 
 -- Men's Jackets (category_id: 9)
 ('Winter Puffer Jacket', 'Warm and comfortable puffer jacket with water-resistant exterior', 129.99, 9),
-('Leather Bomber Jacket', 'Classic leather bomber jacket with premium quality leather', 199.99, 9),
 ('Waterproof Rain Jacket', 'Lightweight and packable rain jacket with sealed seams', 89.99, 9),
 
 -- Men's Running Shoes (category_id: 10)
 ('Speed Runner Pro', 'Professional running shoes with advanced cushioning technology', 159.99, 10),
 ('Daily Trainer X1', 'Comfortable everyday running shoes for regular training', 129.99, 10),
 ('Marathon Elite', 'Long-distance running shoes with superior support', 179.99, 10),
-
--- Women's Dresses (category_id: 17)
-('Summer Floral Dress', 'Light and breezy floral print dress perfect for summer', 79.99, 17),
-('Little Black Dress', 'Classic black cocktail dress for special occasions', 119.99, 17),
-('Maxi Beach Dress', 'Long flowing beach dress with tropical print', 89.99, 17),
 
 -- Women's Running Shoes (category_id: 19)
 ('Women\'s Cloud Runner', 'Lightweight running shoes with cloud-like cushioning', 149.99, 19),

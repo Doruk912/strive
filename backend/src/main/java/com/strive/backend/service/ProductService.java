@@ -281,4 +281,151 @@ public class ProductService {
                 .map(max -> max + 1)
                 .orElse(1);
     }
+
+    public class PageResponse<T> {
+        private List<T> content;
+        private int page;
+        private int size;
+        private long totalElements;
+        private int totalPages;
+
+        public PageResponse(List<T> content, int page, int size, long totalElements) {
+            this.content = content;
+            this.page = page;
+            this.size = size;
+            this.totalElements = totalElements;
+            this.totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
+        }
+
+        // Getters
+        public List<T> getContent() { return content; }
+        public int getPage() { return page; }
+        public int getSize() { return size; }
+        public long getTotalElements() { return totalElements; }
+        public int getTotalPages() { return totalPages; }
+    }
+
+    public PageResponse<ProductDTO> getPaginatedProducts(
+            int page, int size, String categoryIdsParam, String name,
+            Double minPrice, Double maxPrice, Integer minRating, 
+            String sizesParam, String sort) {
+        
+        // Convert string parameters to appropriate types
+        List<Integer> categoryIds = categoryIdsParam != null ? 
+            List.of(categoryIdsParam.split(",")).stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList()) : 
+            null;
+        
+        List<String> sizesList = sizesParam != null ? 
+            List.of(sizesParam.split(",")) : 
+            null;
+        
+        // Start with all products
+        List<Product> allProducts = productRepository.findAll();
+        
+        // Apply filters
+        List<Product> filteredProducts = allProducts.stream()
+            .filter(product -> {
+                // Category filter
+                if (categoryIds != null && !categoryIds.isEmpty() && 
+                    !categoryIds.contains(product.getCategoryId())) {
+                    return false;
+                }
+                
+                // Name filter
+                if (name != null && !name.isEmpty() && 
+                    !product.getName().toLowerCase().contains(name.toLowerCase()) &&
+                    (product.getDescription() == null || 
+                     !product.getDescription().toLowerCase().contains(name.toLowerCase()))) {
+                    return false;
+                }
+                
+                // Price range filter
+                if (minPrice != null && product.getPrice() < minPrice) {
+                    return false;
+                }
+                if (maxPrice != null && product.getPrice() > maxPrice) {
+                    return false;
+                }
+                
+                // Rating filter
+                if (minRating != null && minRating > 0) {
+                    double avgRating = product.getReviews().stream()
+                        .mapToInt(Review::getRating)
+                        .average()
+                        .orElse(0.0);
+                    if (avgRating < minRating) {
+                        return false;
+                    }
+                }
+                
+                // Size filter
+                if (sizesList != null && !sizesList.isEmpty()) {
+                    boolean hasSizes = product.getStocks().stream()
+                        .anyMatch(stock -> sizesList.contains(stock.getSize()) && stock.getQuantity() > 0);
+                    if (!hasSizes) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .collect(Collectors.toList());
+        
+        // Apply sorting
+        if (sort != null && !sort.isEmpty()) {
+            switch (sort) {
+                case "price-low-high":
+                    filteredProducts.sort(Comparator.comparing(Product::getPrice));
+                    break;
+                case "price-high-low":
+                    filteredProducts.sort(Comparator.comparing(Product::getPrice).reversed());
+                    break;
+                case "name-a-z":
+                    filteredProducts.sort(Comparator.comparing(Product::getName));
+                    break;
+                case "name-z-a":
+                    filteredProducts.sort(Comparator.comparing(Product::getName).reversed());
+                    break;
+                case "rating-high-low":
+                    filteredProducts.sort((p1, p2) -> {
+                        double rating1 = p1.getReviews().stream()
+                            .mapToInt(Review::getRating).average().orElse(0.0);
+                        double rating2 = p2.getReviews().stream()
+                            .mapToInt(Review::getRating).average().orElse(0.0);
+                        return Double.compare(rating2, rating1);
+                    });
+                    break;
+            }
+        }
+        
+        // Calculate total filtered count
+        long totalElements = filteredProducts.size();
+        
+        // Calculate total pages
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
+        
+        // Fix the fromIndex and toIndex calculation
+        int fromIndex = Math.min(page * size, filteredProducts.size());
+        int toIndex = Math.min(fromIndex + size, filteredProducts.size());
+        
+        // Handle out of bounds - if the page is beyond available data, return the last page
+        if (totalElements > 0 && fromIndex >= filteredProducts.size()) {
+            page = totalPages - 1; // Last valid page (0-based)
+            fromIndex = page * size;
+            toIndex = Math.min(fromIndex + size, filteredProducts.size());
+        }
+        
+        List<Product> pagedProducts = filteredProducts.isEmpty() ? 
+            List.of() : 
+            filteredProducts.subList(fromIndex, toIndex);
+        
+        // Convert to DTOs
+        List<ProductDTO> productDTOs = pagedProducts.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+        
+        return new PageResponse<>(productDTOs, page, size, totalElements);
+    }
 }

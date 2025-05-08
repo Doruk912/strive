@@ -107,4 +107,20 @@ public class ProductController {
             @RequestBody List<Integer> productIds) {
         return ResponseEntity.ok(productService.reorderFeaturedProducts(productIds));
     }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<?> getPaginatedProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String categoryIds,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minRating,
+            @RequestParam(required = false) String sizes,
+            @RequestParam(required = false) String sort) {
+        
+        return ResponseEntity.ok(productService.getPaginatedProducts(
+            page, size, categoryIds, name, minPrice, maxPrice, minRating, sizes, sort));
+    }
 }

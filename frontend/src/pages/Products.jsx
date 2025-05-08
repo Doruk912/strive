@@ -131,18 +131,19 @@ const Products = () => {
     // Pagination state
     const [page, setPage] = useState(1);
     const productsPerPage = 12;
+    const [totalProducts, setTotalProducts] = useState(0);
     
     // Price range input fields
     const [priceInputs, setPriceInputs] = useState({
         min: '0',
-        max: '1000',
+        max: '2000',
     });
 
     // Filter state
     const [filters, setFilters] = useState({
         category: [],
         name: '',
-        priceRange: [0, 1000],
+        priceRange: [0, 2000],
         minRating: 0,
         sizes: []
     });
@@ -255,21 +256,42 @@ const Products = () => {
         }
     }, [location.search, categories, findCategoryById, expandedCategories]);
 
-    // Fetch categories and products
+    // Fetch categories and products - modified to implement pagination
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [productsRes, categoriesRes] = await Promise.all([
-                    axios.get('http://localhost:8080/api/products'),
-                    axios.get('http://localhost:8080/api/categories')
-                ]);
+                // Fetch only categories first
+                const categoriesResponse = await axios.get('http://localhost:8080/api/categories');
+                setCategories(categoriesResponse.data);
 
-                setProducts(productsRes.data);
-                setCategories(categoriesRes.data);
+                // Fetch paginated products with filters
+                const productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
+                    params: {
+                        page: page - 1, // Backend uses 0-based indexing
+                        size: productsPerPage,
+                        // Add filter parameters
+                        categoryIds: filters.category.length > 0 ? filters.category.join(',') : null,
+                        name: filters.name || null,
+                        minPrice: filters.priceRange[0] || null,
+                        maxPrice: filters.priceRange[1] || null,
+                        minRating: filters.minRating > 0 ? filters.minRating : null,
+                        sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
+                        sort: sortOption !== 'default' ? sortOption : null
+                    }
+                });
 
-                // Fetch ratings for each product
-                const ratingPromises = productsRes.data.map(product =>
+                setProducts(productsResponse.data.content);
+                setTotalProducts(productsResponse.data.totalElements);
+                
+                // If we got no products and we're not on page 1, go back to page 1
+                if (productsResponse.data.content.length === 0 && page > 1) {
+                    setPage(1);
+                    return; // Don't proceed with rating fetching, we'll refetch on page change
+                }
+                
+                // Fetch ratings only for current page products
+                const ratingPromises = productsResponse.data.content.map(product =>
                     axios.get(`http://localhost:8080/api/reviews/product/${product.id}/rating`)
                         .then(res => ({ id: product.id, rating: res.data }))
                         .catch(() => ({ id: product.id, rating: 0 }))
@@ -292,7 +314,7 @@ const Products = () => {
         };
 
         fetchData();
-    }, []);
+    }, [page, filters, sortOption, productsPerPage]);
 
     // Add a dedicated effect that runs when categories are loaded
     useEffect(() => {
@@ -375,143 +397,67 @@ const Products = () => {
         return products.filter(product => categoryIds.includes(product.categoryId)).length;
     }, [products, getAllSubcategoryIds]);
 
-    const filteredProducts = useMemo(() => {
-        let filtered = products;
-        
-        // Category filtering (existing logic)
-        if (filters.category.length > 0) {
-            // Get all selected categories
-            const selectedCategories = filters.category
-                .map(id => findCategoryById(id))
-                .filter(Boolean);
-
-            // If no valid categories found, return empty array
-            if (selectedCategories.length === 0) {
-                return [];
-            }
-
-            // Create a Set to store all category IDs to include
-            const includedCategoryIds = new Set();
-
-            // Function to check if a category is a parent of another
-            const isParentOf = (parent, child) => {
-                let current = child;
-                while (current && current.parent) {
-                    if (current.parent === parent.id) return true;
-                    current = findCategoryById(current.parent);
-                }
-                return false;
-            };
-
-            // First, find all "leaf" categories (most specific selections)
-            const leafCategories = selectedCategories.filter(category => {
-                return !selectedCategories.some(otherCategory => {
-                    return otherCategory.id !== category.id &&
-                        isParentOf(otherCategory, category);
-                });
-            });
-
-            // Add all leaf categories and their descendants
-            leafCategories.forEach(category => {
-                const allSubcategoryIds = getAllSubcategoryIds(category);
-                allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
-            });
-
-            // If no leaf categories found (only parents selected), include all selected parents and their descendants
-            if (leafCategories.length === 0) {
-                selectedCategories.forEach(category => {
-                    const allSubcategoryIds = getAllSubcategoryIds(category);
-                    allSubcategoryIds.forEach(id => includedCategoryIds.add(id));
-                });
-            }
-
-            // Filter products based on included categories
-            filtered = filtered.filter(product => includedCategoryIds.has(product.categoryId));
-        }
-        
-        // Name search filtering
-        if (filters.name.trim() !== '') {
-            const searchTerm = filters.name.toLowerCase().trim();
-            filtered = filtered.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) || 
-                (product.description && product.description.toLowerCase().includes(searchTerm))
-            );
-        }
-        
-        // Price range filtering
-        filtered = filtered.filter(product => 
-            product.price >= filters.priceRange[0] && 
-            product.price <= filters.priceRange[1]
-        );
-        
-        // Rating filtering
-        if (filters.minRating > 0) {
-            filtered = filtered.filter(product => 
-                (productRatings[product.id] || 0) >= filters.minRating
-            );
-        }
-        
-        // Size filtering
-        if (filters.sizes.length > 0) {
-            filtered = filtered.filter(product => {
-                if (!product.stocks || product.stocks.length === 0) return false;
-                return product.stocks.some(stock => 
-                    filters.sizes.includes(stock.size) && stock.stock > 0
-                );
-            });
-        }
-        
-        return filtered;
-    }, [products, filters, findCategoryById, getAllSubcategoryIds, productRatings]);
-
-    // Sort products function
-    const sortProducts = useCallback((products) => {
-        if (!products || products.length === 0) return [];
-        
-        switch (sortOption) {
-            case 'price-low-high':
-                return [...products].sort((a, b) => a.price - b.price);
-            case 'price-high-low':
-                return [...products].sort((a, b) => b.price - a.price);
-            case 'rating-high-low':
-                return [...products].sort((a, b) => (productRatings[b.id] || 0) - (productRatings[a.id] || 0));
-            case 'name-a-z':
-                return [...products].sort((a, b) => a.name.localeCompare(b.name));
-            case 'name-z-a':
-                return [...products].sort((a, b) => b.name.localeCompare(a.name));
-            default:
-                return products;
-        }
-    }, [sortOption, productRatings]);
-
-    // Apply sorting to filtered products
-    const sortedFilteredProducts = useMemo(() => {
-        return sortProducts(filteredProducts);
-    }, [filteredProducts, sortProducts]);
-    
-    // Update current products to use sorted filtered products
-    const currentProducts = useMemo(() => {
-        const indexOfLastProduct = page * productsPerPage;
-        const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-        return sortedFilteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-    }, [sortedFilteredProducts, page, productsPerPage]);
-    
     // Update total pages calculation
     const totalPages = useMemo(() => {
-        return Math.ceil(sortedFilteredProducts.length / productsPerPage);
-    }, [sortedFilteredProducts, productsPerPage]);
+        return Math.ceil(totalProducts / productsPerPage);
+    }, [totalProducts, productsPerPage]);
+
+    // Remove client-side filtering since we're doing server-side now
+    // Current products is directly from the API response
+    const currentProducts = products;
 
     // Handle sort change
     const handleSortChange = (event) => {
         setSortOption(event.target.value);
     };
 
-    // Get the max price for the price range slider
+    // Get the max price for the price range slider with a proper default
     const maxPrice = useMemo(() => {
-        if (products.length === 0) return 1000;
+        // If no products loaded yet, use a high default value
+        if (products.length === 0) return 2000;
+        
+        // Otherwise use the highest product price, with minimum of 2000
         const max = Math.max(...products.map(product => product.price));
-        return Math.ceil(max / 100) * 100; // Round up to nearest 100
+        // Round up to nearest 100 and ensure it's at least 2000
+        return Math.max(Math.ceil(max / 100) * 100, 2000); 
     }, [products]);
+
+    // Add a separate effect to fetch the highest price from all products (not just current page)
+    useEffect(() => {
+        // This effect should only run once on component mount
+        const fetchMaxPrice = async () => {
+            try {
+                // We can use a dedicated endpoint for this or use the min/max filters of existing ones
+                const response = await axios.get('http://localhost:8080/api/products/paginated', {
+                    params: {
+                        page: 0,
+                        size: 1,
+                        sort: 'price-high-low' // Sort by highest price first
+                    }
+                });
+                
+                // If we got products, update the max price inputs and filters
+                if (response.data.content && response.data.content.length > 0) {
+                    const highestPrice = response.data.content[0].price;
+                    const roundedMax = Math.max(Math.ceil(highestPrice / 100) * 100, 2000);
+                    
+                    setPriceInputs(prev => ({
+                        ...prev,
+                        max: roundedMax.toString()
+                    }));
+                    
+                    setFilters(prev => ({
+                        ...prev,
+                        priceRange: [prev.priceRange[0], roundedMax]
+                    }));
+                }
+            } catch (error) {
+                console.error('Error fetching max price:', error);
+            }
+        };
+        
+        fetchMaxPrice();
+    }, []); // Empty dependency array ensures it only runs once
 
     // Update the initial state of the price range when products load
     useEffect(() => {
@@ -702,6 +648,15 @@ const Products = () => {
         console.log('expandedCategories state:', expandedCategories);
     }, [expandedCategories]);
 
+    // Remove the client-side filtering and sorting since we moved to server-side
+    // Instead of calculating filteredProducts and sortedFilteredProducts, use direct API results
+    const displayedProductsCount = totalProducts;
+    const currentPageProductsCount = products.length;
+
+    // Display count now comes from the API response total
+    const showingStartIndex = products.length > 0 ? (page - 1) * productsPerPage + 1 : 0;
+    const showingEndIndex = showingStartIndex + products.length - 1;
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -755,7 +710,7 @@ const Products = () => {
                     </Typography>
                     
                     {/* Improved sorting component with entire field clickable */}
-                    {sortedFilteredProducts.length > 0 && (
+                    {products.length > 0 && (
                         <Box sx={{ 
                             display: 'flex', 
                             alignItems: 'center',
@@ -1348,7 +1303,7 @@ const Products = () => {
                     </Box>
 
                     <Box sx={{ flex: 1 }}>
-                        {sortedFilteredProducts.length > 0 ? (
+                        {products.length > 0 ? (
                             <>
                                 <Box sx={{ 
                                     mb: 2, 
@@ -1358,7 +1313,7 @@ const Products = () => {
                                     gap: 1
                                 }}>
                                     <Chip
-                                        label={`${sortedFilteredProducts.length} products found`}
+                                        label={`${displayedProductsCount} products found`}
                                         size="small"
                                         sx={{ 
                                             backgroundColor: '#f0f0f0',
@@ -1391,12 +1346,11 @@ const Products = () => {
                                             order: { xs: 3, sm: 0 },
                                         }}
                                     >
-                                        Showing {Math.min(sortedFilteredProducts.length, (page - 1) * productsPerPage + 1)}-
-                                        {Math.min(page * productsPerPage, sortedFilteredProducts.length)} of {sortedFilteredProducts.length}
+                                        {products.length > 0 ? `Showing ${showingStartIndex}-${showingEndIndex} of ${displayedProductsCount}` : 'No products found'}
                                     </Typography>
                                 </Box>
                                 <Grid container spacing={{ xs: 2, md: 3 }}>
-                                    {currentProducts.map((product) => (
+                                    {products.map((product) => (
                                         <Grid item xs={6} sm={6} md={4} lg={3} key={product.id}>
                                             <Card
                                                 onClick={() => navigate(`/product/${product.id}`)}
