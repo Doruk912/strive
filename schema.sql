@@ -542,16 +542,42 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, 43);
 
 -- Camping & Hiking - Tents (category_id: 38)
--- Looking at the schema, Tents is category 38
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Ultralight 2-Person Backpacking Tent', 'Compact and lightweight tent ideal for hiking trips with quick setup design', 249.99, 38),
 ('Family Camping Tent - 4 Person', 'Spacious 4-person tent with weather protection and separate sleeping areas', 299.99, 38);
 
 -- Camping & Hiking - Backpacks (category_id: 39)
--- Looking at the schema, Backpacks is category 39
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Expedition Trekking Backpack - Ruby Red', 'Durable 55L backpack with ergonomic harness system and multiple compartments', 159.99, 39),
 ('Adventure Trail Backpack - Tactical Black', 'Weather-resistant 45L backpack with hydration compatibility and load stabilizers', 149.99, 39);
+
+-- Water Sports - Kayaking
+INSERT INTO products (name, description, price, category_id) VALUES
+('Recreational Kayak Helmet - Orange', 'Lightweight water sports helmet with adjustable fit system', 69.99, 40),
+('Professional Kayak Paddle', 'Lightweight and durable paddle with ergonomic grip and efficient blade design', 129.99, 40),
+('Performance Kayak Life Vest - Red', 'Coast guard approved PFD with multiple adjustment points for secure fit', 89.99, 40);
+
+-- Winter Sports - Skiing (category_id: 42)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Premium Ski Helmet', 'Durable and lightweight helmet with adjustable ventilation and comfortable fit', 89.99, 42),
+('Insulated Ski Gloves', 'Waterproof and insulated gloves with reinforced palm for durability', 49.99, 42),
+('Performance Ski Goggles', 'Anti-fog ski goggles with wide field of vision and UV protection', 79.99, 42),
+('Alpine Down Jacket - Red', 'Insulated down jacket designed for extreme mountain conditions', 189.99, 42),
+('Alpine Down Jacket - Black', 'Premium insulated jacket with water-resistant exterior and thermal lining', 189.99, 42);
+
+-- Winter Sports - Snowboarding (category_id: 43)
+INSERT INTO products (name, description, price, category_id) VALUES
+('All-Mountain Snowboard - Red', 'Versatile snowboard for all terrain conditions with responsive flex pattern', 349.99, 43),
+('Freestyle Snowboard - Black', 'Flexible snowboard designed for tricks and park riding with twin-tip design', 329.99, 43),
+('Performance Snowboard - Green', 'High-performance snowboard with directional shape for speed and control', 379.99, 43),
+('Alpine Snowboarding Boots - Red', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 43),
+('Alpine Snowboarding Boots - Blue', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 43),
+('Performance Snowboard Pants - Blue', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 43),
+('Professional Snowoard Pants - Black', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 43);
+
+-- Water Sports - Swimming (category_id: 40)
+INSERT INTO products (name, description, price, category_id) VALUES
+('Competition Women\'s Swimsuit - Red', 'High-performance racing swimsuit with chlorine-resistant fabric', 79.99, 40);
 
 -- Add stock information for these new products
 -- This would require knowing the product IDs assigned by the auto-increment, 
