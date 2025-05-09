@@ -3,6 +3,9 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
+// Create a custom event for logout
+export const LOGOUT_EVENT = 'app:logout';
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
         const savedUser = localStorage.getItem('user');
@@ -36,6 +39,10 @@ export const AuthProvider = ({ children }) => {
             
             // Remove authorization header
             delete axios.defaults.headers.common['Authorization'];
+            
+            // Dispatch a custom event to notify other components (like CartContext)
+            window.dispatchEvent(new Event(LOGOUT_EVENT));
+            
             resolve();
         });
     };

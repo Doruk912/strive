@@ -1,5 +1,5 @@
-// src/context/CartContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { LOGOUT_EVENT } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -42,8 +42,22 @@ export const CartProvider = ({ children }) => {
             }
         };
 
+        // Handle logout event from AuthContext
+        const handleLogout = () => {
+            setCartItems([]);
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                localStorage.removeItem(`cart_${userId}`);
+            }
+        };
+
         window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        window.addEventListener(LOGOUT_EVENT, handleLogout);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener(LOGOUT_EVENT, handleLogout);
+        };
     }, []);
 
     const addToCart = async (product, quantity = 1, selectedSize = null) => {
