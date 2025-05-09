@@ -34,10 +34,10 @@ import axios from 'axios';
 import CartNotification from '../components/CartNotification';
 
 const ProductDetail = () => {
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
-    const { addToCart, cartItems } = useCart();
-    const { favoriteItems, addToFavorites, removeFromFavorites } = useFavorites();
+    const {addToCart, cartItems} = useCart();
+    const {favoriteItems, addToFavorites, removeFromFavorites} = useFavorites();
     const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('');
@@ -59,7 +59,7 @@ const ProductDetail = () => {
                     axios.get(`http://localhost:8080/api/reviews/product/${id}`),
                     axios.get(`http://localhost:8080/api/reviews/product/${id}/rating`)
                 ]);
-                
+
                 setProduct(productRes.data);
                 setReviews(reviewsRes.data);
                 setAverageRating(ratingRes.data || 0);
@@ -92,7 +92,7 @@ const ProductDetail = () => {
 
     const findCategoryPath = (categories, targetId) => {
         const path = [];
-        
+
         const findPath = (cats, id) => {
             for (const cat of cats) {
                 if (cat.id === id) {
@@ -114,7 +114,7 @@ const ProductDetail = () => {
     };
 
     const totalStock = product?.stocks?.reduce((total, stock) => total + (stock.stock || 0), 0) || 0;
-    const isInCart = cartItems.some(item => 
+    const isInCart = cartItems.some(item =>
         item.id === product?.id && item.selectedSize === selectedSize
     );
     const isFavorite = favoriteItems.some(item => item.id === product?.id);
@@ -171,7 +171,7 @@ const ProductDetail = () => {
 
     const toggleFavorite = () => {
         if (!product) return;
-        
+
         if (isFavorite) {
             removeFromFavorites(product.id);
         } else {
@@ -190,8 +190,8 @@ const ProductDetail = () => {
     if (loading) {
         return (
             <Container>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                    <CircularProgress />
+                <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
+                    <CircularProgress/>
                 </Box>
             </Container>
         );
@@ -200,12 +200,12 @@ const ProductDetail = () => {
     if (error) {
         return (
             <Container>
-                <Box sx={{ p: 3 }}>
+                <Box sx={{p: 3}}>
                     <Alert severity="error">{error}</Alert>
                     <Button
                         variant="contained"
                         onClick={() => navigate('/shop')}
-                        sx={{ mt: 2 }}
+                        sx={{mt: 2}}
                     >
                         Return to Shop
                     </Button>
@@ -217,12 +217,12 @@ const ProductDetail = () => {
     if (!product) {
         return (
             <Container>
-                <Box sx={{ p: 3 }}>
+                <Box sx={{p: 3}}>
                     <Alert severity="warning">Product not found</Alert>
                     <Button
                         variant="contained"
                         onClick={() => navigate('/shop')}
-                        sx={{ mt: 2 }}
+                        sx={{mt: 2}}
                     >
                         Return to Shop
                     </Button>
@@ -234,16 +234,16 @@ const ProductDetail = () => {
     const maxSteps = product.images?.length || 0;
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="lg" sx={{py: 4}}>
             <Breadcrumbs
-                separator={<NavigateNextIcon fontSize="small" />}
-                sx={{ mb: 4 }}
+                separator={<NavigateNextIcon fontSize="small"/>}
+                sx={{mb: 4}}
             >
                 <Link
                     component="button"
                     onClick={() => navigate('/')}
                     color="inherit"
-                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    sx={{textDecoration: 'none', '&:hover': {textDecoration: 'underline'}}}
                 >
                     Home
                 </Link>
@@ -253,7 +253,7 @@ const ProductDetail = () => {
                         component="button"
                         onClick={() => navigate(`/products?category=${category.id}`)}
                         color="inherit"
-                        sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                        sx={{textDecoration: 'none', '&:hover': {textDecoration: 'underline'}}}
                     >
                         {category.name}
                     </Link>
@@ -276,7 +276,7 @@ const ProductDetail = () => {
                             <>
                                 <Box
                                     sx={{
-                                        height: { xs: '300px', md: '500px' },
+                                        height: {xs: '300px', md: '500px'},
                                         width: '100%',
                                         position: 'relative',
                                     }}
@@ -314,7 +314,7 @@ const ProductDetail = () => {
                                                 disabled={activeStep === maxSteps - 1}
                                             >
                                                 Next
-                                                <KeyboardArrowRight />
+                                                <KeyboardArrowRight/>
                                             </Button>
                                         }
                                         backButton={
@@ -323,7 +323,7 @@ const ProductDetail = () => {
                                                 onClick={handleBack}
                                                 disabled={activeStep === 0}
                                             >
-                                                <KeyboardArrowLeft />
+                                                <KeyboardArrowLeft/>
                                                 Back
                                             </Button>
                                         }
@@ -333,7 +333,7 @@ const ProductDetail = () => {
                         )}
                     </Box>
                     {maxSteps > 1 && (
-                        <Box sx={{ display: 'flex', gap: 1, mt: 2, overflowX: 'auto', pb: 1 }}>
+                        <Box sx={{display: 'flex', gap: 1, mt: 2, overflowX: 'auto', pb: 1}}>
                             {product.images.map((image, index) => (
                                 <Box
                                     key={index}
@@ -366,69 +366,76 @@ const ProductDetail = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <Box sx={{ position: 'relative' }}>
-                        <IconButton
-                            onClick={toggleFavorite}
-                            sx={{
-                                position: 'absolute',
-                                right: 0,
-                                top: 0,
-                                color: isFavorite ? 'error.main' : 'action.active',
-                                transition: 'transform 0.2s ease',
-                                '&:hover': {
-                                    transform: 'scale(1.1)',
-                                },
-                            }}
-                        >
-                            {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                        </IconButton>
+                    <Box>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            mb: 2
+                        }}>
+                            <Box sx={{flex: 1, pr: 2}}>
+                                <Typography variant="h4" component="h1" gutterBottom>
+                                    {product.name}
+                                </Typography>
+                            </Box>
 
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            {product.name}
-                        </Typography>
+                            <IconButton
+                                onClick={toggleFavorite}
+                                sx={{
+                                    color: isFavorite ? 'error.main' : 'action.active',
+                                    transition: 'transform 0.2s ease',
+                                    '&:hover': {
+                                        transform: 'scale(1.1)',
+                                    },
+                                }}
+                            >
+                                {isFavorite ? <FavoriteIcon/> : <FavoriteBorderIcon/>}
+                            </IconButton>
+                        </Box>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Rating value={averageRating} readOnly precision={0.5} />
-                            <Typography variant="body2" sx={{ ml: 1 }}>
+                        <Box sx={{display: 'flex', alignItems: 'center', mb: 2}}>
+                            <Rating value={averageRating} readOnly precision={0.5}/>
+                            <Typography variant="body2" sx={{ml: 1}}>
                                 ({averageRating.toFixed(1)} / 5)
                             </Typography>
-                            <Typography variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
+                            <Typography variant="body2" sx={{ml: 1, color: 'text.secondary'}}>
                                 ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
                             </Typography>
                         </Box>
 
-                        <Typography variant="h5" sx={{ mb: 2 }}>
+                        <Typography variant="h5" sx={{mb: 2}}>
                             ${Number(product.price).toFixed(2)}
                         </Typography>
 
-                        <Typography variant="body1" sx={{ mb: 3 }}>
+                        <Typography variant="body1" sx={{mb: 3}}>
                             {product.description}
                         </Typography>
 
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                                Category: <span style={{ color: '#666' }}>{product.categoryName}</span>
+                        <Box sx={{mb: 3}}>
+                            <Typography variant="subtitle1" sx={{mb: 1}}>
+                                Category: <span style={{color: '#666'}}>{product.categoryName}</span>
                             </Typography>
                             <Typography variant="subtitle1">
-                                Available: <span style={{ color: totalStock > 0 ? '#4caf50' : '#f44336', fontWeight: 500 }}>
-                                    {totalStock} units
-                                </span>
+                                Available: <span
+                                style={{color: totalStock > 0 ? '#4caf50' : '#f44336', fontWeight: 500}}>
+                                {totalStock} units
+                            </span>
                             </Typography>
                         </Box>
 
-                        <Divider sx={{ my: 3 }} />
+                        <Divider sx={{my: 3}}/>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, mb: 3}}>
                             <Box>
-                                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+                                <Typography variant="subtitle1" gutterBottom sx={{fontWeight: 500}}>
                                     Select Size
                                 </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1}}>
                                     {getSortedSizes(product.stocks || []).map((stock) => (
                                         <Button
                                             key={stock.size}
                                             variant={selectedSize === stock.size ? "contained" : "outlined"}
-                                            onClick={() => handleSizeChange({ target: { value: stock.size } })}
+                                            onClick={() => handleSizeChange({target: {value: stock.size}})}
                                             disabled={stock.stock === 0}
                                             sx={{
                                                 minWidth: '60px',
@@ -450,19 +457,20 @@ const ProductDetail = () => {
                                     ))}
                                 </Box>
                                 {sizeError && (
-                                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                                    <Typography variant="caption" color="error" sx={{mt: 1, display: 'block'}}>
                                         Please select a size
                                     </Typography>
                                 )}
                                 {selectedSize && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                        {product.stocks?.find(s => s.size === selectedSize)?.stock || 0} items available in this size
+                                    <Typography variant="caption" color="text.secondary" sx={{mt: 1, display: 'block'}}>
+                                        {product.stocks?.find(s => s.size === selectedSize)?.stock || 0} items available
+                                        in this size
                                     </Typography>
                                 )}
                             </Box>
 
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <FormControl sx={{ width: 100 }}>
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                                <FormControl sx={{width: 100}}>
                                     <InputLabel>Qty</InputLabel>
                                     <Select
                                         value={quantity}
@@ -494,9 +502,9 @@ const ProductDetail = () => {
                                         },
                                     }}
                                 >
-                                    {totalStock === 0 ? 'Out of Stock' : 
-                                     isInCart ? 'Already in Cart' : 
-                                     'Add to Cart'}
+                                    {totalStock === 0 ? 'Out of Stock' :
+                                        isInCart ? 'Already in Cart' :
+                                            'Add to Cart'}
                                 </Button>
                             </Box>
                         </Box>
@@ -504,18 +512,17 @@ const ProductDetail = () => {
                 </Grid>
             </Grid>
 
-            {/* Reviews Section */}
-            <Box sx={{ mt: 6 }}>
-                <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+            <Box sx={{mt: 6}}>
+                <Typography variant="h5" gutterBottom sx={{mb: 3}}>
                     Customer Reviews ({reviews.length})
                 </Typography>
                 {reviews.length > 0 ? (
                     <Grid container spacing={3}>
                         {reviews.map((review) => (
                             <Grid item xs={12} key={review.id}>
-                                <Paper sx={{ p: 3 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                        <Avatar sx={{ mr: 2 }}>{review.userName?.[0] || 'U'}</Avatar>
+                                <Paper sx={{p: 3}}>
+                                    <Box sx={{display: 'flex', alignItems: 'center', mb: 2}}>
+                                        <Avatar sx={{mr: 2}}>{review.userName?.[0] || 'U'}</Avatar>
                                         <Box>
                                             <Typography variant="subtitle1">
                                                 {review.userName || 'Anonymous'}
@@ -524,11 +531,11 @@ const ProductDetail = () => {
                                                 {new Date(review.createdAt).toLocaleDateString()}
                                             </Typography>
                                         </Box>
-                                        <Rating 
-                                            value={review.rating} 
-                                            readOnly 
-                                            size="small" 
-                                            sx={{ ml: 'auto' }}
+                                        <Rating
+                                            value={review.rating}
+                                            readOnly
+                                            size="small"
+                                            sx={{ml: 'auto'}}
                                         />
                                     </Box>
                                     <Typography variant="body1">
