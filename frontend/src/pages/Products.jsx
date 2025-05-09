@@ -261,37 +261,96 @@ const Products = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                let productsResponse;
+                let totalResults;
+                let totalPagesFromResponse;
+
                 // Fetch only categories first
                 const categoriesResponse = await axios.get('http://localhost:8080/api/categories');
                 setCategories(categoriesResponse.data);
 
-                // Fetch paginated products with filters
-                const productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
-                    params: {
-                        page: page - 1, // Backend uses 0-based indexing
-                        size: productsPerPage,
-                        // Add filter parameters
-                        categoryIds: filters.category.length > 0 ? filters.category.join(',') : null,
-                        name: filters.name || null,
-                        minPrice: filters.priceRange[0] || null,
-                        maxPrice: filters.priceRange[1] || null,
-                        minRating: filters.minRating > 0 ? filters.minRating : null,
-                        sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
-                        sort: sortOption !== 'default' ? sortOption : null
-                    }
-                });
-
-                setProducts(productsResponse.data.content);
-                setTotalProducts(productsResponse.data.totalElements);
-                
-                // If we got no products and we're not on page 1, go back to page 1
-                if (productsResponse.data.content.length === 0 && page > 1) {
-                    setPage(1);
-                    return; // Don't proceed with rating fetching, we'll refetch on page change
+                // Expand all subcategories for selected parent categories
+                if (filters.category.length > 0) {
+                    let selectedCategoryIds = [...filters.category];
+                    
+                    // For each selected category, get all its descendants
+                    filters.category.forEach(categoryId => {
+                        const category = categoriesResponse.data.find(cat => 
+                            cat.id === categoryId || 
+                            (cat.children && cat.children.some(child => child.id === categoryId))
+                        );
+                        
+                        if (category) {
+                            // If we found this category directly
+                            if (category.id === categoryId && category.children) {
+                                // Get all descendants and add them to the filter
+                                const descendants = getAllDescendantIds(category);
+                                selectedCategoryIds = [...selectedCategoryIds, ...descendants];
+                            }
+                            // If it's a child in the top-level categories
+                            else if (category.children) {
+                                const childCategory = category.children.find(child => child.id === categoryId);
+                                if (childCategory && childCategory.children) {
+                                    const descendants = getAllDescendantIds(childCategory);
+                                    selectedCategoryIds = [...selectedCategoryIds, ...descendants];
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Remove duplicates
+                    selectedCategoryIds = [...new Set(selectedCategoryIds)];
+                    
+                    // Use this expanded list for the API call
+                    // Fetch paginated products with expanded category filters
+                    productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
+                        params: {
+                            page: page - 1, // Backend uses 0-based indexing
+                            size: productsPerPage,
+                            // Add filter parameters
+                            categoryIds: selectedCategoryIds.join(','),
+                            name: filters.name || null,
+                            minPrice: filters.priceRange[0] || null,
+                            maxPrice: filters.priceRange[1] || null,
+                            minRating: filters.minRating > 0 ? filters.minRating : null,
+                            sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
+                            sort: sortOption !== 'default' ? sortOption : null
+                        }
+                    });
+                } else {
+                    // Regular fetch without category expansion
+                    productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
+                        params: {
+                            page: page - 1,
+                            size: productsPerPage,
+                            name: filters.name || null,
+                            minPrice: filters.priceRange[0] || null,
+                            maxPrice: filters.priceRange[1] || null,
+                            minRating: filters.minRating > 0 ? filters.minRating : null,
+                            sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
+                            sort: sortOption !== 'default' ? sortOption : null
+                        }
+                    });
                 }
                 
-                // Fetch ratings only for current page products
-                const ratingPromises = productsResponse.data.content.map(product =>
+                totalResults = productsResponse.data.totalElements;
+                totalPagesFromResponse = Math.ceil(totalResults / productsPerPage);
+                
+                // If we're on a page that no longer exists after filtering
+                if (totalResults > 0 && page > totalPagesFromResponse) {
+                    // Silently update page state without triggering another fetch yet
+                    setPage(totalPagesFromResponse);
+                    // Don't set other state yet - the page change will trigger another fetch
+                    setLoading(false);
+                    return;
+                }
+
+                setProducts(productsResponse.data.content);
+                setTotalProducts(totalResults);
+                
+                // Fetch ratings only for current page products - using the updated products state
+                const currentProducts = productsResponse.data.content;
+                const ratingPromises = currentProducts.map(product =>
                     axios.get(`http://localhost:8080/api/reviews/product/${product.id}/rating`)
                         .then(res => ({ id: product.id, rating: res.data }))
                         .catch(() => ({ id: product.id, rating: 0 }))
@@ -338,6 +397,9 @@ const Products = () => {
     }, [categories, location.search]);
 
     const handleFilterChange = (filterType, value) => {
+        // Always reset to page 1 when applying a new filter
+        setPage(1);
+        
         if (filterType !== 'category') {
             setFilters(prev => ({
                 ...prev,
@@ -408,6 +470,8 @@ const Products = () => {
 
     // Handle sort change
     const handleSortChange = (event) => {
+        // Reset to page 1 when changing sort order
+        setPage(1);
         setSortOption(event.target.value);
     };
 
@@ -461,19 +525,23 @@ const Products = () => {
 
     // Update the initial state of the price range when products load
     useEffect(() => {
-        if (products.length > 0) {
-            // Only update the inputs, not the filters on initial load
+        // Only update when maxPrice changes, not when products.length changes
             setPriceInputs({
                 min: '0',
                 max: maxPrice.toString()
             });
-            // Initialize the filters with the full range - will only change when "Apply" is clicked
-            setFilters(prev => ({
+        // Only update filters when maxPrice changes significantly
+        setFilters(prev => {
+            // Don't update if the current max price is close enough
+            if (Math.abs(prev.priceRange[1] - maxPrice) < 100) {
+                return prev;
+            }
+            return {
                 ...prev,
-                priceRange: [0, maxPrice]
-            }));
-        }
-    }, [maxPrice, products.length]);
+                priceRange: [prev.priceRange[0], maxPrice]
+            };
+        });
+    }, [maxPrice]); // Remove products.length dependency
     
     // Handle page change
     const handlePageChange = (event, value) => {
@@ -569,20 +637,30 @@ const Products = () => {
             min = max;
         }
         
+        // Ensure max is at least 1 to avoid division by zero issues
+        max = Math.max(max, 1);
+        
         // Update UI state to reflect validated values
         setPriceInputs({
             min: min.toString(),
             max: max.toString()
         });
         
+        // Only apply to filters if values have actually changed
+        if (min !== filters.priceRange[0] || max !== filters.priceRange[1]) {
+            // Reset to page 1 when changing filters to avoid pagination issues
+            setPage(1);
         // Apply to filters
         setFilters(prev => ({
             ...prev,
             priceRange: [min, max]
         }));
+        }
     };
 
     const handleNameFilterChange = (event) => {
+        // Reset to page 1 when search filter changes
+        setPage(1);
         setFilters(prev => ({
             ...prev,
             name: event.target.value
@@ -590,6 +668,8 @@ const Products = () => {
     };
 
     const handleRatingChange = (value) => {
+        // Reset to page 1 when rating filter changes
+        setPage(1);
         setFilters(prev => ({
             ...prev,
             minRating: value
@@ -597,6 +677,8 @@ const Products = () => {
     };
 
     const handleSizeFilterChange = (size) => {
+        // Reset to page 1 when size filter changes
+        setPage(1);
         setFilters(prev => ({
             ...prev,
             sizes: prev.sizes.includes(size)
@@ -656,6 +738,42 @@ const Products = () => {
     // Display count now comes from the API response total
     const showingStartIndex = products.length > 0 ? (page - 1) * productsPerPage + 1 : 0;
     const showingEndIndex = showingStartIndex + products.length - 1;
+
+    // Add a clearAllFilters function to properly handle clearing filters
+    const clearAllFilters = () => {
+        // Reset to page 1
+        setPage(1);
+        
+        // Reset all filters to initial values
+        setFilters({ 
+            category: [], 
+            name: '', 
+            priceRange: [0, maxPrice], 
+            minRating: 0, 
+            sizes: [] 
+        });
+        
+        // Also reset price inputs to match
+        setPriceInputs({ 
+            min: '0', 
+            max: maxPrice.toString() 
+        });
+    };
+
+    // Helper function to get all descendant category IDs - define outside useEffect for better scope
+    const getAllDescendantIds = useCallback((category) => {
+        let ids = [];
+        if (!category || !category.children) return ids;
+        
+        category.children.forEach(child => {
+            ids.push(child.id);
+            if (child.children) {
+                ids = [...ids, ...getAllDescendantIds(child)];
+            }
+        });
+        
+        return ids;
+    }, []);
 
     if (loading) {
         return (
@@ -1266,21 +1384,7 @@ const Products = () => {
                                     <Button
                                         variant="outlined"
                                         fullWidth
-                                        onClick={() => {
-                                            // Reset all filters
-                                            setFilters({ 
-                                                category: [], 
-                                                name: '', 
-                                                priceRange: [0, maxPrice], 
-                                                minRating: 0, 
-                                                sizes: [] 
-                                            });
-                                            // Also reset price inputs to match
-                                            setPriceInputs({ 
-                                                min: '0', 
-                                                max: maxPrice.toString() 
-                                            });
-                                        }}
+                                        onClick={clearAllFilters}
                                         sx={{
                                             color: primaryColor,
                                             borderColor: primaryColor,
@@ -1558,19 +1662,7 @@ const Products = () => {
                                     variant="outlined"
                                     color="primary"
                                     sx={{ mt: 2 }}
-                                    onClick={() => {
-                                        setFilters({ 
-                                            category: [], 
-                                            name: '', 
-                                            priceRange: [0, maxPrice], 
-                                            minRating: 0, 
-                                            sizes: [] 
-                                        });
-                                        setPriceInputs({ 
-                                            min: '0', 
-                                            max: maxPrice.toString() 
-                                        });
-                                    }}
+                                    onClick={clearAllFilters}
                                 >
                                     Clear All Filters
                                 </Button>

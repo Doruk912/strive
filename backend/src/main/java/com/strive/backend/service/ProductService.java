@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 @Service
 public class ProductService {
@@ -315,7 +316,7 @@ public class ProductService {
             List.of(categoryIdsParam.split(",")).stream()
                 .map(Integer::parseInt)
                 .collect(Collectors.toList()) : 
-            null;
+            new ArrayList<>();
         
         List<String> sizesList = sizesParam != null ? 
             List.of(sizesParam.split(",")) : 
@@ -328,8 +329,7 @@ public class ProductService {
         List<Product> filteredProducts = allProducts.stream()
             .filter(product -> {
                 // Category filter
-                if (categoryIds != null && !categoryIds.isEmpty() && 
-                    !categoryIds.contains(product.getCategoryId())) {
+                if (!categoryIds.isEmpty() && !categoryIds.contains(product.getCategoryId())) {
                     return false;
                 }
                 

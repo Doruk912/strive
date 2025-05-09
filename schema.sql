@@ -328,7 +328,10 @@ INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
 
 -- Winter Sports subcategories
 ('Skiing', 37, NULL, NULL),
-('Snowboarding', 37, NULL, NULL);
+('Snowboarding', 37, NULL, NULL),
+
+-- Team Sports - Track & Field (Add this as a new category under Individual Sports)
+('Track & Field', 24, NULL, NULL);
 
 INSERT INTO featured_categories (category_id, display_order) VALUES
 (9, 1),   -- Men's Jacekts
@@ -444,12 +447,12 @@ INSERT INTO products (name, description, price, category_id) VALUES
 INSERT INTO products (name, description, price, category_id) VALUES
 ('TrailMaster Waterproof Hiking Boots', 'Rugged hiking boots with waterproof membrane and advanced grip technology', 159.99, 11);
 
--- Men's Tracksuits (Add to Men's Clothing - category_id: 5)
+-- Men's Clothing (Add to Men's Clothing - category_id: 5)
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Performance Athletic Tracksuit - Navy Blue', 'Breathable tracksuit with moisture-wicking technology and ergonomic design', 89.99, 5),
 ('Elite Training Tracksuit - Black', 'Premium tracksuit with reflective details and four-way stretch fabric', 99.99, 5);
 
--- Women's Tracksuits (Add to Women's Clothing - category_id: 14)
+-- Women's Clothing (Add to Women's Clothing - category_id: 14)
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Active Lifestyle Tracksuit - Ruby Red', 'Stylish tracksuit with quick-dry technology and flattering silhouette', 94.99, 14),
 ('Essential Training Tracksuit - Beige', 'Comfortable tracksuit with soft fabric and subtle brand detailing', 89.99, 14);
@@ -511,7 +514,7 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Women\'s Essential Training Set - Beige', 'Stylish workout set with supportive top and high-waisted leggings', 74.99, 32),
 ('Women\'s Premium Fitness Set - Sage Green', 'Eco-friendly fitness set with buttery-soft fabric and seamless construction', 89.99, 32);
 
--- Fitness - Yoga (category_id: 26)
+-- Yoga (category_id: 26)
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Premium Yoga Mat - 6mm', 'Extra thick yoga mat with non-slip surface and eco-friendly materials', 44.99, 26),
 ('Deluxe Yoga Starter Kit - Lilac', 'Complete yoga set including mat, blocks, strap, and carrying bag in calming lilac', 79.99, 26),
@@ -534,23 +537,18 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Competition Men\'s Swimming Jammers', 'Professional swimming shorts with water-repellent technology and secure fit', 49.99, 40),
 ('Aqua Vision Swimming Goggles', 'Anti-fog swimming goggles with UV protection and adjustable silicone strap', 29.99, 40);
 
--- Team Sports - Track & Field (Add this as a new category under Individual Sports)
-INSERT INTO categories (name, parent_id, image_data, image_type) VALUES
-('Track & Field', 24, NULL, NULL);
-
--- Get the new category ID (assuming it will be the next ID after current max)
-SET @track_field_id = (SELECT MAX(id) FROM categories);
-
--- Add the spike shoes to this new category
+-- Track & Field (category_id: 43 - We ensure this matches with the inserted category)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, @track_field_id);
+('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, 43);
 
 -- Camping & Hiking - Tents (category_id: 38)
+-- Looking at the schema, Tents is category 38
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Ultralight 2-Person Backpacking Tent', 'Compact and lightweight tent ideal for hiking trips with quick setup design', 249.99, 38),
 ('Family Camping Tent - 4 Person', 'Spacious 4-person tent with weather protection and separate sleeping areas', 299.99, 38);
 
 -- Camping & Hiking - Backpacks (category_id: 39)
+-- Looking at the schema, Backpacks is category 39
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Expedition Trekking Backpack - Ruby Red', 'Durable 55L backpack with ergonomic harness system and multiple compartments', 159.99, 39),
 ('Adventure Trail Backpack - Tactical Black', 'Weather-resistant 45L backpack with hydration compatibility and load stabilizers', 149.99, 39);
