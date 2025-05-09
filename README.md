@@ -1,12 +1,12 @@
 # Todo List
-* Add images to all products
-* Fix categories of some products
+* Check and fix categories
 * Improve header categories ui
 * Fix header responsiveness on smaller screens
 * Fix issues with cart and favorites when logging out
 * Revisit product cards
 * Ordering without logging in
 * Product details page breadcrumb
+* Prompt user to login if jwt is expired
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
