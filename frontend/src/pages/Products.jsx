@@ -106,6 +106,19 @@ const Products = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
+
+    // Extract category filter from URL immediately
+    const initialCategoryId = (() => {
+        const categoryParam = searchParams.get('category');
+        if (categoryParam) {
+            const categoryId = parseInt(categoryParam, 10);
+            if (!isNaN(categoryId)) {
+                return categoryId;
+            }
+        }
+        return null;
+    })();
+    
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -132,9 +145,9 @@ const Products = () => {
         max: '2000',
     });
 
-    // Filter state
+    // Filter state - Initialize with category from URL if available
     const [filters, setFilters] = useState({
-        category: [],
+        category: initialCategoryId ? [initialCategoryId] : [],
         name: '',
         priceRange: [0, 2000],
         minRating: 0,
@@ -143,6 +156,12 @@ const Products = () => {
 
     // Add a temporary name input state
     const [nameInput, setNameInput] = useState('');
+    
+    // State for tracking if initial filters were applied
+    // const [initialFiltersApplied, setInitialFiltersApplied] = useState(initialCategoryId !== null);
+    
+    // Add state to track URL category parameter
+    // const [urlCategoryFilter, setUrlCategoryFilter] = useState(initialCategoryId);
 
     // Find a category by ID in the entire category tree (recursive)
     const findCategoryById = useCallback((categoryId) => {
@@ -192,8 +211,17 @@ const Products = () => {
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
         const parentCategoryParam = params.get('parentCategory');
+        const parentChainParam = params.get('parentChain');
         const nameParam = params.get('name');
         const expandFiltersParam = params.get('expandFilters');
+
+        // Store the category from URL for persistence
+        if (categoryParam) {
+            const categoryId = parseInt(categoryParam, 10);
+            if (!isNaN(categoryId)) {
+                // setUrlCategoryFilter(categoryId);
+            }
+        }
 
         // Only process filters when categories are loaded
         if (categories.length > 0) {
@@ -214,8 +242,27 @@ const Products = () => {
                                 [parentId]: true
                             }));
                         }
-                    } else {
-                        // If parent is not specified but category exists
+                    } 
+                    // Handle parent chain parameter (from Home page)
+                    else if (parentChainParam) {
+                        const parentChain = parentChainParam.split(',').map(id => parseInt(id, 10));
+                        // Expand all parent categories in the chain
+                        const expansionUpdates = {};
+                        parentChain.forEach(id => {
+                            if (!isNaN(id)) {
+                                expansionUpdates[id] = true;
+                            }
+                        });
+                        
+                        if (Object.keys(expansionUpdates).length > 0) {
+                            setExpandedCategories(prev => ({
+                                ...prev,
+                                ...expansionUpdates
+                            }));
+                        }
+                    }
+                    // If neither parent params are specified but category exists
+                    else {
                         const selectedCategory = findCategoryById(categoryId);
                         if (selectedCategory && selectedCategory.parent) {
                             setExpandedCategories(prev => ({
@@ -233,6 +280,7 @@ const Products = () => {
             }
 
             if (Object.keys(filterUpdates).length > 0) {
+                console.log('Setting filters from URL:', filterUpdates);
                 setFilters(prev => ({
                     ...prev,
                     ...filterUpdates
@@ -246,11 +294,26 @@ const Products = () => {
         }
     }, [location.search, categories, findCategoryById]); // Reduced dependencies
 
+    // Add an effect to ensure URL category filter persists
+    useEffect(() => {
+        // Only run if we have a URL category filter and the current filters don't include it
+        if (initialCategoryId && 
+            filters.category && 
+            !filters.category.includes(initialCategoryId)) {
+            
+            console.log('Restoring URL category filter:', initialCategoryId);
+            // Restore the URL category filter
+            setFilters(prev => ({
+                ...prev,
+                category: [initialCategoryId]
+            }));
+        }
+    }, [initialCategoryId, filters]);
+
     // Fetch categories and products - modified to implement pagination
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Remove setLoading(true) from here as it's causing issues with infinite loading
                 let productsResponse;
                 let totalResults;
                 let totalPagesFromResponse;
@@ -290,6 +353,9 @@ const Products = () => {
                     selectedCategoryIds = [...new Set(selectedCategoryIds)];
                     params.categoryIds = selectedCategoryIds.join(',');
                 }
+
+                // Log the params being sent to the API
+                console.log('Fetching products with params:', params);
 
                 productsResponse = await axios.get('http://localhost:8080/api/products/paginated', { params });
 
@@ -451,6 +517,9 @@ const Products = () => {
         // This effect should only run once on component mount
         const fetchMaxPrice = async () => {
             try {
+                // Store current category filter before making API call that might change state
+                const currentCategoryFilter = [...filters.category];
+                
                 // We can use a dedicated endpoint for this or use the min/max filters of existing ones
                 const response = await axios.get('http://localhost:8080/api/products/paginated', {
                     params: {
@@ -470,10 +539,19 @@ const Products = () => {
                         max: roundedMax.toString()
                     }));
 
-                    setFilters(prev => ({
-                        ...prev,
-                        priceRange: [prev.priceRange[0], roundedMax]
-                    }));
+                    // Carefully update only the price range, preserving category filters
+                    setFilters(prev => {
+                        // Restore category filter if it was changed
+                        const categoryFilter = prev.category.length ? prev.category : currentCategoryFilter;
+                        
+                        return {
+                            ...prev,
+                            category: categoryFilter,
+                            priceRange: [prev.priceRange[0], roundedMax]
+                        };
+                    });
+                    
+                    console.log('Updated price range, preserving category filter:', currentCategoryFilter);
                 }
             } catch (error) {
                 console.error('Error fetching max price:', error);
@@ -485,23 +563,30 @@ const Products = () => {
 
     // Update the initial state of the price range when products load
     useEffect(() => {
-        // Only update when maxPrice changes, not when products.length changes
-            setPriceInputs({
-                min: '0',
-                max: maxPrice.toString()
-            });
-        // Only update filters when maxPrice changes significantly
+        // Only update the price inputs without affecting filters
+        setPriceInputs({
+            min: '0',
+            max: maxPrice.toString()
+        });
+        
+        // Only update price range in filters, carefully preserving other filter values
+        // This should not affect category filters that were set from the URL
         setFilters(prev => {
             // Don't update if the current max price is close enough
             if (Math.abs(prev.priceRange[1] - maxPrice) < 100) {
                 return prev;
             }
+            
+            // Keep all other filters (especially category) unchanged
             return {
                 ...prev,
                 priceRange: [prev.priceRange[0], maxPrice]
             };
         });
-    }, [maxPrice]); // Remove products.length dependency
+        
+        // Log current filters for debugging
+        console.log('Price range effect - current filters:', filters);
+    }, [maxPrice]); // Only depend on maxPrice changes
 
     // Handle page change
     const handlePageChange = (event, value) => {

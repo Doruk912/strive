@@ -159,16 +159,22 @@ const Home = () => {
             queryParams.set('category', categoryId);
             queryParams.set('expandFilters', 'true');
             
+            // If this category has a parent, set it for better context
+            if (selectedCategory.fullCategoryInfo && selectedCategory.fullCategoryInfo.parent) {
+                queryParams.set('parentCategory', selectedCategory.fullCategoryInfo.parent);
+            }
+            
             // If this category has a parent chain, add it to expand the full tree
             if (selectedCategory.parentChain && selectedCategory.parentChain.length > 0) {
                 queryParams.set('parentChain', selectedCategory.parentChain.join(','));
             }
             
-            // Navigate with all parameters
-            navigate(`/products?${queryParams.toString()}`);
+            // Use push instead of navigate to force a full navigation event
+            // This ensures the Products component fully remounts with the new parameters
+            window.location.href = `${window.location.origin}/products?${queryParams.toString()}`;
         } else {
             // Fallback navigation
-            navigate(`/products?category=${categoryId}&expandFilters=true`);
+            window.location.href = `${window.location.origin}/products?category=${categoryId}&expandFilters=true`;
         }
     };
 

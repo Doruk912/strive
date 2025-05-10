@@ -3,7 +3,6 @@
 * Revisit product cards
 * Ordering without logging in
 * Prompt user to login if jwt is expired
-* Fix category handling from Featured and Header Categories
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️
 
