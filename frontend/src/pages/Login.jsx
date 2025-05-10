@@ -161,9 +161,8 @@ const Login = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            overflow: 'hidden',
-            marginTop: isMobile ? '-40px' : '-32px',
-            marginBottom: '-24px',
+            position: 'relative',
+            paddingTop: '32px',
         },
         formWrapper: {
             display: 'flex',
