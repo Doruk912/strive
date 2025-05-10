@@ -479,67 +479,67 @@ INSERT INTO products (name, description, price, category_id) VALUES
 ('Urban Explorer Crossbody Bag - Pink', 'Stylish and functional crossbody bag with multiple compartments and adjustable strap', 64.99, 22),
 ('Weekend Adventure Tote - Black', 'Spacious tote bag with durable construction and interior organization pockets', 74.99, 22);
 
--- Team Sports - Basketball (category_id: 28)
+-- Team Sports - Basketball (category_id: 29)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Professional Basketball Jersey', 'Competition-grade basketball jersey with moisture-wicking fabric and team customization options', 54.99, 28),
-('Competition Basketball - Official Size', 'Official size and weight basketball with superior grip and durability', 49.99, 28);
+('Professional Basketball Jersey', 'Competition-grade basketball jersey with moisture-wicking fabric and team customization options', 54.99, 29),
+('Competition Basketball - Official Size', 'Official size and weight basketball with superior grip and durability', 49.99, 29);
 
--- Team Sports - Soccer (category_id: 27)
+-- Team Sports - Soccer (category_id: 28)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Match Quality Soccer Ball - Size 5', 'Tournament-grade soccer ball with precision stitching and durable construction', 39.99, 27);
+('Match Quality Soccer Ball - Size 5', 'Tournament-grade soccer ball with precision stitching and durable construction', 39.99, 28);
 
--- Individual Sports - Tennis (category_id: 29)
+-- Individual Sports - Tennis (category_id: 30)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Pro Tour Tennis Racket', 'Performance tennis racket with power-enhancing frame and comfortable grip', 129.99, 29),
-('Championship Tennis Balls - 3 Pack', 'Professional-grade tennis balls with consistent bounce and visibility', 9.99, 29);
+('Pro Tour Tennis Racket', 'Performance tennis racket with power-enhancing frame and comfortable grip', 129.99, 30),
+('Championship Tennis Balls - 3 Pack', 'Professional-grade tennis balls with consistent bounce and visibility', 9.99, 30);
 
--- Individual Sports - Golf (category_id: 30)
+-- Individual Sports - Golf (category_id: 31)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Tour Performance Golf Club Set', 'Complete set of high-performance golf clubs including driver, irons, and putter', 699.99, 30),
-('Premium Leather Golf Gloves', 'Soft yet durable leather golf gloves with precision fit and enhanced grip', 29.99, 30),
-('Distance Pro Golf Balls - 12 Pack', 'Long-distance golf balls with aerodynamic dimple pattern for reduced drag', 34.99, 30);
+('Tour Performance Golf Club Set', 'Complete set of high-performance golf clubs including driver, irons, and putter', 699.99, 31),
+('Premium Leather Golf Gloves', 'Soft yet durable leather golf gloves with precision fit and enhanced grip', 29.99, 31),
+('Distance Pro Golf Balls - 12 Pack', 'Long-distance golf balls with aerodynamic dimple pattern for reduced drag', 34.99, 31);
 
--- Fitness - Gym Equipment (category_id: 31)
+-- Fitness - Gym Equipment (category_id: 32)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Precision Cast Iron Dumbbells - 2kg Pair', 'Professional-grade 2kg dumbbells with ergonomic grip and durable construction', 39.99, 31),
-('Heavy Duty Cast Iron Dumbbells - 5kg Pair', 'Premium 5kg dumbbells with comfortable grip and rust-resistant finish', 59.99, 31),
-('Professional Training Dumbbells - 10kg Pair', 'Gym-quality 10kg dumbbells with knurled grip for secure handling', 89.99, 31),
-('Competition Kettlebell Set - 5kg Pair', 'Competition-grade 5kg kettlebells with color-coded vinyl coating', 64.99, 31),
-('Premium Cast Iron Kettlebell - 8kg', 'Professional 8kg kettlebell with balanced design and comfortable grip', 49.99, 31);
+('Precision Cast Iron Dumbbells - 2kg Pair', 'Professional-grade 2kg dumbbells with ergonomic grip and durable construction', 39.99, 32),
+('Heavy Duty Cast Iron Dumbbells - 5kg Pair', 'Premium 5kg dumbbells with comfortable grip and rust-resistant finish', 59.99, 32),
+('Professional Training Dumbbells - 10kg Pair', 'Gym-quality 10kg dumbbells with knurled grip for secure handling', 89.99, 32),
+('Competition Kettlebell Set - 5kg Pair', 'Competition-grade 5kg kettlebells with color-coded vinyl coating', 64.99, 32),
+('Premium Cast Iron Kettlebell - 8kg', 'Professional 8kg kettlebell with balanced design and comfortable grip', 49.99, 32);
 
--- Fitness - Fitness Apparel (category_id: 32)
+-- Fitness - Fitness Apparel (category_id: 33)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Men\'s Performance Training Set - Grey', 'Coordinated training outfit with moisture-wicking top and quick-dry shorts', 69.99, 32),
-('Men\'s Elite Workout Set - Black', 'Premium workout set featuring compression technology and four-way stretch fabric', 79.99, 32),
-('Women\'s Essential Training Set - Beige', 'Stylish workout set with supportive top and high-waisted leggings', 74.99, 32),
-('Women\'s Premium Fitness Set - Sage Green', 'Eco-friendly fitness set with buttery-soft fabric and seamless construction', 89.99, 32);
+('Men\'s Performance Training Set - Grey', 'Coordinated training outfit with moisture-wicking top and quick-dry shorts', 69.99, 33),
+('Men\'s Elite Workout Set - Black', 'Premium workout set featuring compression technology and four-way stretch fabric', 79.99, 33),
+('Women\'s Essential Training Set - Beige', 'Stylish workout set with supportive top and high-waisted leggings', 74.99, 33),
+('Women\'s Premium Fitness Set - Sage Green', 'Eco-friendly fitness set with buttery-soft fabric and seamless construction', 89.99, 33);
 
--- Yoga (category_id: 26)
+-- Yoga (category_id: 27)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Premium Yoga Mat - 6mm', 'Extra thick yoga mat with non-slip surface and eco-friendly materials', 44.99, 26),
-('Deluxe Yoga Starter Kit - Lilac', 'Complete yoga set including mat, blocks, strap, and carrying bag in calming lilac', 79.99, 26),
-('Essential Yoga Practice Set - Mint Green', 'Comprehensive yoga set with premium mat, foam blocks, and cotton strap', 74.99, 26),
-('Professional Pilates Resistance Bands Set', 'Set of 3 resistance bands with different strengths for varied workout intensity', 24.99, 26);
+('Premium Yoga Mat - 6mm', 'Extra thick yoga mat with non-slip surface and eco-friendly materials', 44.99, 27),
+('Deluxe Yoga Starter Kit - Lilac', 'Complete yoga set including mat, blocks, strap, and carrying bag in calming lilac', 79.99, 27),
+('Essential Yoga Practice Set - Mint Green', 'Comprehensive yoga set with premium mat, foam blocks, and cotton strap', 74.99, 27),
+('Professional Pilates Resistance Bands Set', 'Set of 3 resistance bands with different strengths for varied workout intensity', 24.99, 27);
 
--- Cycling - Mountain Bikes (category_id: 38)
+-- Cycling - Mountain Bikes (category_id: 40)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Alpine Explorer Mountain Bike - Fire Red', 'All-terrain mountain bike with front suspension and precision gear system', 899.99, 38),
-('Trail Blazer Mountain Bike - Forest Green', 'Rugged mountain bike with hydraulic disc brakes and lightweight aluminum frame', 999.99, 38);
+('Alpine Explorer Mountain Bike - Fire Red', 'All-terrain mountain bike with front suspension and precision gear system', 899.99, 40),
+('Trail Blazer Mountain Bike - Forest Green', 'Rugged mountain bike with hydraulic disc brakes and lightweight aluminum frame', 999.99, 40);
 
--- Cycling - Road Bikes (category_id: 39)
+-- Cycling - Road Bikes (category_id: 41)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Velocity Pro Road Bike - Electric Blue', 'Aerodynamic road bike with carbon fork and professional racing geometry', 1299.99, 39),
-('Endurance Elite Road Bike - Matte Black', 'Long-distance road bike with vibration-dampening frame and precision components', 1199.99, 39);
+('Velocity Pro Road Bike - Electric Blue', 'Aerodynamic road bike with carbon fork and professional racing geometry', 1299.99, 41),
+('Endurance Elite Road Bike - Matte Black', 'Long-distance road bike with vibration-dampening frame and precision components', 1199.99, 41);
 
--- Water Sports - Swimming (category_id: 40)
+-- Water Sports - Swimming (category_id: 42)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Pro Performance Swim Cap', 'Ergonomic silicone swim cap with wrinkle-free fit and UV protection', 19.99, 40),
-('Competition Men\'s Swimming Jammers', 'Professional swimming shorts with water-repellent technology and secure fit', 49.99, 40),
-('Aqua Vision Swimming Goggles', 'Anti-fog swimming goggles with UV protection and adjustable silicone strap', 29.99, 40);
+('Pro Performance Swim Cap', 'Ergonomic silicone swim cap with wrinkle-free fit and UV protection', 19.99, 42),
+('Competition Men\'s Swimming Jammers', 'Professional swimming shorts with water-repellent technology and secure fit', 49.99, 42),
+('Aqua Vision Swimming Goggles', 'Anti-fog swimming goggles with UV protection and adjustable silicone strap', 29.99, 42);
 
--- Track & Field (category_id: 43 - We ensure this matches with the inserted category)
+-- Track & Field (category_id: 46)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, 43);
+('Elite Sprint Track Spikes', 'Lightweight competition spikes with responsive plate and replaceable pins', 119.99, 46);
 
 -- Camping & Hiking - Tents (category_id: 38)
 INSERT INTO products (name, description, price, category_id) VALUES
@@ -553,31 +553,31 @@ INSERT INTO products (name, description, price, category_id) VALUES
 
 -- Water Sports - Kayaking
 INSERT INTO products (name, description, price, category_id) VALUES
-('Recreational Kayak Helmet - Orange', 'Lightweight water sports helmet with adjustable fit system', 69.99, 40),
-('Professional Kayak Paddle', 'Lightweight and durable paddle with ergonomic grip and efficient blade design', 129.99, 40),
-('Performance Kayak Life Vest - Red', 'Coast guard approved PFD with multiple adjustment points for secure fit', 89.99, 40);
+('Recreational Kayak Helmet - Orange', 'Lightweight water sports helmet with adjustable fit system', 69.99, 43),
+('Professional Kayak Paddle', 'Lightweight and durable paddle with ergonomic grip and efficient blade design', 129.99, 43),
+('Performance Kayak Life Vest - Red', 'Coast guard approved PFD with multiple adjustment points for secure fit', 89.99, 43);
 
--- Winter Sports - Skiing (category_id: 42)
+-- Winter Sports - Skiing (category_id: 44)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Premium Ski Helmet', 'Durable and lightweight helmet with adjustable ventilation and comfortable fit', 89.99, 42),
-('Insulated Ski Gloves', 'Waterproof and insulated gloves with reinforced palm for durability', 49.99, 42),
-('Performance Ski Goggles', 'Anti-fog ski goggles with wide field of vision and UV protection', 79.99, 42),
-('Alpine Down Jacket - Red', 'Insulated down jacket designed for extreme mountain conditions', 189.99, 42),
-('Alpine Down Jacket - Black', 'Premium insulated jacket with water-resistant exterior and thermal lining', 189.99, 42);
+('Premium Ski Helmet', 'Durable and lightweight helmet with adjustable ventilation and comfortable fit', 89.99, 44),
+('Insulated Ski Gloves', 'Waterproof and insulated gloves with reinforced palm for durability', 49.99, 44),
+('Performance Ski Goggles', 'Anti-fog ski goggles with wide field of vision and UV protection', 79.99, 44),
+('Alpine Down Jacket - Red', 'Insulated down jacket designed for extreme mountain conditions', 189.99, 44),
+('Alpine Down Jacket - Black', 'Premium insulated jacket with water-resistant exterior and thermal lining', 189.99, 44);
 
--- Winter Sports - Snowboarding (category_id: 43)
+-- Winter Sports - Snowboarding (category_id: 45)
 INSERT INTO products (name, description, price, category_id) VALUES
-('All-Mountain Snowboard - Red', 'Versatile snowboard for all terrain conditions with responsive flex pattern', 349.99, 43),
-('Freestyle Snowboard - Black', 'Flexible snowboard designed for tricks and park riding with twin-tip design', 329.99, 43),
-('Performance Snowboard - Green', 'High-performance snowboard with directional shape for speed and control', 379.99, 43),
-('Alpine Snowboarding Boots - Red', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 43),
-('Alpine Snowboarding Boots - Blue', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 43),
-('Performance Snowboard Pants - Blue', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 43),
-('Professional Snowoard Pants - Black', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 43);
+('All-Mountain Snowboard - Red', 'Versatile snowboard for all terrain conditions with responsive flex pattern', 349.99, 45),
+('Freestyle Snowboard - Black', 'Flexible snowboard designed for tricks and park riding with twin-tip design', 329.99, 45),
+('Performance Snowboard - Green', 'High-performance snowboard with directional shape for speed and control', 379.99, 45),
+('Alpine Snowboarding Boots - Red', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 45),
+('Alpine Snowboarding Boots - Blue', 'Supportive snowboard boots with quick-lacing system and thermal lining', 199.99, 45),
+('Performance Snowboard Pants - Blue', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 45),
+('Professional Snowoard Pants - Black', 'Waterproof and breathable pants with reinforced seams and articulated knees', 149.99, 45);
 
--- Water Sports - Swimming (category_id: 40)
+-- Water Sports - Swimming (category_id: 42)
 INSERT INTO products (name, description, price, category_id) VALUES
-('Competition Women\'s Swimsuit - Red', 'High-performance racing swimsuit with chlorine-resistant fabric', 79.99, 40);
+('Competition Women\'s Swimsuit - Red', 'High-performance racing swimsuit with chlorine-resistant fabric', 79.99, 42);
 
 -- Add stock information for these new products
 -- This would require knowing the product IDs assigned by the auto-increment, 

@@ -1,9 +1,7 @@
 # Todo List
-* Check and fix categories
 * Improve header categories ui
 * Revisit product cards
 * Ordering without logging in
-* Product details page breadcrumb
 * Prompt user to login if jwt is expired
 * Fix category handling from Featured and Header Categories
 
