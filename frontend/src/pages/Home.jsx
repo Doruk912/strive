@@ -43,25 +43,46 @@ const Home = () => {
 
     const fetchCategories = async () => {
         try {
-            // Get featured categories
-            const featuredCategories = await featuredCategoryService.getAllFeaturedCategories();
+            setLoading(true);
             
-            // Fetch all categories to get parent/child relationships
-            const allCategoriesResponse = await axios.get('http://localhost:8080/api/categories');
+            // Fetch both in parallel
+            const [featuredResponse, allCategoriesResponse] = await Promise.all([
+                featuredCategoryService.getAllFeaturedCategories(),
+                axios.get('http://localhost:8080/api/categories')
+            ]);
+
+            const featuredCategories = featuredResponse;
             const allCategories = allCategoriesResponse.data;
             
-            // Enhance featured categories with parent information when available
+            // Build a map of categories for quick lookup
+            const categoryMap = new Map(allCategories.map(cat => [cat.id, cat]));
+            
+            // Enhance featured categories with complete parent information
             const enhancedCategories = featuredCategories.map(featCat => {
-                // Find this category in the full categories list to get its parent info
-                const fullCategoryInfo = allCategories.find(cat => cat.id === featCat.categoryId);
+                const fullCategoryInfo = categoryMap.get(featCat.categoryId);
+                
+                // Get complete parent chain
+                let parentChain = [];
+                let currentCat = fullCategoryInfo;
+                while (currentCat && currentCat.parent) {
+                    const parentCat = categoryMap.get(currentCat.parent);
+                    if (parentCat) {
+                        parentChain.unshift(parentCat);
+                        currentCat = parentCat;
+                    } else {
+                        break;
+                    }
+                }
+                
                 return {
                     ...featCat,
-                    parentId: fullCategoryInfo?.parent || null
+                    parentId: fullCategoryInfo?.parent || null,
+                    parentChain: parentChain.map(p => p.id), // Store full parent chain
+                    fullCategoryInfo // Store complete category info
                 };
             });
             
-            console.log('Enhanced categories with parent info:', enhancedCategories);
-            
+            console.log('Enhanced categories with full parent chain:', enhancedCategories);
             setPopularCategories(enhancedCategories);
             setLoading(false);
         } catch (error) {
@@ -129,14 +150,24 @@ const Home = () => {
 
     // Function to handle category click
     const handleCategoryClick = (categoryId) => {
-        // Check if we have the parent category ID from our fetched data
         const selectedCategory = popularCategories.find(cat => cat.categoryId === categoryId);
         
-        if (selectedCategory && selectedCategory.parentId) {
-            // If this is a subcategory, include the parent information to expand the correct section
-            navigate(`/products?category=${categoryId}&parentCategory=${selectedCategory.parentId}&expandFilters=true`);
+        if (selectedCategory) {
+            let queryParams = new URLSearchParams();
+            
+            // Add the selected category
+            queryParams.set('category', categoryId);
+            queryParams.set('expandFilters', 'true');
+            
+            // If this category has a parent chain, add it to expand the full tree
+            if (selectedCategory.parentChain && selectedCategory.parentChain.length > 0) {
+                queryParams.set('parentChain', selectedCategory.parentChain.join(','));
+            }
+            
+            // Navigate with all parameters
+            navigate(`/products?${queryParams.toString()}`);
         } else {
-            // Otherwise just navigate with the category and expand filters
+            // Fallback navigation
             navigate(`/products?category=${categoryId}&expandFilters=true`);
         }
     };

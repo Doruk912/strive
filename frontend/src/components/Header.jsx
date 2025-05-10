@@ -80,6 +80,9 @@ const Header = () => {
     const [dbCategories, setDbCategories] = useState([]);
     const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
+    // Add this new state for category structure
+    const [categoryStructure, setCategoryStructure] = useState(new Map());
+
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
@@ -95,25 +98,50 @@ const Header = () => {
                 setIsLoadingCategories(true);
                 const response = await axios.get('http://localhost:8080/api/categories');
                 setDbCategories(response.data);
+
+                // Build category structure map
+                const structure = new Map();
+                response.data.forEach(category => {
+                    structure.set(category.id, {
+                        ...category,
+                        parentChain: []
+                    });
+                });
+
+                // Add parent chain information
+                response.data.forEach(category => {
+                    if (category.parent) {
+                        let parentChain = [];
+                        let currentCat = category;
+                        while (currentCat && currentCat.parent) {
+                            parentChain.unshift(currentCat.parent);
+                            currentCat = structure.get(currentCat.parent);
+                        }
+                        structure.get(category.id).parentChain = parentChain;
+                    }
+                });
+
+                setCategoryStructure(structure);
+
             } catch (error) {
                 console.error('Error fetching categories:', error);
             } finally {
                 setIsLoadingCategories(false);
             }
         };
-        
+
         fetchCategories();
     }, []);
 
     // Prepare categories for display
-    const categories = dbCategories.length > 0 
+    const categories = dbCategories.length > 0
         ? dbCategories
             .filter(category => !category.parent) // Only root categories
             .map(category => ({
                 id: category.id,
                 name: category.name.toUpperCase(),
                 path: `/products?category=${category.id}`,
-                subcategories: category.children ? 
+                subcategories: category.children ?
                     category.children.map(child => ({
                         id: child.id,
                         name: child.name.toUpperCase()
@@ -249,21 +277,34 @@ const Header = () => {
 
     // Handle subcategory navigation with proper filtering
     const handleSubcategoryClick = (categoryObj, subcategoryObj) => {
-        // If using the database categories:
-        if (dbCategories.length > 0) {
+        if (categoryStructure.size > 0) {
             const subcategoryId = subcategoryObj.id;
-            // Find the parent category ID
-            const parentCategoryId = typeof categoryObj === 'object' ? categoryObj.id : null;
-            
-            // Include both parent and subcategory IDs in the URL
-            navigate(`/products?category=${subcategoryId}&parentCategory=${parentCategoryId}&expandFilters=true`);
+            const category = categoryStructure.get(subcategoryId);
+
+            if (category) {
+                const queryParams = new URLSearchParams();
+                queryParams.set('category', subcategoryId);
+                queryParams.set('expandFilters', 'true');
+
+                // Add all parent categories to the chain
+                if (category.parentChain && category.parentChain.length > 0) {
+                    queryParams.set('parentChain', category.parentChain.join(','));
+                }
+
+                // Navigate with all parameters
+                navigate(`/products?${queryParams.toString()}`);
+            } else {
+                // Fallback navigation
+                navigate(`/products?category=${subcategoryId}&expandFilters=true`);
+            }
         } else {
-            // Fallback for when database categories aren't loaded yet
+            // Fallback for old category structure
             const categoryName = typeof categoryObj === 'string' ? categoryObj : categoryObj.name;
             const subcategoryName = typeof subcategoryObj === 'string' ? subcategoryObj : subcategoryObj.name;
-            navigate(`/products?category=${categoryName.toLowerCase()}&subcategory=${subcategoryName.toLowerCase().replace(/\s+/g, '-')}&expandFilters=true`);
+            navigate(`/products?category=${subcategoryName.toLowerCase()}&parentCategory=${categoryName.toLowerCase()}&expandFilters=true`);
         }
         setHoveredCategory(null);
+        setDrawerOpen(false);
     };
 
     const renderCategoryDropdown = (category) => (
@@ -593,7 +634,7 @@ const Header = () => {
                         <ListItem
                             button
                             onClick={() => { navigate('/admin'); setDrawerOpen(false); }}
-                            sx={{ 
+                            sx={{
                                 px: 2,
                                 py: { xs: 1.5, sm: 1.2 } // Larger touch targets
                             }}
@@ -607,7 +648,7 @@ const Header = () => {
                     <ListItem
                         button
                         onClick={() => { logout(); navigate('/'); setDrawerOpen(false); }}
-                        sx={{ 
+                        sx={{
                             px: 2,
                             py: { xs: 1.5, sm: 1.2 } // Larger touch targets
                         }}
@@ -674,15 +715,15 @@ const Header = () => {
                         }}
                         InputProps={{
                             disableUnderline: true,
-                            sx: { 
-                                fontSize: { xs: '1rem', sm: '1.1rem' }, 
+                            sx: {
+                                fontSize: { xs: '1rem', sm: '1.1rem' },
                                 fontWeight: 400,
                                 padding: { xs: '4px 0', sm: '6px 0' },
                             }
                         }}
                     />
-                    <IconButton 
-                        color="inherit" 
+                    <IconButton
+                        color="inherit"
                         onClick={handleSearchClose}
                         sx={{
                             backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -845,12 +886,12 @@ const Header = () => {
                             {isMobile ? (
                                 <>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <IconButton 
-                                            edge="start" 
-                                            color="inherit" 
+                                        <IconButton
+                                            edge="start"
+                                            color="inherit"
                                             onClick={toggleDrawer(true)}
-                                            sx={{ 
-                                                p: { xs: 0.5, sm: 1 } 
+                                            sx={{
+                                                p: { xs: 0.5, sm: 1 }
                                             }}
                                         >
                                             <MenuIcon fontSize={isExtraSmall ? 'medium' : 'large'} />
@@ -863,13 +904,13 @@ const Header = () => {
                                             }}
                                             onClick={() => navigate('/')}
                                         >
-                                            <img 
-                                                src="/logo.png" 
-                                                alt="Logo" 
-                                                style={{ 
+                                            <img
+                                                src="/logo.png"
+                                                alt="Logo"
+                                                style={{
                                                     height: isExtraSmall ? 30 : 35,
                                                     marginRight: isExtraSmall ? 4 : 8
-                                                }} 
+                                                }}
                                             />
                                             <Typography
                                                 variant="subtitle1"
@@ -887,9 +928,9 @@ const Header = () => {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <SwipeableDrawer 
-                                        anchor="left" 
-                                        open={drawerOpen} 
+                                    <SwipeableDrawer
+                                        anchor="left"
+                                        open={drawerOpen}
                                         onClose={toggleDrawer(false)}
                                         onOpen={toggleDrawer(true)}
                                         disableBackdropTransition={!isExtraSmall}

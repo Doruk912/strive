@@ -198,157 +198,117 @@ const Products = () => {
         const parentCategoryParam = params.get('parentCategory');
         const nameParam = params.get('name');
         const expandFiltersParam = params.get('expandFilters');
-        
-        // Open the filters section when expandFilters is true
-        if (expandFiltersParam === 'true') {
-            setMobileFiltersOpen(true);
-        }
-        
-        let filterUpdates = {};
-        
-        // Process the category parameter
-        if (categoryParam) {
-            // Check if categoryParam is a valid ID
-            const categoryId = parseInt(categoryParam, 10);
-            if (!isNaN(categoryId)) {
-                filterUpdates.category = [categoryId];
-                
-                // If parent category is specified, expand it immediately
-                if (parentCategoryParam && categories.length > 0) {
-                    const parentId = parseInt(parentCategoryParam, 10);
-                    if (!isNaN(parentId)) {
-                        // Use functional update to safely modify the state
-                        setExpandedCategories(prevExpanded => {
-                            // Only update if it's not already true
-                            if (prevExpanded[parentId]) {
-                                return prevExpanded; // Avoid unnecessary re-renders
-                            }
-                            // Return a new object with the parentId set to true
-                            return { ...prevExpanded, [parentId]: true };
-                        });
-                    }
-                }
-                // If parent is not specified but the category exists and has a parent, expand it
-                else if (categories.length > 0) {
-                    const selectedCategory = findCategoryById(categoryId);
-                    if (selectedCategory && selectedCategory.parent) {
-                        // Use functional update to safely modify the state
-                        setExpandedCategories(prevExpanded => {
-                            if (prevExpanded[selectedCategory.parent]) {
-                                return prevExpanded;
-                            }
-                            return { ...prevExpanded, [selectedCategory.parent]: true };
-                        });
+
+        // Only process filters when categories are loaded
+        if (categories.length > 0) {
+            let filterUpdates = {};
+
+            // Process the category parameter
+            if (categoryParam) {
+                const categoryId = parseInt(categoryParam, 10);
+                if (!isNaN(categoryId)) {
+                    filterUpdates.category = [categoryId];
+
+                    // Handle parent category expansion
+                    if (parentCategoryParam) {
+                        const parentId = parseInt(parentCategoryParam, 10);
+                        if (!isNaN(parentId)) {
+                            setExpandedCategories(prev => ({
+                                ...prev,
+                                [parentId]: true
+                            }));
+                        }
+                    } else {
+                        // If parent is not specified but category exists
+                        const selectedCategory = findCategoryById(categoryId);
+                        if (selectedCategory && selectedCategory.parent) {
+                            setExpandedCategories(prev => ({
+                                ...prev,
+                                [selectedCategory.parent]: true
+                            }));
+                        }
                     }
                 }
             }
+
+            if (nameParam) {
+                filterUpdates.name = nameParam;
+            }
+
+            if (Object.keys(filterUpdates).length > 0) {
+                setFilters(prev => ({
+                    ...prev,
+                    ...filterUpdates
+                }));
+            }
         }
-        
-        if (nameParam) {
-            filterUpdates.name = nameParam;
+
+        // Handle expandFilters parameter separately
+        if (expandFiltersParam === 'true') {
+            setMobileFiltersOpen(true);
         }
-        
-        if (Object.keys(filterUpdates).length > 0) {
-            setFilters(prev => ({
-                ...prev,
-                ...filterUpdates
-            }));
-        }
-    }, [location.search, categories, findCategoryById, expandedCategories]);
+    }, [location.search, categories, findCategoryById]); // Reduced dependencies
 
     // Fetch categories and products - modified to implement pagination
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setLoading(true);
+                // Remove setLoading(true) from here as it's causing issues with infinite loading
                 let productsResponse;
                 let totalResults;
                 let totalPagesFromResponse;
 
-                // Fetch only categories first
-                const categoriesResponse = await axios.get('http://localhost:8080/api/categories');
-                setCategories(categoriesResponse.data);
+                // Ensure categories are loaded first if needed
+                if (categories.length === 0) {
+                    const categoriesResponse = await axios.get('http://localhost:8080/api/categories');
+                    setCategories(categoriesResponse.data);
+                }
 
-                // Expand all subcategories for selected parent categories
+                // Modified this part to always fetch products regardless of category filter
+                const params = {
+                    page: page - 1,
+                    size: productsPerPage,
+                    name: filters.name || null,
+                    minPrice: filters.priceRange[0] || null,
+                    maxPrice: filters.priceRange[1] || null,
+                    minRating: filters.minRating > 0 ? filters.minRating : null,
+                    sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
+                    sort: sortOption !== 'default' ? sortOption : null
+                };
+
+                // Only add categoryIds if there are selected categories
                 if (filters.category.length > 0) {
                     let selectedCategoryIds = [...filters.category];
-                    
+
                     // For each selected category, get all its descendants
                     filters.category.forEach(categoryId => {
-                        const category = categoriesResponse.data.find(cat => 
-                            cat.id === categoryId || 
-                            (cat.children && cat.children.some(child => child.id === categoryId))
-                        );
-                        
+                        const category = findCategoryById(categoryId);
                         if (category) {
-                            // If we found this category directly
-                            if (category.id === categoryId && category.children) {
-                                // Get all descendants and add them to the filter
-                                const descendants = getAllDescendantIds(category);
-                                selectedCategoryIds = [...selectedCategoryIds, ...descendants];
-                            }
-                            // If it's a child in the top-level categories
-                            else if (category.children) {
-                                const childCategory = category.children.find(child => child.id === categoryId);
-                                if (childCategory && childCategory.children) {
-                                    const descendants = getAllDescendantIds(childCategory);
-                                    selectedCategoryIds = [...selectedCategoryIds, ...descendants];
-                                }
-                            }
+                            const descendants = getAllSubcategoryIds(category);
+                            selectedCategoryIds = [...selectedCategoryIds, ...descendants];
                         }
                     });
-                    
+
                     // Remove duplicates
                     selectedCategoryIds = [...new Set(selectedCategoryIds)];
-                    
-                    // Use this expanded list for the API call
-                    // Fetch paginated products with expanded category filters
-                    productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
-                        params: {
-                            page: page - 1, // Backend uses 0-based indexing
-                            size: productsPerPage,
-                            // Add filter parameters
-                            categoryIds: selectedCategoryIds.join(','),
-                            name: filters.name || null,
-                            minPrice: filters.priceRange[0] || null,
-                            maxPrice: filters.priceRange[1] || null,
-                            minRating: filters.minRating > 0 ? filters.minRating : null,
-                            sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
-                            sort: sortOption !== 'default' ? sortOption : null
-                        }
-                    });
-                } else {
-                    // Regular fetch without category expansion
-                    productsResponse = await axios.get('http://localhost:8080/api/products/paginated', {
-                        params: {
-                            page: page - 1,
-                            size: productsPerPage,
-                            name: filters.name || null,
-                            minPrice: filters.priceRange[0] || null,
-                            maxPrice: filters.priceRange[1] || null,
-                            minRating: filters.minRating > 0 ? filters.minRating : null,
-                            sizes: filters.sizes.length > 0 ? filters.sizes.join(',') : null,
-                            sort: sortOption !== 'default' ? sortOption : null
-                        }
-                    });
+                    params.categoryIds = selectedCategoryIds.join(',');
                 }
-                
+
+                productsResponse = await axios.get('http://localhost:8080/api/products/paginated', { params });
+
                 totalResults = productsResponse.data.totalElements;
                 totalPagesFromResponse = Math.ceil(totalResults / productsPerPage);
-                
+
                 // If we're on a page that no longer exists after filtering
                 if (totalResults > 0 && page > totalPagesFromResponse) {
-                    // Silently update page state without triggering another fetch yet
                     setPage(totalPagesFromResponse);
-                    // Don't set other state yet - the page change will trigger another fetch
-                    setLoading(false);
-                    return;
+                    return; // Exit early to avoid setting states with invalid data
                 }
 
                 setProducts(productsResponse.data.content);
                 setTotalProducts(totalResults);
-                
-                // Fetch ratings only for current page products - using the updated products state
+
+                // Fetch ratings only for current page products
                 const currentProducts = productsResponse.data.content;
                 const ratingPromises = currentProducts.map(product =>
                     axios.get(`http://localhost:8080/api/reviews/product/${product.id}/rating`)
@@ -372,17 +332,20 @@ const Products = () => {
             }
         };
 
+        // Set loading to true only when starting a new fetch
+        setLoading(true);
         fetchData();
-    }, [page, filters, sortOption, productsPerPage]);
+
+    }, [page, filters, sortOption, productsPerPage, categories.length, findCategoryById, getAllSubcategoryIds]);
 
     // Add a dedicated effect that runs when categories are loaded
     useEffect(() => {
         // Only run if categories have been loaded
         if (categories.length === 0) return;
-        
+
         const params = new URLSearchParams(location.search);
         const parentCategoryParam = params.get('parentCategory');
-        
+
         // If parent category is specified in URL, make sure it's expanded
         if (parentCategoryParam) {
             const parentId = parseInt(parentCategoryParam, 10);
@@ -399,7 +362,7 @@ const Products = () => {
     const handleFilterChange = (filterType, value) => {
         // Always reset to page 1 when applying a new filter
         setPage(1);
-        
+
         if (filterType !== 'category') {
             setFilters(prev => ({
                 ...prev,
@@ -454,7 +417,7 @@ const Products = () => {
     // Count products in a category and its subcategories
     const countProductsInSubcategories = useCallback((category) => {
         if (!category) return 0;
-        
+
         const categoryIds = getAllSubcategoryIds(category);
         return products.filter(product => categoryIds.includes(product.categoryId)).length;
     }, [products, getAllSubcategoryIds]);
@@ -479,11 +442,11 @@ const Products = () => {
     const maxPrice = useMemo(() => {
         // If no products loaded yet, use a high default value
         if (products.length === 0) return 2000;
-        
+
         // Otherwise use the highest product price, with minimum of 2000
         const max = Math.max(...products.map(product => product.price));
         // Round up to nearest 100 and ensure it's at least 2000
-        return Math.max(Math.ceil(max / 100) * 100, 2000); 
+        return Math.max(Math.ceil(max / 100) * 100, 2000);
     }, [products]);
 
     // Add a separate effect to fetch the highest price from all products (not just current page)
@@ -499,17 +462,17 @@ const Products = () => {
                         sort: 'price-high-low' // Sort by highest price first
                     }
                 });
-                
+
                 // If we got products, update the max price inputs and filters
                 if (response.data.content && response.data.content.length > 0) {
                     const highestPrice = response.data.content[0].price;
                     const roundedMax = Math.max(Math.ceil(highestPrice / 100) * 100, 2000);
-                    
+
                     setPriceInputs(prev => ({
                         ...prev,
                         max: roundedMax.toString()
                     }));
-                    
+
                     setFilters(prev => ({
                         ...prev,
                         priceRange: [prev.priceRange[0], roundedMax]
@@ -519,7 +482,7 @@ const Products = () => {
                 console.error('Error fetching max price:', error);
             }
         };
-        
+
         fetchMaxPrice();
     }, []); // Empty dependency array ensures it only runs once
 
@@ -542,7 +505,7 @@ const Products = () => {
             };
         });
     }, [maxPrice]); // Remove products.length dependency
-    
+
     // Handle page change
     const handlePageChange = (event, value) => {
         setPage(value);
@@ -552,7 +515,7 @@ const Products = () => {
             behavior: 'smooth'
         });
     };
-    
+
     // Reset to first page when filters change
     useEffect(() => {
         setPage(1);
@@ -580,7 +543,7 @@ const Products = () => {
             max: newValue[1].toString()
         });
     };
-    
+
     const handlePriceInputChange = (type, rawValue) => {
         // Allow empty string for better editing experience
         if (rawValue === '') {
@@ -590,18 +553,18 @@ const Products = () => {
             }));
             return;
         }
-        
+
         // Convert to number and check if it's a valid number
         const value = Number(rawValue);
         if (isNaN(value)) {
             return; // Don't update if not a valid number
         }
-        
+
         // Only allow non-negative integers
         if (value < 0 || !Number.isInteger(value)) {
             return;
         }
-        
+
         // Apply max constraints
         if (type === 'max' && value > maxPrice) {
             setPriceInputs(prev => ({
@@ -610,14 +573,14 @@ const Products = () => {
             }));
             return;
         }
-        
+
         // Store as string to allow for empty input during editing
         setPriceInputs(prev => ({
             ...prev,
             [type]: rawValue
         }));
     };
-    
+
     const resetPriceFilter = () => {
         // Reset to default values (0 to maxPrice)
         setPriceInputs({
@@ -631,21 +594,21 @@ const Products = () => {
         // Parse inputs as numbers
         let min = priceInputs.min === '' ? 0 : Number(priceInputs.min);
         let max = priceInputs.max === '' ? maxPrice : Number(priceInputs.max);
-        
+
         // Ensure min doesn't exceed max
         if (min > max) {
             min = max;
         }
-        
+
         // Ensure max is at least 1 to avoid division by zero issues
         max = Math.max(max, 1);
-        
+
         // Update UI state to reflect validated values
         setPriceInputs({
             min: min.toString(),
             max: max.toString()
         });
-        
+
         // Only apply to filters if values have actually changed
         if (min !== filters.priceRange[0] || max !== filters.priceRange[1]) {
             // Reset to page 1 when changing filters to avoid pagination issues
@@ -690,7 +653,7 @@ const Products = () => {
     // Helper function to expand all parent categories of a selected category
     const expandParentCategories = useCallback((category) => {
         if (!category || !category.parent) return;
-        
+
         let parentId = category.parent;
         while (parentId) {
             setExpandedCategories(prev => ({
@@ -710,7 +673,7 @@ const Products = () => {
         // Set the new state directly
         setExpandedCategories(newExpandedCategories);
     };
-    
+
     // Restore the previous effect for expandedCategories and filters
     useEffect(() => {
         if (!categories.length || !filters.category.length) return;
@@ -743,20 +706,20 @@ const Products = () => {
     const clearAllFilters = () => {
         // Reset to page 1
         setPage(1);
-        
+
         // Reset all filters to initial values
-        setFilters({ 
-            category: [], 
-            name: '', 
-            priceRange: [0, maxPrice], 
-            minRating: 0, 
-            sizes: [] 
+        setFilters({
+            category: [],
+            name: '',
+            priceRange: [0, maxPrice],
+            minRating: 0,
+            sizes: []
         });
-        
+
         // Also reset price inputs to match
-        setPriceInputs({ 
-            min: '0', 
-            max: maxPrice.toString() 
+        setPriceInputs({
+            min: '0',
+            max: maxPrice.toString()
         });
     };
 
@@ -764,14 +727,14 @@ const Products = () => {
     const getAllDescendantIds = useCallback((category) => {
         let ids = [];
         if (!category || !category.children) return ids;
-        
+
         category.children.forEach(child => {
             ids.push(child.id);
             if (child.children) {
                 ids = [...ids, ...getAllDescendantIds(child)];
             }
         });
-        
+
         return ids;
     }, []);
 
@@ -805,8 +768,8 @@ const Products = () => {
                 quantity={notification.quantity}
             />
             <Box sx={{ pt: 0, pb: 4, px: { xs: 1.5, sm: 3, md: 4 } }}>
-                <Box sx={{ 
-                    display: 'flex', 
+                <Box sx={{
+                    display: 'flex',
                     flexDirection: { xs: 'column', sm: 'row' },
                     justifyContent: 'space-between',
                     alignItems: { xs: 'flex-start', sm: 'center' },
@@ -826,11 +789,11 @@ const Products = () => {
                     >
                         STRIVE | Products
                     </Typography>
-                    
+
                     {/* Improved sorting component with entire field clickable */}
                     {products.length > 0 && (
-                        <Box sx={{ 
-                            display: 'flex', 
+                        <Box sx={{
+                            display: 'flex',
                             alignItems: 'center',
                             gap: 1,
                             backgroundColor: '#f8f8f8',
@@ -857,7 +820,7 @@ const Products = () => {
                                             pr: 3,
                                             width: '100%',
                                         },
-                                        '&:before, &:after': { 
+                                        '&:before, &:after': {
                                             display: 'none' // Remove borders that might affect clicking
                                         },
                                         '.MuiSelect-root': {
@@ -928,28 +891,28 @@ const Products = () => {
                                     Filters
                                 </Typography>
                             </Box>
-                            
+
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 {/* Active filters indicator */}
-                                {(filters.category.length > 0 || 
-                                filters.sizes.length > 0 || 
-                                filters.name !== '' || 
-                                filters.minRating > 0 || 
-                                filters.priceRange[0] > 0 || 
+                                {(filters.category.length > 0 ||
+                                filters.sizes.length > 0 ||
+                                filters.name !== '' ||
+                                filters.minRating > 0 ||
+                                filters.priceRange[0] > 0 ||
                                 filters.priceRange[1] < maxPrice) && (
-                                    <Chip 
-                                        label={`Active filters`} 
-                                        size="small" 
+                                    <Chip
+                                        label={`Active filters`}
+                                        size="small"
                                         color="primary"
                                         variant="outlined"
                                         sx={{ fontSize: '0.7rem', mr: { xs: 1, md: 0 } }}
                                     />
                                 )}
-                                
+
                                 {/* Mobile toggle icon */}
-                                <IconButton 
-                                    size="small" 
-                                    sx={{ 
+                                <IconButton
+                                    size="small"
+                                    sx={{
                                         display: { xs: 'flex', md: 'none' },
                                         p: 0.5
                                     }}
@@ -958,7 +921,7 @@ const Products = () => {
                                 </IconButton>
                             </Box>
                         </Box>
-                        
+
                         {/* Filters content - collapsible on mobile */}
                         <Collapse in={mobileFiltersOpen || !isMobile} timeout="auto">
                             <Box sx={{ p: { xs: 2, md: 0 }, pt: { xs: 0, md: 0 } }}>
@@ -1117,7 +1080,7 @@ const Products = () => {
                                                 label="Min $"
                                                 type="number"
                                                 InputProps={{
-                                                    inputProps: { 
+                                                    inputProps: {
                                                         min: 0
                                                     }
                                                 }}
@@ -1137,7 +1100,7 @@ const Products = () => {
                                                 label="Max $"
                                                 type="number"
                                                 InputProps={{
-                                                    inputProps: { 
+                                                    inputProps: {
                                                         min: 0
                                                     }
                                                 }}
@@ -1352,10 +1315,10 @@ const Products = () => {
                                 )}
 
                                 {/* Mobile-only filter actions */}
-                                <Box 
-                                    sx={{ 
-                                        mt: 3, 
-                                        pt: 2, 
+                                <Box
+                                    sx={{
+                                        mt: 3,
+                                        pt: 2,
                                         borderTop: '1px solid rgba(0,0,0,0.08)',
                                         display: { xs: 'flex', md: 'block' },
                                         gap: 2
@@ -1380,7 +1343,7 @@ const Products = () => {
                                     >
                                         Apply Filters
                                     </Button>
-                                    
+
                                     <Button
                                         variant="outlined"
                                         fullWidth
@@ -1409,9 +1372,9 @@ const Products = () => {
                     <Box sx={{ flex: 1 }}>
                         {products.length > 0 ? (
                             <>
-                                <Box sx={{ 
-                                    mb: 2, 
-                                    display: 'flex', 
+                                <Box sx={{
+                                    mb: 2,
+                                    display: 'flex',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
                                     gap: 1
@@ -1419,7 +1382,7 @@ const Products = () => {
                                     <Chip
                                         label={`${displayedProductsCount} products found`}
                                         size="small"
-                                        sx={{ 
+                                        sx={{
                                             backgroundColor: '#f0f0f0',
                                             color: 'text.secondary',
                                             fontWeight: 500,
@@ -1431,7 +1394,7 @@ const Products = () => {
                                             label={`Search: ${filters.name}`}
                                             size="small"
                                             onDelete={() => setFilters(prev => ({ ...prev, name: '' }))}
-                                            sx={{ 
+                                            sx={{
                                                 backgroundColor: `${primaryColor}10`,
                                                 color: primaryColor,
                                                 fontWeight: 500,
@@ -1439,11 +1402,11 @@ const Products = () => {
                                             }}
                                         />
                                     )}
-                                    <Typography 
-                                        variant="body2" 
+                                    <Typography
+                                        variant="body2"
                                         color="text.secondary"
-                                        sx={{ 
-                                            ml: { xs: 0, sm: 'auto' }, 
+                                        sx={{
+                                            ml: { xs: 0, sm: 'auto' },
                                             fontSize: '0.85rem',
                                             width: { xs: '100%', sm: 'auto' },
                                             mt: { xs: 1, sm: 0 },
@@ -1516,10 +1479,10 @@ const Products = () => {
                                                 </Box>
 
                                                 {/* Product Info */}
-                                                <Box sx={{ 
-                                                    p: { xs: 1.5, sm: 2 }, 
-                                                    display: 'flex', 
-                                                    flexDirection: 'column', 
+                                                <Box sx={{
+                                                    p: { xs: 1.5, sm: 2 },
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
                                                     height: { xs: '40%', sm: '35%' },
                                                     justifyContent: 'space-between'
                                                 }}>
@@ -1548,7 +1511,7 @@ const Products = () => {
                                                         {[...Array(5)].map((_, index) => {
                                                             const rating = productRatings[product.id] || 0;
                                                             const isHalfStar = index < rating && index >= Math.floor(rating);
-                                                            
+
                                                             return (
                                                                 <Box
                                                                     key={index}
@@ -1562,7 +1525,7 @@ const Products = () => {
                                                                 >
                                                                     {/* Background star (always shown) */}
                                                                     <span>★</span>
-                                                                    
+
                                                                     {/* Foreground star (full or half) */}
                                                                     {(index < Math.floor(rating) || isHalfStar) && (
                                                                         <Box
@@ -1612,17 +1575,17 @@ const Products = () => {
                                         </Grid>
                                     ))}
                                 </Grid>
-                                
+
                                 {/* Pagination */}
                                 {totalPages > 1 && (
-                                    <Stack spacing={2} sx={{ 
-                                        mt: { xs: 3, md: 4 }, 
-                                        display: 'flex', 
+                                    <Stack spacing={2} sx={{
+                                        mt: { xs: 3, md: 4 },
+                                        display: 'flex',
                                         alignItems: 'center'
                                     }}>
-                                        <Pagination 
-                                            count={totalPages} 
-                                            page={page} 
+                                        <Pagination
+                                            count={totalPages}
+                                            page={page}
                                             onChange={handlePageChange}
                                             color="primary"
                                             size={isMobile ? "medium" : "large"}
@@ -1646,9 +1609,9 @@ const Products = () => {
                                 )}
                             </>
                         ) : (
-                            <Box sx={{ 
-                                textAlign: 'center', 
-                                py: { xs: 6, sm: 8 }, 
+                            <Box sx={{
+                                textAlign: 'center',
+                                py: { xs: 6, sm: 8 },
                                 backgroundColor: 'rgba(0,0,0,0.02)',
                                 borderRadius: '12px'
                             }}>
