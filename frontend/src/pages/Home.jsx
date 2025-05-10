@@ -327,21 +327,23 @@ const Home = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontFamily: "'Playfair Display', serif",
+                            fontFamily: "'Montserrat', sans-serif",
                             fontWeight: 600,
-                            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-                            color: '#1a1a1a',
+                            fontSize: { xs: '1.4rem', sm: '1.5rem' },
+                            color: '#2B2B2B',
                             textAlign: 'left',
                             marginBottom: '1.5rem',
                             position: 'relative',
-                            '&::after': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            '&::before': {
                                 content: '""',
-                                position: 'absolute',
-                                bottom: '-10px',
-                                left: 0,
-                                width: '60px',
-                                height: '3px',
-                                backgroundColor: '#4CAF50',
+                                display: 'inline-block',
+                                width: '4px',
+                                height: '24px',
+                                backgroundColor: '#1976d2',
+                                marginRight: '12px',
+                                borderRadius: '2px',
                             }
                         }}
                     >
@@ -487,21 +489,23 @@ const Home = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontFamily: "'Playfair Display', serif",
+                            fontFamily: "'Montserrat', sans-serif",
                             fontWeight: 600,
-                            fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-                            color: '#1a1a1a',
+                            fontSize: { xs: '1.4rem', sm: '1.5rem' },
+                            color: '#2B2B2B',
                             textAlign: 'left',
                             marginBottom: '1.5rem',
                             position: 'relative',
-                            '&::after': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            '&::before': {
                                 content: '""',
-                                position: 'absolute',
-                                bottom: '-10px',
-                                left: 0,
-                                width: '60px',
-                                height: '3px',
-                                backgroundColor: '#4CAF50',
+                                display: 'inline-block',
+                                width: '4px',
+                                height: '24px',
+                                backgroundColor: '#1976d2',
+                                marginRight: '12px',
+                                borderRadius: '2px',
                             }
                         }}
                     >

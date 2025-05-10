@@ -889,8 +889,8 @@ const Products = () => {
                     <Typography
                         variant="h5"
                         sx={{
-                            fontFamily: "'Playfair Display', serif",
-                            fontWeight: 700,
+                            fontFamily: "'Montserrat', sans-serif", // Changed from Playfair Display
+                            fontWeight: 600, // Changed from 700
                             color: '#2B2B2B',
                             mb: { xs: 0.5, sm: 0 },
                             fontSize: { xs: '1.4rem', sm: '1.5rem' },
