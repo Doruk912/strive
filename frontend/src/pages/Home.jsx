@@ -604,21 +604,26 @@ const Home = () => {
                                                 }
                                             }}
                                         />
+                                        {/* Category Tag */}
                                         <Box
                                             sx={{
                                                 position: 'absolute',
                                                 top: 12,
                                                 left: 12,
-                                                backgroundColor: 'rgba(0,0,0,0.6)',
-                                                color: 'white',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                color: '#2B2B2B',
                                                 padding: '4px 10px',
-                                                borderRadius: '20px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 500
+                                                borderRadius: '16px',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 600,
+                                                letterSpacing: '0.5px',
+                                                textTransform: 'uppercase',
+                                                backdropFilter: 'blur(4px)',
                                             }}
                                         >
                                             {product.categoryName}
                                         </Box>
+                                        {/* Favorite Button */}
                                         <IconButton
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -628,9 +633,10 @@ const Home = () => {
                                                 position: 'absolute',
                                                 top: 12,
                                                 right: 12,
-                                                backgroundColor: 'rgba(255,255,255,0.9)',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                backdropFilter: 'blur(4px)',
                                                 '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,1)'
+                                                    backgroundColor: 'rgba(255, 255, 255, 1)'
                                                 }
                                             }}
                                         >
@@ -641,66 +647,98 @@ const Home = () => {
                                             )}
                                         </IconButton>
                                     </Box>
-                                    <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', backgroundColor: '#ffffff' }}>
-                                        <Typography 
-                                            variant="subtitle1" 
-                                            sx={{ 
-                                                mb: 0.5,
-                                                fontFamily: 'Montserrat',
-                                                fontWeight: 500,
+
+                                    {/* Product Info */}
+                                    <Box sx={{
+                                        p: 2,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        height: '35%',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
                                                 fontSize: '0.9rem',
-                                                color: '#1a1a1a'
+                                                fontWeight: 600,
+                                                mb: 0.5,
+                                                color: '#2B2B2B',
+                                                fontFamily: "'Montserrat', sans-serif",
+                                                lineHeight: 1.3,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
                                             }}
                                         >
                                             {product.name}
                                         </Typography>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                            <Typography 
-                                                variant="h6" 
-                                                sx={{ 
-                                                    fontFamily: 'Playfair Display',
-                                                    fontWeight: 600,
-                                                    fontSize: '1rem',
-                                                    color: '#1a1a1a'
+
+                                        {/* Rating */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.8 }}>
+                                            {[...Array(5)].map((_, index) => {
+                                                const rating = product.averageRating || 0;
+                                                const isHalfStar = index < rating && index >= Math.floor(rating);
+
+                                                return (
+                                                    <Box
+                                                        key={index}
+                                                        sx={{
+                                                            position: 'relative',
+                                                            display: 'inline-block',
+                                                            color: '#E0E0E0',
+                                                            fontSize: '1rem',
+                                                            mr: 0.1,
+                                                        }}
+                                                    >
+                                                        {/* Background star */}
+                                                        <span>★</span>
+
+                                                        {/* Foreground star (full or half) */}
+                                                        {(index < Math.floor(rating) || isHalfStar) && (
+                                                            <Box
+                                                                sx={{
+                                                                    position: 'absolute',
+                                                                    top: 0,
+                                                                    left: 0,
+                                                                    color: '#FFC107',
+                                                                    overflow: 'hidden',
+                                                                    width: isHalfStar ? '50%' : '100%',
+                                                                }}
+                                                            >
+                                                                ★
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                );
+                                            })}
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    ml: 0.6,
+                                                    color: '#666',
+                                                    fontSize: '0.8rem',
+                                                    fontWeight: 500,
                                                 }}
                                             >
-                                                ${Number(product.price).toFixed(2)}
+                                                ({(product.averageRating || 0).toFixed(1)})
                                             </Typography>
-                                            {product.averageRating && (
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <StarIcon sx={{ fontSize: '0.7rem', color: '#ffd700' }} />
-                                                    <Typography variant="body2" sx={{ fontSize: '0.7rem', color: '#666' }}>
-                                                        {product.averageRating.toFixed(1)}
-                                                    </Typography>
-                                                </Box>
-                                            )}
                                         </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                                <Tooltip title="Quick View">
-                                                    <IconButton 
-                                                        size="small"
-                                                        sx={{ 
-                                                            color: '#666',
-                                                            '&:hover': { color: '#1a1a1a' }
-                                                        }}
-                                                    >
-                                                        <VisibilityIcon sx={{ fontSize: '1.1rem' }} />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Add to Cart">
-                                                    <IconButton 
-                                                        size="small"
-                                                        sx={{ 
-                                                            color: '#666',
-                                                            '&:hover': { color: '#1a1a1a' }
-                                                        }}
-                                                    >
-                                                        <ShoppingCartIcon sx={{ fontSize: '1.1rem' }} />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </Box>
-                                        </Box>
+
+                                        {/* Price */}
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                color: '#1976d2',
+                                                fontWeight: 700,
+                                                fontSize: '1.1rem',
+                                                fontFamily: "'Playfair Display', serif",
+                                                mt: 'auto',
+                                            }}
+                                        >
+                                            ${Number(product.price).toFixed(2)}
+                                        </Typography>
                                     </Box>
                                 </Card>
                             ))}
