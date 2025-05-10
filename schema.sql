@@ -579,15 +579,184 @@ INSERT INTO products (name, description, price, category_id) VALUES
 INSERT INTO products (name, description, price, category_id) VALUES
 ('Competition Women\'s Swimsuit - Red', 'High-performance racing swimsuit with chlorine-resistant fabric', 79.99, 42);
 
--- Add stock information for these new products
--- This would require knowing the product IDs assigned by the auto-increment, 
--- but since we're adding many products, I'll provide a general approach:
-
--- For example, for the first new product (assuming it gets ID 31):
+-- Simplified stock entries for all products
 INSERT INTO stocks (product_id, size, quantity) VALUES
-(31, 'S', 30),
-(31, 'M', 45),
-(31, 'L', 40),
-(31, 'XL', 25);
+-- Clothing products (S, M, L)
+(1, 'S', 25),
+(1, 'M', 40),
+(1, 'L', 35),
+(2, 'S', 22),
+(2, 'M', 38),
+(2, 'L', 30),
+(3, 'S', 18),
+(3, 'M', 25),
+(3, 'L', 30),
+(8, 'S', 15),
+(8, 'M', 25),
+(8, 'L', 22),
+(9, 'S', 12),
+(9, 'M', 24),
+(9, 'L', 20),
+(10, 'S', 20),
+(10, 'M', 28),
+(10, 'L', 25),
+(11, 'S', 14),
+(11, 'M', 22),
+(11, 'L', 20),
+(12, 'S', 20),
+(12, 'M', 25),
+(12, 'L', 15),
+(13, 'S', 18),
+(13, 'M', 24),
+(13, 'L', 16),
+(14, 'S', 25),
+(14, 'M', 30),
+(14, 'L', 25),
+(20, 'S', 18),
+(20, 'M', 25),
+(20, 'L', 22),
+(31, 'S', 18),
+(31, 'M', 30),
+(31, 'L', 28),
+(32, 'S', 15),
+(32, 'M', 28),
+(32, 'L', 25),
+(33, 'S', 22),
+(33, 'M', 30),
+(33, 'L', 20),
+(34, 'S', 20),
+(34, 'M', 28),
+(34, 'L', 22),
+(44, 'S', 15),
+(44, 'M', 25),
+(44, 'L', 20),
+(52, 'S', 18),
+(52, 'M', 25),
+(52, 'L', 20),
+(55, 'S', 15),
+(55, 'M', 22),
+(55, 'L', 18),
+(56, 'S', 18),
+(56, 'M', 24),
+(56, 'L', 20),
+(64, 'S', 22),
+(64, 'M', 28),
+(64, 'L', 15),
 
--- And so on for each product with appropriate sizes and quantities
+-- Footwear products (S, M, L)
+(6, 'S', 15),
+(6, 'M', 20),
+(6, 'L', 15),
+(7, 'S', 12),
+(7, 'M', 15),
+(7, 'L', 12),
+(15, 'S', 12),
+(15, 'M', 18),
+(15, 'L', 15),
+(16, 'S', 15),
+(16, 'M', 20),
+(16, 'L', 15),
+(47, 'S', 12),
+(47, 'M', 20),
+(47, 'L', 15),
+(53, 'S', 12),
+(53, 'M', 18),
+(53, 'L', 10),
+(54, 'S', 15),
+(54, 'M', 20),
+(54, 'L', 12),
+
+-- One size products
+(4, 'ONE SIZE', 50),
+(5, 'ONE SIZE', 35),
+(17, 'ONE SIZE', 40),
+(18, 'ONE SIZE', 45),
+(21, 'ONE SIZE', 35),
+(22, 'ONE SIZE', 25),
+(23, 'ONE SIZE', 60),
+(24, 'ONE SIZE', 15),
+(26, 'ONE SIZE', 35),
+(27, 'ONE SIZE', 80),
+(28, 'ONE SIZE', 30),
+(29, 'ONE SIZE', 25),
+(30, 'ONE SIZE', 20),
+(35, 'ONE SIZE', 40),
+(36, 'ONE SIZE', 25),
+(37, 'ONE SIZE', 30),
+(38, 'ONE SIZE', 45),
+(42, 'ONE SIZE', 75),
+(43, 'ONE SIZE', 60),
+(45, 'ONE SIZE', 15),
+(46, 'ONE SIZE', 20),
+(48, 'ONE SIZE', 18),
+(49, 'ONE SIZE', 25),
+(50, 'ONE SIZE', 40),
+(51, 'ONE SIZE', 25),
+(58, 'ONE SIZE', 15),
+(59, 'ONE SIZE', 12),
+(60, 'ONE SIZE', 18),
+(61, 'ONE SIZE', 20);
+
+-- Featured Products with display order
+INSERT INTO featured_products (product_id, display_order) VALUES
+(3, 1),   -- Alpine Explorer Insulated Jacket
+(5, 2),   -- Expedition Chronograph Sports Watch
+(6, 3),   -- Momentum Pro Performance Running Shoes
+(24, 4),  -- Tour Performance Golf Club Set
+(39, 5),  -- Alpine Explorer Mountain Bike
+(51, 6),  -- All-Mountain Snowboard
+(35, 7),  -- Premium Yoga Mat
+(58, 8);  -- Ultralight 2-Person Backpacking Tent
+
+-- Review data for popular and featured products
+INSERT INTO reviews (product_id, user_id, rating, comment, created_at) VALUES
+-- Premium Cotton T-Shirt
+(1, 3, 5, 'Excellent quality, fits perfectly and very comfortable to wear all day!', CURRENT_TIMESTAMP - INTERVAL 30 DAY),
+(1, 4, 4, 'Good material and comfortable fit. Holds up well after multiple washes.', CURRENT_TIMESTAMP - INTERVAL 25 DAY),
+-- Athletic Performance T-Shirt
+(2, 3, 5, 'Perfect for my workouts! The moisture-wicking is truly effective.', CURRENT_TIMESTAMP - INTERVAL 45 DAY),
+(2, 4, 4, 'Great shirt for running, keeps me dry even during intense sessions.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
+-- Alpine Explorer Insulated Jacket (FEATURED)
+(3, 3, 5, 'Extremely warm and waterproof as promised. Perfect for winter hikes.', CURRENT_TIMESTAMP - INTERVAL 60 DAY),
+(3, 4, 5, 'This jacket is amazing! Used it during a snowstorm and stayed completely dry and warm.', CURRENT_TIMESTAMP - INTERVAL 55 DAY),
+-- Performance Outdoor Baseball Cap
+(4, 4, 4, 'Good quality cap, provides great sun protection. Adjustable strap works well.', CURRENT_TIMESTAMP - INTERVAL 20 DAY),
+-- Expedition Chronograph Watch (FEATURED)
+(5, 3, 5, 'Fantastic watch! Accurate, looks great, and the water resistance works perfectly.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
+(5, 4, 4, 'Very impressed with this watch. The chronograph features are easy to use.', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+-- Running Shoes (FEATURED)
+(6, 3, 5, 'These are the best running shoes I\'ve ever owned! Great cushioning and support.', CURRENT_TIMESTAMP - INTERVAL 120 DAY),
+(6, 4, 4, 'Very comfortable for long runs. Good arch support and breathable.', CURRENT_TIMESTAMP - INTERVAL 110 DAY),
+-- Hiking Boots
+(7, 3, 5, 'These boots saved my hiking trip! Completely waterproof and excellent grip on rocks.', CURRENT_TIMESTAMP - INTERVAL 150 DAY),
+(7, 4, 5, 'Fantastic hiking boots, no blisters even on the first wear. Great ankle support.', CURRENT_TIMESTAMP - INTERVAL 145 DAY),
+-- Performance Athletic Tracksuit
+(8, 4, 4, 'Good quality tracksuit, comfortable and looks great. Perfect for my morning jogs.', CURRENT_TIMESTAMP - INTERVAL 70 DAY),
+-- Women's Running Shoes
+(15, 4, 5, 'Perfect fit and extremely comfortable! Great cushioning for my long runs.', CURRENT_TIMESTAMP - INTERVAL 100 DAY),
+-- Basketball
+(20, 3, 5, 'Excellent grip and bounce. This ball is perfect for both indoor and outdoor courts.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
+-- Tennis Racket
+(22, 3, 4, 'Great balance and control. Has improved my game significantly!', CURRENT_TIMESTAMP - INTERVAL 65 DAY),
+-- Golf Club Set (FEATURED)
+(24, 3, 5, 'Fantastic set for intermediate players. Each club performs excellently.', CURRENT_TIMESTAMP - INTERVAL 110 DAY),
+(24, 4, 5, 'High-quality clubs that have dramatically improved my game. Great value!', CURRENT_TIMESTAMP - INTERVAL 105 DAY),
+-- Yoga Mat (FEATURED)
+(35, 4, 5, 'Perfect thickness and grip. Makes my yoga practice so much more comfortable.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
+(35, 3, 5, 'Best yoga mat I\'ve ever owned. Non-slip surface works perfectly even during hot yoga.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
+-- Mountain Bike (FEATURED)
+(39, 3, 5, 'Amazing bike! Handles rough terrain beautifully and shifting is smooth.', CURRENT_TIMESTAMP - INTERVAL 200 DAY),
+(39, 4, 4, 'Great value for the quality. The suspension works perfectly on bumpy trails.', CURRENT_TIMESTAMP - INTERVAL 195 DAY),
+-- Road Bike
+(41, 3, 5, 'Incredible road bike! Lightweight, fast, and the components are top quality.', CURRENT_TIMESTAMP - INTERVAL 180 DAY),
+-- Snowboard (FEATURED)
+(51, 3, 5, 'Perfect all-mountain board. Handles everything from powder to park with ease.', CURRENT_TIMESTAMP - INTERVAL 220 DAY),
+(51, 4, 5, 'Fantastic board for intermediates looking to progress. Very forgiving but responsive.', CURRENT_TIMESTAMP - INTERVAL 215 DAY),
+-- Backpacking Tent (FEATURED)
+(58, 4, 5, 'Lightweight yet sturdy. Kept me completely dry during an unexpected rainstorm.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
+(58, 3, 5, 'Impressed with how easy it is to set up and how little space it takes in my pack!', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+-- Backpack
+(60, 3, 4, 'Comfortable to carry even when fully loaded. Lots of useful compartments.', CURRENT_TIMESTAMP - INTERVAL 130 DAY),
+-- Ski Equipment
+(48, 3, 5, 'Excellent helmet! Comfortable fit with good ventilation options.', CURRENT_TIMESTAMP - INTERVAL 250 DAY),
+(50, 4, 5, 'Crystal clear vision even in foggy conditions. Great peripheral vision too.', CURRENT_TIMESTAMP - INTERVAL 240 DAY);
