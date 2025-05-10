@@ -42,7 +42,6 @@ const primaryDarkColor = '#1565c0'; // Darker blue color
 const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countProductsInSubcategories, expandedCategories, toggleCategoryExpand }) => {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories[category.id] === true;
-    const count = countProductsInSubcategories(category);
 
     return (
         <div>
@@ -77,12 +76,6 @@ const CategoryTreeItem = ({ category, level, filters, handleFilterChange, countP
                     label={
                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                             <Typography variant="body2">{category.name}</Typography>
-                            <Typography
-                                variant="caption"
-                                sx={{ ml: 1, color: 'text.secondary' }}
-                            >
-                                ({count})
-                            </Typography>
                         </Box>
                     }
                 />
