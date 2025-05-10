@@ -1073,26 +1073,30 @@ const Header = () => {
                                                 onClick={() => navigate(`/products?category=${category.id || category.name.toLowerCase()}&expandFilters=true`)}
                                                 sx={{
                                                     textTransform: 'none',
-                                                    fontWeight: 'medium',
-                                                    fontSize: '1rem',
-                                                    p: 1,
-                                                    borderRadius: '4px',
-                                                    transition: 'all 0.2s ease',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.95rem',
+                                                    p: 1.2,
+                                                    px: 2.5,
+                                                    borderRadius: '8px',
+                                                    transition: 'all 0.25s ease',
                                                     position: 'relative',
+                                                    overflow: 'hidden',
+                                                    color: hoveredCategory === category ? 'primary.main' : 'text.primary',
                                                     '&::after': {
                                                         content: '""',
                                                         position: 'absolute',
-                                                        bottom: 5,
+                                                        bottom: 0,
                                                         left: '50%',
-                                                        width: hoveredCategory === category ? '30%' : '0%',
+                                                        width: hoveredCategory === category ? '80%' : '0%',
                                                         height: '2px',
                                                         backgroundColor: 'primary.main',
                                                         transform: 'translateX(-50%)',
-                                                        transition: 'width 0.2s ease'
+                                                        transition: 'width 0.3s ease'
                                                     },
                                                     '&:hover': {
-                                                        backgroundColor: 'rgba(0,0,0,0.02)',
-                                                        transform: 'translateY(-1px)'
+                                                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 4px 8px rgba(0,0,0,0.04)'
                                                     },
                                                 }}
                                             >
@@ -1174,7 +1178,7 @@ const Header = () => {
                         </Box>
                     </Toolbar>
 
-                    {/* Full-width dropdown menu */}
+                    {/* Full-width dropdown menu - Enhanced version */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -1186,92 +1190,139 @@ const Header = () => {
                         }}
                     >
                         <Paper
-                            elevation={3}
+                            elevation={4}
                             onMouseEnter={handleDropdownMouseEnter}
                             onMouseLeave={handleMouseLeave}
                             sx={{
-                                backgroundColor: 'white',
-                                boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
-                                p: 4,
+                                backgroundColor: '#f8f9fc',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                                py: 3.5,
+                                px: 6,
+                                borderTop: '1px solid rgba(0,0,0,0.05)',
+                                borderRadius: '0 0 12px 12px',
                                 transform: hoveredCategory ? 'translateY(0)' : 'translateY(-100%)',
-                                transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                transition: 'transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                opacity: hoveredCategory ? 1 : 0,
                             }}
                         >
-                            <Grid
-                                container
-                                spacing={4}
-                                justifyContent="center"
-                            >
-                                {hoveredCategory && hoveredCategory.subcategories && hoveredCategory.subcategories.length > 0 ? (
-                                    // Map through subcategories if they exist
-                                    hoveredCategory.subcategories.map((subcategory, idx) => (
-                                        <Grid item xs={4} key={idx}>
-                                            <Box
-                                                sx={{
-                                                    cursor: 'pointer',
-                                                    p: 2,
-                                                    borderRadius: '6px',
-                                                    transition: 'all 0.2s ease',
-                                                    textAlign: 'center',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(25, 118, 210, 0.05)',
-                                                        transform: 'translateY(-2px)',
-                                                        boxShadow: '0 4px 8px rgba(0,0,0,0.03)'
-                                                    },
-                                                }}
-                                                onClick={() => handleSubcategoryClick(hoveredCategory, subcategory)}
-                                            >
-                                                <Typography
-                                                    variant="subtitle1"
+                            <Box sx={{ maxWidth: '1400px', mx: 'auto' }}>
+                                <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+                                    <Typography 
+                                        variant="h6" 
+                                        sx={{ 
+                                            fontWeight: 700, 
+                                            color: 'primary.main',
+                                            position: 'relative',
+                                            '&::after': {
+                                                content: '""',
+                                                position: 'absolute',
+                                                bottom: -5,
+                                                left: 0,
+                                                width: '40px',
+                                                height: '3px',
+                                                backgroundColor: 'primary.main',
+                                                borderRadius: '2px'
+                                            }
+                                        }}
+                                    >
+                                        {hoveredCategory?.name}
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}&expandFilters=true`)}
+                                        sx={{
+                                            ml: 'auto',
+                                            textTransform: 'none',
+                                            borderRadius: '20px',
+                                            fontSize: '0.8rem',
+                                            px: 2,
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        View All
+                                    </Button>
+                                </Box>
+                                
+                                <Grid
+                                    container
+                                    spacing={3}
+                                    sx={{ mt: 1 }}
+                                >
+                                    {hoveredCategory && hoveredCategory.subcategories && hoveredCategory.subcategories.length > 0 ? (
+                                        // Map through subcategories with improved grid layout
+                                        hoveredCategory.subcategories.map((subcategory, idx) => (
+                                            <Grid item xs={12} sm={6} md={4} lg={3} key={idx}>
+                                                <Box
                                                     sx={{
-                                                        fontWeight: 'medium',
-                                                        color: 'text.primary',
-                                                        transition: 'color 0.15s ease',
+                                                        cursor: 'pointer',
+                                                        py: 1.5,
+                                                        px: 2,
+                                                        borderRadius: '8px',
+                                                        transition: 'all 0.2s ease',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        border: '1px solid transparent',
+                                                        backgroundColor: 'white',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
                                                         '&:hover': {
-                                                            color: 'primary.main',
+                                                            backgroundColor: 'white',
+                                                            transform: 'translateX(4px)',
+                                                            borderColor: 'rgba(25, 118, 210, 0.1)',
+                                                            boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
                                                         },
                                                     }}
+                                                    onClick={() => handleSubcategoryClick(hoveredCategory, subcategory)}
                                                 >
-                                                    {typeof subcategory === 'string' ? subcategory : subcategory.name}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    ))
-                                ) : (
-                                    // Show "Browse All" option if no subcategories
-                                    <Grid item xs={4}>
-                                        <Box
-                                            sx={{
-                                                cursor: 'pointer',
-                                                p: 2,
-                                                borderRadius: '6px',
-                                                transition: 'all 0.2s ease',
-                                                textAlign: 'center',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.03)'
-                                                },
-                                            }}
-                                            onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}&expandFilters=true`)}
-                                        >
-                                            <Typography
-                                                variant="subtitle1"
+                                                    <Box 
+                                                        sx={{ 
+                                                            width: 6, 
+                                                            height: 6, 
+                                                            backgroundColor: 'primary.main', 
+                                                            borderRadius: '50%',
+                                                            mr: 1.5,
+                                                            opacity: 0.7
+                                                        }} 
+                                                    />
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            fontWeight: 500,
+                                                            color: 'text.primary',
+                                                            transition: 'color 0.15s ease',
+                                                            '&:hover': {
+                                                                color: 'primary.main',
+                                                            },
+                                                        }}
+                                                    >
+                                                        {typeof subcategory === 'string' ? subcategory : subcategory.name}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid>
+                                        ))
+                                    ) : (
+                                        // Show "Browse All" option if no subcategories
+                                        <Grid item xs={12} sx={{ textAlign: 'center', py: 4 }}>
+                                            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                                                No subcategories available for {hoveredCategory?.name}
+                                            </Typography>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={() => navigate(`/products?category=${hoveredCategory?.id || hoveredCategory?.name?.toLowerCase()}&expandFilters=true`)}
                                                 sx={{
-                                                    fontWeight: 'medium',
-                                                    color: 'text.primary',
-                                                    transition: 'color 0.15s ease',
-                                                    '&:hover': {
-                                                        color: 'primary.main',
-                                                    },
+                                                    borderRadius: '24px',
+                                                    textTransform: 'none',
+                                                    px: 3,
+                                                    py: 1
                                                 }}
                                             >
                                                 Browse All Products
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Grid>
+                                            </Button>
+                                        </Grid>
+                                    )}
+                                </Grid>
+                            </Box>
                         </Paper>
                     </Box>
                     <Menu
