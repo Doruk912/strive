@@ -19,7 +19,7 @@ import {
     Popper,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Check, Close } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {Helmet} from "react-helmet";
 import { useAuth } from '../context/AuthContext';
 
@@ -49,10 +49,14 @@ const Register = () => {
     const passwordFieldRef = useRef(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const { login } = useAuth();
+    
+    // Get the redirect path from location state or default to home
+    const from = location.state?.from || '/';
 
     // Determine the popper placement based on screen size
     const popperPlacement = isMobile ? 'bottom' : 'right-start';
@@ -118,8 +122,11 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return;
-
+        
+        if (!validateForm()) {
+            return;
+        }
+        
         setIsLoading(true);
         try {
             // Register the user
@@ -162,8 +169,8 @@ const Register = () => {
             // Use AuthContext login function instead of directly manipulating localStorage
             login(loginData);
 
-            // Redirect to home page immediately
-            navigate('/');
+            // Redirect to the original page they were trying to access or home if none specified
+            navigate(from);
         } catch (error) {
             setErrors({ submit: error.message || 'Registration failed' });
         } finally {

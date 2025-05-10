@@ -1,7 +1,6 @@
 # Todo List
 * Improve header categories ui
 * Revisit product cards
-* Ordering without logging in
 * Prompt user to login if jwt is expired
 
 # STRIVE - Sports & Lifestyle Store 🏃‍♂️

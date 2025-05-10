@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { addressService } from '../services/addressService';
@@ -25,6 +25,8 @@ import {
 } from '@mui/material';
 import {
     LocationOn as LocationIcon,
+    PersonOutline as PersonIcon,
+    ShoppingBag as ShoppingBagIcon,
 } from '@mui/icons-material';
 import {Helmet} from "react-helmet";
 import CheckoutAddressDialog from '../components/CheckoutAddressDialog';
@@ -34,6 +36,7 @@ const steps = ['Shipping Address', 'Payment Method', 'Review Order'];
 
 const Checkout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const [activeStep, setActiveStep] = useState(0);
@@ -53,7 +56,8 @@ const Checkout = () => {
 
     useEffect(() => {
         if (!user) {
-            navigate('/login');
+            setLoading(false);
+            // Instead of automatically redirecting, we'll show login options in the render
             return;
         }
 
@@ -255,6 +259,112 @@ const Checkout = () => {
                     <CircularProgress />
                 </Box>
             </Container>
+        );
+    }
+
+    // If user is not logged in, show login/signup options
+    if (!user) {
+        return (
+            <>
+                <Helmet>
+                    <title>Strive - Sign In Required</title>
+                </Helmet>
+                <Container maxWidth="md" sx={{ py: 6 }}>
+                    <Card sx={{ p: 4 }}>
+                        <CardContent>
+                            <Box sx={{ textAlign: 'center', mb: 4 }}>
+                                <Typography variant="h4" gutterBottom>
+                                    Sign In Required
+                                </Typography>
+                                <Typography variant="body1" color="text.secondary">
+                                    Please sign in or create an account to continue with your purchase.
+                                </Typography>
+                            </Box>
+                            
+                            <Grid container spacing={3} justifyContent="center">
+                                <Grid item xs={12} md={5}>
+                                    <Card sx={{ 
+                                        p: 3, 
+                                        height: '100%', 
+                                        display: 'flex', 
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                        '&:hover': {
+                                            transform: 'translateY(-4px)',
+                                            boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                                        }
+                                    }}>
+                                        <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                            <PersonIcon sx={{ fontSize: 48, mb: 2, color: 'primary.main' }} />
+                                            <Typography variant="h6" gutterBottom>
+                                                Already have an account?
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Sign in to access your saved addresses and complete your purchase faster.
+                                            </Typography>
+                                        </Box>
+                                        <Button 
+                                            variant="contained" 
+                                            color="primary" 
+                                            fullWidth
+                                            onClick={() => navigate('/login', { state: { from: location.pathname } })}
+                                        >
+                                            Sign In
+                                        </Button>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={12} md={5}>
+                                    <Card sx={{ 
+                                        p: 3, 
+                                        height: '100%',
+                                        display: 'flex', 
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                        '&:hover': {
+                                            transform: 'translateY(-4px)',
+                                            boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                                        }
+                                    }}>
+                                        <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                            <ShoppingBagIcon sx={{ fontSize: 48, mb: 2, color: 'secondary.main' }} />
+                                            <Typography variant="h6" gutterBottom>
+                                                New to Strive?
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Create an account to track your order history and get exclusive offers.
+                                            </Typography>
+                                        </Box>
+                                        <Button 
+                                            variant="outlined" 
+                                            color="secondary" 
+                                            fullWidth
+                                            onClick={() => navigate('/register', { state: { from: location.pathname } })}
+                                        >
+                                            Create Account
+                                        </Button>
+                                    </Card>
+                                </Grid>
+                            </Grid>
+                            
+                            <Box sx={{ mt: 4, textAlign: 'center' }}>
+                                <Button 
+                                    variant="text" 
+                                    color="inherit"
+                                    onClick={() => navigate('/cart')}
+                                >
+                                    Return to Cart
+                                </Button>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Container>
+            </>
         );
     }
 

@@ -3,12 +3,16 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { Button, Box } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import GoogleIcon from '@mui/icons-material/Google';
 
 const GoogleLoginButton = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Get the redirect path from location state or default to home
+    const from = location.state?.from || '/';
 
     const handleGoogleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
@@ -45,7 +49,8 @@ const GoogleLoginButton = () => {
                 } else if (userData.role && userData.role.toUpperCase() === 'MANAGER') {
                     navigate('/manager');
                 } else {
-                    navigate('/');
+                    // For regular users, redirect to the original page they were trying to access
+                    navigate(from);
                 }
             } catch (error) {
                 console.error('Google login error:', error);

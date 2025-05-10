@@ -15,6 +15,10 @@ import {
     CircularProgress,
     Collapse,
     Fade,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -22,6 +26,7 @@ import {
     Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {Helmet} from "react-helmet";
 
@@ -30,7 +35,9 @@ const Cart = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
     const { cartItems, removeFromCart, updateQuantity, getCartTotal, loading } = useCart();
+    const { isAuthenticated } = useAuth();
     const [removingItems, setRemovingItems] = useState(new Set());
+    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
     const handleQuantityChange = async (productId, newQuantity) => {
         if (newQuantity >= 1) {
@@ -46,6 +53,28 @@ const Cart = () => {
             newSet.delete(productId);
             return newSet;
         });
+    };
+
+    const handleCheckoutClick = () => {
+        if (isAuthenticated()) {
+            navigate('/checkout');
+        } else {
+            setLoginDialogOpen(true);
+        }
+    };
+
+    const handleCloseLoginDialog = () => {
+        setLoginDialogOpen(false);
+    };
+
+    const handleLogin = () => {
+        setLoginDialogOpen(false);
+        navigate('/login', { state: { from: '/checkout' } });
+    };
+
+    const handleSignup = () => {
+        setLoginDialogOpen(false);
+        navigate('/register', { state: { from: '/checkout' } });
     };
 
     const cartTotals = getCartTotal();
@@ -259,7 +288,7 @@ const Cart = () => {
                                     variant="contained"
                                     fullWidth
                                     size="large"
-                                    onClick={() => navigate('/checkout')}
+                                    onClick={handleCheckoutClick}
                                     disabled={cartItems.length === 0 || loading}
                                 >
                                     {loading ? <CircularProgress size={24} /> : 'Proceed to Checkout'}
@@ -269,6 +298,34 @@ const Cart = () => {
                     </Grid>
                 </Grid>
             </Container>
+
+            {/* Login Dialog */}
+            <Dialog
+                open={loginDialogOpen}
+                onClose={handleCloseLoginDialog}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>Sign in to continue</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" gutterBottom>
+                        Please sign in or create an account to proceed with your purchase.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, display: 'flex', justifyContent: 'space-between' }}>
+                    <Button onClick={handleCloseLoginDialog} color="inherit">
+                        Cancel
+                    </Button>
+                    <Box>
+                        <Button onClick={handleSignup} color="primary" sx={{ mr: 1 }}>
+                            Create Account
+                        </Button>
+                        <Button onClick={handleLogin} variant="contained" color="primary">
+                            Sign In
+                        </Button>
+                    </Box>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

@@ -15,7 +15,7 @@ import {
     Divider,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet';
 import axios from 'axios';
@@ -45,9 +45,13 @@ const Login = () => {
     const [errors, setErrors] = useState({});
 
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    
+    // Get the redirect path from location state or default to home
+    const from = location.state?.from || '/';
 
     useEffect(() => {
         const savedEmail = localStorage.getItem('rememberedEmail');
@@ -118,17 +122,18 @@ const Login = () => {
 
             await login(userData);
 
-            let title = 'Strive - Home';
+            // Check user role for admin/manager dashboards
             if (userData.role && userData.role.toUpperCase() === 'ADMIN') {
-                title = 'Strive - Admin';
+                document.title = 'Strive - Admin';
                 navigate('/admin');
             } else if (userData.role && userData.role.toUpperCase() === 'MANAGER') {
-                title = 'Strive - Manager';
+                document.title = 'Strive - Manager';
                 navigate('/manager');
             } else {
-                navigate('/');
+                // For regular users, redirect to the original page they were trying to access
+                document.title = 'Strive - Home'; 
+                navigate(from);
             }
-            document.title = title;
 
         } catch (error) {
             console.error('Login error:', error);
