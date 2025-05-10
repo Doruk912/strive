@@ -700,63 +700,128 @@ INSERT INTO stocks (product_id, size, quantity) VALUES
 -- Featured Products with display order
 INSERT INTO featured_products (product_id, display_order) VALUES
 (3, 1),   -- Alpine Explorer Insulated Jacket
-(5, 2),   -- Expedition Chronograph Sports Watch
-(6, 3),   -- Momentum Pro Performance Running Shoes
-(24, 4),  -- Tour Performance Golf Club Set
-(39, 5),  -- Alpine Explorer Mountain Bike
-(51, 6),  -- All-Mountain Snowboard
-(35, 7),  -- Premium Yoga Mat
-(58, 8);  -- Ultralight 2-Person Backpacking Tent
+(6, 2),   -- Momentum Pro Performance Running Shoes
+(24, 3),  -- Tour Performance Golf Club Set
+(39, 4),  -- Alpine Explorer Mountain Bike
+(51, 5),  -- All-Mountain Snowboard
+(35, 6),  -- Premium Yoga Mat
+(58, 7),  -- Ultralight 2-Person Backpacking Tent
+(43, 8);  -- Professional Kayak Paddle
 
 -- Review data for popular and featured products
 INSERT INTO reviews (product_id, user_id, rating, comment, created_at) VALUES
 -- Premium Cotton T-Shirt
 (1, 3, 5, 'Excellent quality, fits perfectly and very comfortable to wear all day!', CURRENT_TIMESTAMP - INTERVAL 30 DAY),
 (1, 4, 4, 'Good material and comfortable fit. Holds up well after multiple washes.', CURRENT_TIMESTAMP - INTERVAL 25 DAY),
--- Athletic Performance T-Shirt
 (2, 3, 5, 'Perfect for my workouts! The moisture-wicking is truly effective.', CURRENT_TIMESTAMP - INTERVAL 45 DAY),
 (2, 4, 4, 'Great shirt for running, keeps me dry even during intense sessions.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
+(2, 3, 3, 'Decent shirt but runs a bit small. Order a size up if you\'re between sizes.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
 -- Alpine Explorer Insulated Jacket (FEATURED)
 (3, 3, 5, 'Extremely warm and waterproof as promised. Perfect for winter hikes.', CURRENT_TIMESTAMP - INTERVAL 60 DAY),
 (3, 4, 5, 'This jacket is amazing! Used it during a snowstorm and stayed completely dry and warm.', CURRENT_TIMESTAMP - INTERVAL 55 DAY),
+(3, 3, 4, 'Great jacket overall but zipper can be a bit finicky sometimes.', CURRENT_TIMESTAMP - INTERVAL 50 DAY),
 -- Performance Outdoor Baseball Cap
 (4, 4, 4, 'Good quality cap, provides great sun protection. Adjustable strap works well.', CURRENT_TIMESTAMP - INTERVAL 20 DAY),
--- Expedition Chronograph Watch (FEATURED)
+(4, 3, 2, 'Disappointed with the quality. Started fraying after just a few wears.', CURRENT_TIMESTAMP - INTERVAL 15 DAY),
+-- Expedition Chronograph Watch
 (5, 3, 5, 'Fantastic watch! Accurate, looks great, and the water resistance works perfectly.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
 (5, 4, 4, 'Very impressed with this watch. The chronograph features are easy to use.', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+(5, 3, 3, 'Nice looking watch but battery died within 3 months. Expected better longevity.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
 -- Running Shoes (FEATURED)
 (6, 3, 5, 'These are the best running shoes I\'ve ever owned! Great cushioning and support.', CURRENT_TIMESTAMP - INTERVAL 120 DAY),
 (6, 4, 4, 'Very comfortable for long runs. Good arch support and breathable.', CURRENT_TIMESTAMP - INTERVAL 110 DAY),
+(6, 3, 2, 'Disappointing durability. Started showing wear after just 50 miles.', CURRENT_TIMESTAMP - INTERVAL 100 DAY),
 -- Hiking Boots
 (7, 3, 5, 'These boots saved my hiking trip! Completely waterproof and excellent grip on rocks.', CURRENT_TIMESTAMP - INTERVAL 150 DAY),
 (7, 4, 5, 'Fantastic hiking boots, no blisters even on the first wear. Great ankle support.', CURRENT_TIMESTAMP - INTERVAL 145 DAY),
+(7, 3, 3, 'Good boots but quite heavy. Be prepared for the extra weight on long hikes.', CURRENT_TIMESTAMP - INTERVAL 140 DAY),
 -- Performance Athletic Tracksuit
 (8, 4, 4, 'Good quality tracksuit, comfortable and looks great. Perfect for my morning jogs.', CURRENT_TIMESTAMP - INTERVAL 70 DAY),
+(8, 3, 5, 'Love everything about this tracksuit! Great quality and perfect fit.', CURRENT_TIMESTAMP - INTERVAL 65 DAY),
+-- Elite Training Tracksuit
+(9, 3, 4, 'Sleek design and comfortable fit. Material is high quality and long-lasting.', CURRENT_TIMESTAMP - INTERVAL 55 DAY),
+(9, 4, 2, 'Too tight in the shoulders and the material isn\'t as breathable as described.', CURRENT_TIMESTAMP - INTERVAL 50 DAY),
+-- Active Lifestyle Tracksuit
+(10, 4, 5, 'Beautiful color and very comfortable. Gets compliments every time I wear it.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
+(10, 3, 4, 'Really nice tracksuit, but the color was slightly different than pictured.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
+-- Essential Training Tracksuit
+(11, 3, 3, 'Average quality. Nice for casual wear but not durable enough for serious training.', CURRENT_TIMESTAMP - INTERVAL 30 DAY),
+(11, 4, 4, 'Comfortable and lightweight. Great for spring and fall weather.', CURRENT_TIMESTAMP - INTERVAL 25 DAY),
+-- Summer Breeze Floral Dress
+(12, 4, 5, 'Gorgeous dress! The fabric is lightweight and the pattern is beautiful.', CURRENT_TIMESTAMP - INTERVAL 60 DAY),
+(12, 4, 4, 'Pretty dress with nice flow. Perfect for summer events.', CURRENT_TIMESTAMP - INTERVAL 55 DAY),
+-- Weekend Getaway Wrap Dress
+(13, 4, 3, 'Nice dress but the wrap style is a bit tricky to keep in place.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
+(13, 4, 4, 'Versatile dress that can be dressed up or down. Love the adjustable waist.', CURRENT_TIMESTAMP - INTERVAL 30 DAY),
 -- Women's Running Shoes
 (15, 4, 5, 'Perfect fit and extremely comfortable! Great cushioning for my long runs.', CURRENT_TIMESTAMP - INTERVAL 100 DAY),
+(15, 4, 4, 'Good support and nice design. Would recommend for moderate runners.', CURRENT_TIMESTAMP - INTERVAL 95 DAY),
+-- Comfort Plus Ergonomic Sandals
+(16, 4, 5, 'Most comfortable sandals I\'ve ever owned! Like walking on clouds.', CURRENT_TIMESTAMP - INTERVAL 110 DAY),
+(16, 3, 4, 'Great arch support and comfortable straps. Perfect for walking all day.', CURRENT_TIMESTAMP - INTERVAL 105 DAY),
+(16, 4, 2, 'Straps started to come loose after just a few wears. Disappointed in the durability.', CURRENT_TIMESTAMP - INTERVAL 100 DAY),
+-- Urban Explorer Crossbody Bag
+(17, 4, 4, 'Cute bag with surprisingly good capacity. Love the organization pockets.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
+(17, 3, 3, 'Nice looking bag but strap is a bit uncomfortable when carrying heavier items.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
 -- Basketball
 (20, 3, 5, 'Excellent grip and bounce. This ball is perfect for both indoor and outdoor courts.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
+(20, 4, 4, 'Good quality basketball with consistent bounce. Grip is excellent.', CURRENT_TIMESTAMP - INTERVAL 75 DAY),
+-- Soccer Ball
+(21, 3, 5, 'Professional quality ball with great feel. Perfect weight and bounce.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
+(21, 4, 4, 'Good ball for regular play. Holds air well and has nice graphics.', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+(21, 3, 3, 'Decent ball but scuffs easily on rough surfaces. Better for grass fields.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
 -- Tennis Racket
 (22, 3, 4, 'Great balance and control. Has improved my game significantly!', CURRENT_TIMESTAMP - INTERVAL 65 DAY),
+(22, 4, 5, 'Excellent racket for intermediate players. Good power and control.', CURRENT_TIMESTAMP - INTERVAL 60 DAY),
 -- Golf Club Set (FEATURED)
 (24, 3, 5, 'Fantastic set for intermediate players. Each club performs excellently.', CURRENT_TIMESTAMP - INTERVAL 110 DAY),
 (24, 4, 5, 'High-quality clubs that have dramatically improved my game. Great value!', CURRENT_TIMESTAMP - INTERVAL 105 DAY),
+(24, 3, 4, 'Well-balanced set with good feel. The putter is particularly impressive.', CURRENT_TIMESTAMP - INTERVAL 100 DAY),
+-- Premium Leather Golf Gloves
+(26, 3, 5, 'Excellent grip and comfortable fit. Leather is soft yet durable.', CURRENT_TIMESTAMP - INTERVAL 75 DAY),
+(26, 4, 3, 'Nice glove but runs small. Order a size up for a comfortable fit.', CURRENT_TIMESTAMP - INTERVAL 70 DAY),
+-- Precision Cast Iron Dumbbells
+(28, 3, 4, 'Solid construction and comfortable grip. Perfect weight for beginners.', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+(28, 4, 5, 'Great addition to my home gym. Compact but effective.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
 -- Yoga Mat (FEATURED)
 (35, 4, 5, 'Perfect thickness and grip. Makes my yoga practice so much more comfortable.', CURRENT_TIMESTAMP - INTERVAL 40 DAY),
 (35, 3, 5, 'Best yoga mat I\'ve ever owned. Non-slip surface works perfectly even during hot yoga.', CURRENT_TIMESTAMP - INTERVAL 35 DAY),
+(35, 4, 4, 'Great cushioning and good grip. Slightly heavy to carry but worth it for the comfort.', CURRENT_TIMESTAMP - INTERVAL 30 DAY),
+-- Deluxe Yoga Starter Kit
+(36, 4, 5, 'Everything you need to start yoga! The blocks and strap are particularly useful.', CURRENT_TIMESTAMP - INTERVAL 50 DAY),
+(36, 3, 4, 'Good quality set with nice color. The carrying bag is a convenient bonus.', CURRENT_TIMESTAMP - INTERVAL 45 DAY),
 -- Mountain Bike (FEATURED)
 (39, 3, 5, 'Amazing bike! Handles rough terrain beautifully and shifting is smooth.', CURRENT_TIMESTAMP - INTERVAL 200 DAY),
 (39, 4, 4, 'Great value for the quality. The suspension works perfectly on bumpy trails.', CURRENT_TIMESTAMP - INTERVAL 195 DAY),
--- Road Bike
-(41, 3, 5, 'Incredible road bike! Lightweight, fast, and the components are top quality.', CURRENT_TIMESTAMP - INTERVAL 180 DAY),
+(39, 3, 5, 'Incredible bike that\'s taken my trail riding to the next level. Highly recommend!', CURRENT_TIMESTAMP - INTERVAL 190 DAY),
+-- Professional Kayak Paddle (FEATURED)
+(43, 3, 5, 'Lightweight and powerful. Makes paddling effortless compared to my old paddle.', CURRENT_TIMESTAMP - INTERVAL 70 DAY),
+(43, 4, 5, 'Perfect balance of strength and weight. Very comfortable grip even during long trips.', CURRENT_TIMESTAMP - INTERVAL 65 DAY),
+(43, 3, 4, 'High quality paddle that\'s worth the investment. Drip rings work great.', CURRENT_TIMESTAMP - INTERVAL 60 DAY),
+-- Performance Kayak Life Vest
+(44, 4, 5, 'Comfortable fit with excellent freedom of movement. Feels secure without being bulky.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
+(44, 3, 4, 'Good quality PFD with nice adjustment options. Highly visible color is a plus for safety.', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+-- Premium Ski Helmet
+(48, 3, 5, 'Excellent helmet! Comfortable fit with good ventilation options.', CURRENT_TIMESTAMP - INTERVAL 250 DAY),
+(48, 4, 4, 'Warm and comfortable helmet with easy adjustment. Audio compatibility is a nice bonus.', CURRENT_TIMESTAMP - INTERVAL 245 DAY),
+-- Performance Ski Goggles
+(50, 4, 5, 'Crystal clear vision even in foggy conditions. Great peripheral vision too.', CURRENT_TIMESTAMP - INTERVAL 240 DAY),
+(50, 3, 3, 'Good visibility but fogs up a bit during intense activity. Anti-fog spray helps.', CURRENT_TIMESTAMP - INTERVAL 235 DAY),
 -- Snowboard (FEATURED)
 (51, 3, 5, 'Perfect all-mountain board. Handles everything from powder to park with ease.', CURRENT_TIMESTAMP - INTERVAL 220 DAY),
 (51, 4, 5, 'Fantastic board for intermediates looking to progress. Very forgiving but responsive.', CURRENT_TIMESTAMP - INTERVAL 215 DAY),
+(51, 3, 4, 'Great board with nice flex pattern. Graphics look even better in person.', CURRENT_TIMESTAMP - INTERVAL 210 DAY),
 -- Backpacking Tent (FEATURED)
 (58, 4, 5, 'Lightweight yet sturdy. Kept me completely dry during an unexpected rainstorm.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
 (58, 3, 5, 'Impressed with how easy it is to set up and how little space it takes in my pack!', CURRENT_TIMESTAMP - INTERVAL 85 DAY),
+(58, 4, 4, 'Great tent for solo backpacking. The vestibule space is particularly useful.', CURRENT_TIMESTAMP - INTERVAL 80 DAY),
 -- Backpack
 (60, 3, 4, 'Comfortable to carry even when fully loaded. Lots of useful compartments.', CURRENT_TIMESTAMP - INTERVAL 130 DAY),
--- Ski Equipment
-(48, 3, 5, 'Excellent helmet! Comfortable fit with good ventilation options.', CURRENT_TIMESTAMP - INTERVAL 250 DAY),
-(50, 4, 5, 'Crystal clear vision even in foggy conditions. Great peripheral vision too.', CURRENT_TIMESTAMP - INTERVAL 240 DAY);
+(60, 4, 5, 'Outstanding comfort with heavy loads. The hip belt distribution is excellent.', CURRENT_TIMESTAMP - INTERVAL 125 DAY),
+(60, 3, 2, 'Side pocket stitching came loose after just two trips. Disappointed in durability.', CURRENT_TIMESTAMP - INTERVAL 120 DAY),
+-- Adventure Trail Backpack
+(61, 3, 5, 'Perfect size for weekend adventures. Well-designed with thoughtful features.', CURRENT_TIMESTAMP - INTERVAL 95 DAY),
+(61, 4, 4, 'Comfortable backpack with good weight distribution. Water bottle pockets could be bigger.', CURRENT_TIMESTAMP - INTERVAL 90 DAY),
+-- Alpine Down Jacket
+(52, 3, 5, 'Incredibly warm without being bulky. Perfect for skiing in cold conditions.', CURRENT_TIMESTAMP - INTERVAL 180 DAY),
+(52, 4, 4, 'Great jacket with excellent insulation. Packs down small for travel.', CURRENT_TIMESTAMP - INTERVAL 175 DAY);
