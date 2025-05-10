@@ -148,6 +148,9 @@ const Products = () => {
         sizes: []
     });
 
+    // Add a temporary name input state
+    const [nameInput, setNameInput] = useState('');
+
     // Find a category by ID in the entire category tree (recursive)
     const findCategoryById = useCallback((categoryId) => {
         if (!categories || categories.length === 0) return null;
@@ -233,6 +236,7 @@ const Products = () => {
 
             if (nameParam) {
                 filterUpdates.name = nameParam;
+                setNameInput(nameParam); // Also set the input field
             }
 
             if (Object.keys(filterUpdates).length > 0) {
@@ -621,13 +625,37 @@ const Products = () => {
         }
     };
 
+    // Modify the handleNameFilterChange function to update temporary state instead of filter
     const handleNameFilterChange = (event) => {
+        setNameInput(event.target.value);
+    };
+
+    // Add a new function to apply the name filter
+    const applyNameFilter = () => {
         // Reset to page 1 when search filter changes
         setPage(1);
         setFilters(prev => ({
             ...prev,
-            name: event.target.value
+            name: nameInput
         }));
+    };
+
+    // Add a function to clear the search
+    const clearNameFilter = () => {
+        // Clear the input field
+        setNameInput('');
+        
+        // Only trigger a page reset and filter change if there was a filter applied
+        if (filters.name) {
+            // Reset to page 1 when removing filter
+            setPage(1);
+            
+            // Update the filters state to remove the name filter
+            setFilters(prev => ({
+                ...prev,
+                name: ''
+            }));
+        }
     };
 
     const handleRatingChange = (value) => {
@@ -702,7 +730,7 @@ const Products = () => {
     const showingStartIndex = products.length > 0 ? (page - 1) * productsPerPage + 1 : 0;
     const showingEndIndex = showingStartIndex + products.length - 1;
 
-    // Add a clearAllFilters function to properly handle clearing filters
+    // Update the clearAllFilters function to also clear the nameInput
     const clearAllFilters = () => {
         // Reset to page 1
         setPage(1);
@@ -716,11 +744,14 @@ const Products = () => {
             sizes: []
         });
 
-        // Also reset price inputs to match
+        // Also reset input fields to match
         setPriceInputs({
             min: '0',
             max: maxPrice.toString()
         });
+        
+        // Clear the name input
+        setNameInput('');
     };
 
     // Helper function to get all descendant category IDs - define outside useEffect for better scope
@@ -951,38 +982,64 @@ const Products = () => {
                                     >
                                         Search
                                     </Typography>
-                                    <TextField
-                                        fullWidth
-                                        placeholder="Search products..."
-                                        variant="outlined"
-                                        value={filters.name}
-                                        onChange={handleNameFilterChange}
-                                        size="small"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                '& fieldset': {
-                                                    borderColor: 'rgba(0, 0, 0, 0.12)',
-                                                    borderRadius: '8px',
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <TextField
+                                            fullWidth
+                                            placeholder="Search products..."
+                                            variant="outlined"
+                                            value={nameInput}
+                                            onChange={handleNameFilterChange}
+                                            size="small"
+                                            sx={{
+                                                flex: 1,
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': {
+                                                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                                                        borderRadius: '8px',
+                                                    },
+                                                    '&:hover fieldset': {
+                                                        borderColor: primaryColor,
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: primaryColor,
+                                                    },
                                                 },
-                                                '&:hover fieldset': {
-                                                    borderColor: primaryColor,
+                                            }}
+                                            InputProps={{
+                                                endAdornment: nameInput ? (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={clearNameFilter}
+                                                    >
+                                                        <Box sx={{ fontSize: '1rem' }}>×</Box>
+                                                    </IconButton>
+                                                ) : null,
+                                            }}
+                                            // Add onKeyPress handler to apply filter on Enter key
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    applyNameFilter();
+                                                }
+                                            }}
+                                        />
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={applyNameFilter}
+                                            sx={{
+                                                backgroundColor: primaryColor,
+                                                '&:hover': {
+                                                    backgroundColor: primaryDarkColor,
                                                 },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: primaryColor,
-                                                },
-                                            },
-                                        }}
-                                        InputProps={{
-                                            endAdornment: filters.name ? (
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => setFilters(prev => ({ ...prev, name: '' }))}
-                                                >
-                                                    <Box sx={{ fontSize: '1rem' }}>×</Box>
-                                                </IconButton>
-                                            ) : null,
-                                        }}
-                                    />
+                                                textTransform: 'none',
+                                                fontWeight: 600,
+                                                fontSize: '0.8rem',
+                                                minWidth: '60px',
+                                            }}
+                                        >
+                                            Search
+                                        </Button>
+                                    </Box>
                                 </Box>
 
                                 {/* Categories Filter */}
@@ -1390,17 +1447,21 @@ const Products = () => {
                                         }}
                                     />
                                     {filters.name && (
-                                        <Chip
-                                            label={`Search: ${filters.name}`}
-                                            size="small"
-                                            onDelete={() => setFilters(prev => ({ ...prev, name: '' }))}
+                                        <Box
                                             sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
                                                 backgroundColor: `${primaryColor}10`,
                                                 color: primaryColor,
-                                                fontWeight: 500,
+                                                borderRadius: '16px',
+                                                padding: '0 12px',
+                                                height: '24px',
                                                 fontSize: '0.8rem',
+                                                fontWeight: 500,
                                             }}
-                                        />
+                                        >
+                                            Search: {filters.name}
+                                        </Box>
                                     )}
                                     <Typography
                                         variant="body2"
