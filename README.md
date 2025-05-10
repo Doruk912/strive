@@ -13,7 +13,6 @@ STRIVE is a modern e-commerce platform specializing in sports and lifestyle prod
 - **API Communication**: Axios
 - **Authentication**: JWT, Google OAuth
 - **Data Visualization**: Chart.js
-- **Internationalization**: i18next
 
 ### Backend
 - **Framework**: Spring Boot 3.4
@@ -75,7 +74,7 @@ STRIVE is a modern e-commerce platform specializing in sports and lifestyle prod
    ```bash
    cd backend
    ```
-2. Configure database connection in `src/main/resources/application.properties`
+2. Configure database connection and environment variables in `src/main/resources/application.properties`
 3. Build and run the Spring Boot application:
    ```bash
    ./mvnw spring-boot:run
@@ -130,34 +129,3 @@ The backend provides RESTful APIs for:
 - Cart and order processing
 - Payment processing
 - Admin functionalities
-
-## 🧪 Testing
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-### Backend Tests
-```bash
-cd backend
-./mvnw test
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
-Made with ❤️ by the STRIVE team
-
